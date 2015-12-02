@@ -73,9 +73,22 @@ public class stabilize_v1 implements Runnable {
                 int Length = mbundle.size();
                 //int Length = 100;
                 float[][] a = new float[Length][2];
+                if(mbundle.getFloatArray("Draw") != null){
+                    for(int i = 0;i<Length;i++){
+                        float[] Draw =  mbundle.getFloatArray("Draw");
+                        a[i][0] = ;
+                        a[i][1] = ;
+                    }
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable("DrawPoints", a);
+                    Message msg2 = new Message();
+                    msg2.setData(bundle);
+                    DemoDraw.DrawStabilizerHandler.sendMessage(msg2);
+                }
                 for(int i = 0;i<Length;i++){
-                    a[i][0] = i+3; //x
-                    a[i][1] = i+5; //y
+                    float[] Draw =  mbundle.getFloatArray("Draw");
+                    a[i][0] = ;
+                    a[i][1] = ;
                 }
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("DrawPoints", a);

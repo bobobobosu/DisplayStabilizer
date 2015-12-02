@@ -56,9 +56,9 @@ public class DemoDraw extends View {
                     paint2.setColor(Color.BLUE);
                     for(int i=0 ; i<DrawPoints.length;i++){
                         Log.d(TAG,"DRAWING: "+ String.valueOf(DrawPoints[i]));
-                        path2.moveTo(DrawPoints[i][0], DrawPoints[i][0]);
+                        path2.moveTo(DrawPoints[i][0], DrawPoints[i][1]);
                         if(i+1<DrawPoints.length-1){
-                            path2.lineTo(DrawPoints[i+1][0], DrawPoints[i+1][0]);
+                            path2.lineTo(DrawPoints[i+1][0], DrawPoints[i+1][1]);
                         }
                     }
 
