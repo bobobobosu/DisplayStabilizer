@@ -1,8 +1,8 @@
 package com.project.nicki.displaystabilizer;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
@@ -15,7 +15,6 @@ public class init extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         new Thread(new getAccelerometer(getBaseContext())).start();
         new Thread(new getGyroscope(getBaseContext())).start();
         //new Thread(new proAccelerometer(getBaseContext())).start();
