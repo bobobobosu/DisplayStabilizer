@@ -29,6 +29,7 @@ public class stabilize_v1 implements Runnable {
     private Context mContext;
     private long Time = 0;
     private float[] Data = new float[2];
+
     public stabilize_v1(Context context) {
         mContext = context;
     }
@@ -57,23 +58,21 @@ public class stabilize_v1 implements Runnable {
                 LOGSTATUS = DemoDraw.drawing;
                 Log.d(TAG, "LOGSTATUS " + LOGSTATUS);
                 Bundle bundlegot = msg.getData();
-                //if( LOGSTATUS == true && msg.getData() != null){
                 if (LOGSTATUS == true && bundlegot != null) {
 
                     if (msg.arg1 == 0) {
                         if (bundlegot.getFloatArray("Draw") != null) {
+                            //if(bundlegot.getFloatArray("Draw")[0] > 0 && bundlegot.getFloatArray("Draw")[1] > 0){
                             DrawDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Draw")));
+                            //}
                         }
                     }
                     if (msg.arg1 == 1) {
                         if (bundlegot.getDoubleArray("Movement") != null) {
-                            Log.d("AAAAAAAAA", "AAAAAAAA");
                             double[] move;
                             move = bundlegot.getDoubleArray("Movement");
-                            Log.d(TAG, "00000000" + String.valueOf(move[0]));
                             CamDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getDoubleArray("Movement")));
                         }
-
                     }
                     if (msg.arg1 == 2) {
                         AcceDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Acce")));
@@ -81,18 +80,12 @@ public class stabilize_v1 implements Runnable {
                     if (msg.arg1 == 3) {
                         GyroDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Gyro")));
                     }
-
                 } else if (LOGSTATUS == false) {
-
-                    Log.d(TAG, "qqqqq " + String.valueOf(DrawDataArr.size()));
-
                     DataCollected[0] = DrawDataArr;
                     DataCollected[1] = CamDataArr;
                     DataCollected[2] = AcceDataArr;
                     DataCollected[3] = GyroDataArr;
-
                     new Thread(new Stabilization(DataCollected)).start();
-
                     Log.d(TAG, "Collect stopped");
                     DataCollected = new Object[4];
                     DrawDataArr = new ArrayList<stabilize_v1>();
@@ -100,8 +93,6 @@ public class stabilize_v1 implements Runnable {
                     AcceDataArr = new ArrayList<stabilize_v1>();
                     GyroDataArr = new ArrayList<stabilize_v1>();
                 }
-
-
             }
         };
         Looper.loop();
@@ -122,38 +113,34 @@ public class stabilize_v1 implements Runnable {
             ArrayList<stabilize_v1> camDataIn = (ArrayList<stabilize_v1>) threadDataCollected[1];
             ArrayList<stabilize_v1> acceDataIn = (ArrayList<stabilize_v1>) threadDataCollected[2];
             ArrayList<stabilize_v1> gyroDataIn = (ArrayList<stabilize_v1>) threadDataCollected[3];
-            ArrayList<stabilize_v1> drawDataOut = new ArrayList<stabilize_v1>();
+
 
             if (drawDataIn.isEmpty() != true) {
-
-
-                float[][] a;
+                float[][] drawDataOut;
                 int Length = drawDataIn.size();
-                a = new float[Length][2];
+                drawDataOut = new float[Length][2];
                 ArrayList<stabilize_v1> x = drawDataIn;
                 for (int i = 0; i < Length - 1; i++) {
-                    stabilize_v1 b = x.get(i);
-                    float[] c = b.Data;
-
-                    float d = c[0];
-                    float e = c[1];
+                    stabilize_v1 drawObject = x.get(i);
+                    float[] drawDataArray = drawObject.Data;
+                    float drawDataX = drawDataArray[0];
+                    float drawDataY = drawDataArray[1];
 
                     //stabilization here
-                    if(i < acceDataIn.size()){
-                        d = d- acceDataIn.get(i).Data[0]*100;
+                    if (i < acceDataIn.size()) {
+                        // drawDataX = drawDataX - camDataIn.get(i).Data[0] * 100;
                     }
 
                     //
-                    a[i][0] = d;
-                    a[i][1] = e;
+                    drawDataOut[i][0] = drawDataX;
+                    drawDataOut[i][1] = drawDataY;
                 }
 
                 for (int i = 0; i < Length - 1; i++) {
-                    Log.d(TAG, "oooooo " + String.valueOf(a[i][0]) + " " + String.valueOf(a[i][0]));
+                    Log.d(TAG, "oooooo " + String.valueOf(drawDataOut[i][0]) + " " + String.valueOf(drawDataOut[i][0]));
                 }
-
                 Bundle bundle = new Bundle();
-                bundle.putSerializable("DrawPoints", a);
+                bundle.putSerializable("DrawPoints", drawDataOut);
                 Message msg2 = new Message();
                 msg2.setData(bundle);
                 DemoDrawUI.DrawStabilizerHandler.sendMessage(msg2);

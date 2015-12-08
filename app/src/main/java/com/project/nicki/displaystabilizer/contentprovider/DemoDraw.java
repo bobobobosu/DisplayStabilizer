@@ -1,13 +1,10 @@
 package com.project.nicki.displaystabilizer.contentprovider;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -15,7 +12,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 
 import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
 
@@ -65,18 +61,18 @@ public class DemoDraw extends View {
     protected void onDraw(Canvas canvas) {
         //Bitmap bitmap=Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
         //Canvas mcanvas=new Canvas(bitmap);
+        /*
         if (clear) {  // Choose the colour you want to clear with.
             path.reset();
             path2.reset();
             clear = false;
-        } else {
-            canvas.drawPath(path, paint);
-            canvas.drawPath(path2, paint2);
-
         }
-
+        */
+        canvas.drawPath(path, paint);
+        canvas.drawPath(path2, paint2);
 
     }
+
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -146,7 +142,7 @@ public class DemoDraw extends View {
 
 
                 msgSTOP.what = 2;
-                proDataFlow.drawHandler.sendMessage(msgSTOP);
+                //proDataFlow.drawHandler.sendMessage(msgSTOP);
                 //stabilize_v1.getDatas.sendMessage(msgSTOP);
 
                 drawing = false;

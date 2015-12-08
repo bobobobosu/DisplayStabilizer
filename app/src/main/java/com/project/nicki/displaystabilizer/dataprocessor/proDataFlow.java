@@ -127,7 +127,7 @@ public class proDataFlow implements Runnable {
                 final long AcceTime;
                 AcceData = AcceBundle.getFloatArray("Acce");
                 AcceTime = AcceBundle.getLong("Time");
-                //Log.d(TAG, "AcceDATA@ " + "Time:" + String.valueOf(AcceTime) + " X:" + String.valueOf(AcceData[0]) + " Y:" + String.valueOf(AcceData[1]) + " Z:" + String.valueOf(AcceData[2]));
+                Log.d(TAG, "AcceDATA@ " + "Time:" + String.valueOf(AcceTime) + " X:" + String.valueOf(AcceData[0]) + " Y:" + String.valueOf(AcceData[1]) + " Z:" + String.valueOf(AcceData[2]));
 
                 final float[] finalAcceData = AcceData;
 
@@ -155,9 +155,9 @@ public class proDataFlow implements Runnable {
                 GyroTime = GyroBundle.getLong("Time");
                 //Log.d(TAG, "GyroDATA@ " + "Time:" + String.valueOf(GyroTime) + " X:" + String.valueOf(GyroData[0]) + " Y:" + String.valueOf(GyroData[1]) + " Z:" + String.valueOf(GyroData[2]));
                 final float[] finalGyroData = GyroData;
-                //Log.d(TAG," GyroDATA@ " + "Time:" + String.valueOf(GyroTime) + " X:" + String.valueOf(finalGyroData[0]) + " Y:" + String.valueOf(finalGyroData[1]));
+                Log.d(TAG, " GyroDATA@ " + "Time:" + String.valueOf(GyroTime) + " X:" + String.valueOf(finalGyroData[0]) + " Y:" + String.valueOf(finalGyroData[1]));
 
-/*
+                /*
                 DemoDrawUI.runOnUI(new Runnable() {
                     @Override
                     public void run() {
@@ -165,6 +165,14 @@ public class proDataFlow implements Runnable {
                     }
                 });
                 */
+
+                DemoDrawUI.runOnUI(new Runnable() {
+                    @Override
+                    public void run() {
+                        DemoDrawUI.mlog_gyro.setText("GyroDATA@ " + "Time:" + String.valueOf(GyroTime) + " X:" + String.valueOf(finalGyroData[0]) + " Y:" + String.valueOf(finalGyroData[1]));
+                    }
+                });
+
 
                 sendData(LOGSTATUS, GyroBundle, 3);
             }

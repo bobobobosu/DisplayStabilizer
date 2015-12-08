@@ -3,7 +3,6 @@ package com.project.nicki.displaystabilizer;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.ViewGroup;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
@@ -58,6 +57,7 @@ public class init extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
         Intent goto_DemoDrawUI = new Intent();
         goto_DemoDrawUI.setClass(init.this, DemoDrawUI.class);
         startActivity(goto_DemoDrawUI);
