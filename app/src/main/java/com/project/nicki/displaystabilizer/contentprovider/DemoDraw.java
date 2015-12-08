@@ -1,10 +1,13 @@
 package com.project.nicki.displaystabilizer.contentprovider;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -12,6 +15,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 
 import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
 
@@ -24,6 +28,7 @@ public class DemoDraw extends View {
     public Paint paint = new Paint();
     public Path path = new Path();
     protected Context mContext;
+    private boolean clear = false;
 
     public DemoDraw(Context context) {
         super(context);
@@ -58,12 +63,17 @@ public class DemoDraw extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-
         //Bitmap bitmap=Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
         //Canvas mcanvas=new Canvas(bitmap);
-        //canvas.drawColor(Color.WHITE);
-        canvas.drawPath(path, paint);
-        canvas.drawPath(path2, paint2);
+        if (clear) {  // Choose the colour you want to clear with.
+            path.reset();
+            path2.reset();
+            clear = false;
+        } else {
+            canvas.drawPath(path, paint);
+            canvas.drawPath(path2, paint2);
+
+        }
 
 
     }
@@ -74,6 +84,10 @@ public class DemoDraw extends View {
         float eventY = event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                clear = true;
+                path.reset();
+                path2.reset();
+                invalidate();
                 Log.d(TAG, "AAAA down");
                 Message msgSTART = new Message();
                 msgSTART.what = 0;
@@ -94,6 +108,7 @@ public class DemoDraw extends View {
                 path.moveTo(eventX, eventY);
                 return true;
             case MotionEvent.ACTION_MOVE:
+                clear = false;
                 Log.d(TAG, "AAAA Drawing");
                 Message msgDRAWING = new Message();
                 msgDRAWING.what = 1;
@@ -115,7 +130,7 @@ public class DemoDraw extends View {
                 path.lineTo(eventX, eventY);
                 break;
             case MotionEvent.ACTION_UP:
-
+                clear = false;
 
                 Log.d(TAG, "AAAA up");
                 Message msgSTOP = new Message();
@@ -146,5 +161,6 @@ public class DemoDraw extends View {
         invalidate();
         return true;
     }
+
 
 }

@@ -139,6 +139,9 @@ public class stabilize_v1 implements Runnable {
                     float e = c[1];
 
                     //stabilization here
+                    if(i < acceDataIn.size()){
+                        d = d- acceDataIn.get(i).Data[0]*100;
+                    }
 
                     //
                     a[i][0] = d;
