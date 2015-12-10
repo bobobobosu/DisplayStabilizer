@@ -22,7 +22,7 @@ public class stabilize_v1 implements Runnable {
     public boolean LOGSTATUS;
     public int bundlenum = 1;
     public Object[] DataCollected = new Object[4];
-    public boolean CalibrateMode = true;
+    public int CalibrateMode = -1;
     //Below Calibration  Variables
     public float camera_screen_multiplyfactor;
     ArrayList<stabilize_v1> DrawDataArr = new ArrayList<stabilize_v1>();
@@ -110,45 +110,51 @@ public class stabilize_v1 implements Runnable {
             ArrayList<stabilize_v1> acceDataIn = (ArrayList<stabilize_v1>) threadDataCollected[2];
             ArrayList<stabilize_v1> gyroDataIn = (ArrayList<stabilize_v1>) threadDataCollected[3];
 
-            if (drawDataIn.isEmpty() != true) {
-                if (CalibrateMode == false) {
-                    float[][] drawDataOut;
-                    int Length = drawDataIn.size();
-                    drawDataOut = new float[Length][2];
-                    ArrayList<stabilize_v1> x = drawDataIn;
-                    for (int i = 0; i < Length - 1; i++) {
-                        float drawDataX = drawDataIn.get(i).Data[0];
-                        float drawDataY = drawDataIn.get(i).Data[1];
+            if (drawDataIn != null) {
+                if (CalibrateMode < 0) {
+                    try {
+                        float[][] drawDataOut;
+                        int Length = drawDataIn.size();
+                        drawDataOut = new float[Length][2];
+                        ArrayList<stabilize_v1> x = drawDataIn;
+                        for (int i = 0; i < Length - 1; i++) {
+                            float drawDataX = drawDataIn.get(i).Data[0];
+                            float drawDataY = drawDataIn.get(i).Data[1];
 
 
-                        //stabilization here
-                        if (i < acceDataIn.size()) {
-                            try {
-                                //double deltaX = drawDataX - c amDataIn.get(i).Data[0] * 100;
-                            } catch (Exception ex) {
+                            //stabilization here
+                            if (i < acceDataIn.size()) {
+                                try {
+                                    //double deltaX = drawDataX - c amDataIn.get(i).Data[0] * 100;
+                                } catch (Exception ex) {
 
+                                }
+                                //
                             }
+
                             //
+
+
+                            drawDataOut[i][0] = drawDataX;
+                            drawDataOut[i][1] = drawDataY;
                         }
 
-                        //
+                        for (int i = 0; i < camDataIn.size(); i++) {
+                            //Log.d(TAG, "iiiiii " + String.valueOf(camDataIn.size()) + String.valueOf(camDataIn.get(i).Data[0]) + " " + String.valueOf(camDataIn.get(i).Data[0]));
+                        }
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable("DrawPoints", drawDataOut);
+                        Message msg2 = new Message();
+                        msg2.setData(bundle);
+                        DemoDrawUI.DrawStabilizerHandler.sendMessage(msg2);
+                    } catch (Exception ex) {
 
-
-                        drawDataOut[i][0] = drawDataX;
-                        drawDataOut[i][1] = drawDataY;
                     }
 
-                    for (int i = 0; i < camDataIn.size(); i++) {
-                        //Log.d(TAG, "iiiiii " + String.valueOf(camDataIn.size()) + String.valueOf(camDataIn.get(i).Data[0]) + " " + String.valueOf(camDataIn.get(i).Data[0]));
-                    }
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable("DrawPoints", drawDataOut);
-                    Message msg2 = new Message();
-                    msg2.setData(bundle);
-                    DemoDrawUI.DrawStabilizerHandler.sendMessage(msg2);
 
-                } else if (CalibrateMode == true) {
-                    CalibrateMode = false;
+                } else {
+                    CalibrateMode = CalibrateMode - 1;
+                    /*
                     double drawlength = Math.pow(Math.pow(drawDataIn.get(drawDataIn.size() - 1).Data[0] - drawDataIn.get(0).Data[0], 2) + Math.pow(drawDataIn.get(drawDataIn.size() - 1).Data[1] - drawDataIn.get(0).Data[1], 2), 0.5);
                     double camlength = 0;
                     double camsumX = 0;
@@ -159,7 +165,8 @@ public class stabilize_v1 implements Runnable {
                     }
                     camlength = Math.pow(Math.pow(camsumX, 2) + Math.pow(camsumY, 2), 0.5);
                     Log.d(TAG, "drawlength " + String.valueOf(drawlength) + " camlength " + String.valueOf(camDataIn.get(0).Data[0]));
-
+*/
+                    Log.d(TAG, "drawlength ");
                 }
 
             }

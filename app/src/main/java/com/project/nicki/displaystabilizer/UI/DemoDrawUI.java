@@ -185,7 +185,7 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
                 for (int j = 0; j < DrawPoints.length - 1; j++) {
                     Log.d(TAG, "aaaaaaaaaaaaaaaaa " + DrawPoints[j][0] + " " + DrawPoints[j][1]);
                 }
-                Log.d(TAG, "This is Override    " + String.valueOf(DrawPoints[2][0]) + " " + String.valueOf(DrawPoints[0][0]));
+                //Log.d(TAG, "This is Override    " + String.valueOf(DrawPoints[2][0]) + " " + String.valueOf(DrawPoints[0][0]));
 
                 DemoDraw.paint2.setColor(Color.BLUE);
 

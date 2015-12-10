@@ -21,14 +21,17 @@ public class init extends AppCompatActivity {
         //new Thread(new onlyAcceXY(getBaseContext())).start();
         //new Thread(new getFrontcam(getBaseContext())).start();
         //new Thread(new proCamera(getBaseContext())).start();
+
         new Thread(new proDataFlow(getBaseContext())).start();
         new Thread(new stabilize_v1(getBaseContext())).start();
+
 
         Intent goto_DemoDrawUI = new Intent();
         overridePendingTransition(0, 0);
         goto_DemoDrawUI.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_DemoDrawUI.setClass(init.this, DemoDrawUI.class);
         startActivity(goto_DemoDrawUI);
+
 
         /*
         Intent goto_DemoStabilizeOn = new Intent();
@@ -58,9 +61,6 @@ public class init extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        Intent goto_DemoDrawUI = new Intent();
-        goto_DemoDrawUI.setClass(init.this, DemoDrawUI.class);
-        startActivity(goto_DemoDrawUI);
 
     }
 }

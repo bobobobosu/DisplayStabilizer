@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 
 import com.project.nicki.displaystabilizer.dataprocessor.proAccelerometer;
 
@@ -40,6 +41,7 @@ public class getAccelerometer implements Runnable {
                 AcceX = event.values[0];
                 AcceY = event.values[1];
                 AcceZ = event.values[2];
+                Log.d(TAG, String.valueOf(AcceX));
                 mRunnable.run();
             }
 
