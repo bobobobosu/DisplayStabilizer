@@ -22,8 +22,10 @@ public class stabilize_v1 implements Runnable {
     public boolean LOGSTATUS;
     public int bundlenum = 1;
     public Object[] DataCollected = new Object[4];
-    public int CalibrateMode = -1;
-    //Below Calibration  Variables
+    public int CalibrateMode = 5;
+    public boolean switchLOGpre = false;
+    public boolean switchLOGcur = false;
+    public boolean switchLOG = false;
     public float camera_screen_multiplyfactor;
     ArrayList<stabilize_v1> DrawDataArr = new ArrayList<stabilize_v1>();
     ArrayList<stabilize_v1> CamDataArr = new ArrayList<stabilize_v1>();
@@ -56,8 +58,20 @@ public class stabilize_v1 implements Runnable {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
+
+                Log.d(TAG, "LOGSTATUS all " + LOGSTATUS);
+                switchLOGpre = switchLOGcur;
+                switchLOGcur = DemoDraw.drawing;
+                if( switchLOGpre == true && switchLOGcur == false){
+                    switchLOG = false;
+                }else if( switchLOGpre == false && switchLOGcur == true){
+                    switchLOG = true;
+                }
+
+
+
+
                 LOGSTATUS = DemoDraw.drawing;
-                Log.d(TAG, "LOGSTATUS " + LOGSTATUS);
                 Bundle bundlegot = msg.getData();
                 if (LOGSTATUS == true && bundlegot != null) {
                     if (msg.arg1 == 0) {
@@ -69,6 +83,7 @@ public class stabilize_v1 implements Runnable {
                         if (bundlegot.getDoubleArray("Movement") != null) {
                             double[] move = bundlegot.getDoubleArray("Movement");
                             CamDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getDoubleArray("Movement")));
+                            Log.d(TAG, String.valueOf(bundlegot.getDoubleArray("Movement")[0]));
                         }
                     }
                     if (msg.arg1 == 2) {
@@ -77,7 +92,8 @@ public class stabilize_v1 implements Runnable {
                     if (msg.arg1 == 3) {
                         GyroDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Gyro")));
                     }
-                } else if (LOGSTATUS == false) {
+                } else if (switchLOGpre == true && switchLOGcur == false) {
+                    Log.d(TAG,"LOGSTATUS "+LOGSTATUS);
                     DataCollected[0] = DrawDataArr;
                     DataCollected[1] = CamDataArr;
                     DataCollected[2] = AcceDataArr;
@@ -105,6 +121,7 @@ public class stabilize_v1 implements Runnable {
         @Override
         public void run() {
             Log.d(TAG, "now on thread");
+            Log.d(TAG,"LOGSTATUS "+LOGSTATUS);
             ArrayList<stabilize_v1> drawDataIn = (ArrayList<stabilize_v1>) threadDataCollected[0];
             ArrayList<stabilize_v1> camDataIn = (ArrayList<stabilize_v1>) threadDataCollected[1];
             ArrayList<stabilize_v1> acceDataIn = (ArrayList<stabilize_v1>) threadDataCollected[2];
@@ -140,7 +157,7 @@ public class stabilize_v1 implements Runnable {
                         }
 
                         for (int i = 0; i < camDataIn.size(); i++) {
-                            //Log.d(TAG, "iiiiii " + String.valueOf(camDataIn.size()) + String.valueOf(camDataIn.get(i).Data[0]) + " " + String.valueOf(camDataIn.get(i).Data[0]));
+                            Log.d(TAG, "iiiiii " + String.valueOf(camDataIn.size()) + String.valueOf(camDataIn.get(i).Data[0]) + " " + String.valueOf(camDataIn.get(i).Data[0]));
                         }
                         Bundle bundle = new Bundle();
                         bundle.putSerializable("DrawPoints", drawDataOut);
@@ -154,19 +171,25 @@ public class stabilize_v1 implements Runnable {
 
                 } else {
                     CalibrateMode = CalibrateMode - 1;
-                    /*
-                    double drawlength = Math.pow(Math.pow(drawDataIn.get(drawDataIn.size() - 1).Data[0] - drawDataIn.get(0).Data[0], 2) + Math.pow(drawDataIn.get(drawDataIn.size() - 1).Data[1] - drawDataIn.get(0).Data[1], 2), 0.5);
-                    double camlength = 0;
-                    double camsumX = 0;
-                    double camsumY = 0;
-                    for (int k = 0; k < camDataIn.size(); k++) {
-                        camsumX = camsumX + camDataIn.get(k).Data[0];
-                        camsumY = camsumY + camDataIn.get(k).Data[1];
+
+                    try{
+                        double drawlength = Math.pow(Math.pow(drawDataIn.get(drawDataIn.size() - 1).Data[0] - drawDataIn.get(0).Data[0], 2) + Math.pow(drawDataIn.get(drawDataIn.size() - 1).Data[1] - drawDataIn.get(0).Data[1], 2), 0.5);
+                        double camlength = 0;
+                        double camsumX = 0;
+                        double camsumY = 0;
+                        for (int k = 0; k < camDataIn.size(); k++) {
+                            camsumX = camsumX + camDataIn.get(k).Data[0];
+                            camsumY = camsumY + camDataIn.get(k).Data[1];
+                            Log.d(TAG, "CAMERAVALUE "+String.valueOf(camsumX) + " "+String.valueOf(camsumY));
+                        }
+                        camlength = Math.pow(Math.pow(camsumX, 2) + Math.pow(camsumY, 2), 0.5);
+                        Log.d(TAG, "drawlength " + String.valueOf(drawlength) + " camlength " + String.valueOf(camDataIn.get(0).Data[0]));
+
+                        Log.d(TAG, "drawlength ");
+                    }catch (Exception ex){
+
                     }
-                    camlength = Math.pow(Math.pow(camsumX, 2) + Math.pow(camsumY, 2), 0.5);
-                    Log.d(TAG, "drawlength " + String.valueOf(drawlength) + " camlength " + String.valueOf(camDataIn.get(0).Data[0]));
-*/
-                    Log.d(TAG, "drawlength ");
+
                 }
 
             }
