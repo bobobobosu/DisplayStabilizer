@@ -11,7 +11,9 @@ import android.util.Log;
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
+
 import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
 
 /**
@@ -57,13 +59,12 @@ public class stabilize_v1 implements Runnable {
                 super.handleMessage(msg);
 
 
-
                 Bundle bundlegot = msg.getData();
-                if (DemoDraw.drawing==true && bundlegot != null) {
+                if (DemoDraw.drawing == true && bundlegot != null) {
                     if (msg.arg1 == 1) {
-                        if (bundlegot.getFloatArray("Movement") != null) {
+                        if (bundlegot.getFloatArray("Movement") != null && bundlegot.getFloatArray("Movement")[0] > 0) {
                             CamDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Movement")));
-                            Log.d(TAG,"cameracameracamera "+CamDataArr.size());
+                            Log.d(TAG, "cameracameracamera " + CamDataArr.size());
                         }
                     }
                     if (msg.arg1 == 0) {
@@ -112,51 +113,48 @@ public class stabilize_v1 implements Runnable {
             ArrayList<stabilize_v1> camDataIn = (ArrayList<stabilize_v1>) threadDataCollected[1];
             ArrayList<stabilize_v1> acceDataIn = (ArrayList<stabilize_v1>) threadDataCollected[2];
             ArrayList<stabilize_v1> gyroDataIn = (ArrayList<stabilize_v1>) threadDataCollected[3];
-            for(int i =0 ; i<camDataIn.size();i++){
-                Log.d(TAG,"cameramovement "+ String.valueOf(camDataIn.size())+" "+String.valueOf(camDataIn.get(i).Data[0]) +" "+ String.valueOf(camDataIn.get(i).Data[1]));
+            for (int i = 0; i < camDataIn.size(); i++) {
+                Log.d(TAG, "cameramovement " + String.valueOf(camDataIn.size()) + " " + String.valueOf(camDataIn.get(i).Data[0]) + " " + String.valueOf(camDataIn.get(i).Data[1]));
             }
-
-            if (drawDataIn != null) {
+            Log.d(TAG,"SIZE: ="+camDataIn.size());
+            if (drawDataIn != null && camDataIn.size()>0) {
                 if (CalibrateMode < 0) {
 
                     float[][] drawDataOut;
                     int Length = drawDataIn.size();
                     drawDataOut = new float[Length - 1][2];
+
+                    Log.d(TAG,"cameraperfered ");
                     for (int i = 0; i < Length - 1; i++) {
 
-                        //if (i < camDataIn.size() - 1) {
                         float drawDataX = drawDataIn.get(i).Data[0];
                         float drawDataY = drawDataIn.get(i).Data[1];
 
 
-                        //stabilization here
+                        long timetocompare =  camDataIn.get(0).Time;
+                        int perferedindex = 0;
+                        //Stabilization
+                        for(int k=0;k<camDataIn.size();k++){
+                            if(Math.abs(drawDataIn.get(i).Time-timetocompare)>Math.abs(drawDataIn.get(k).Time-timetocompare)){
+                                Log.d(TAG,"DEBUG stabil "+drawDataIn.get(i).Time+" "+drawDataIn.get(k)+" "+timetocompare+" "+k+" "+i);
+                                timetocompare = camDataIn.get(k).Time;
+                                perferedindex = k;
+                            }
+                        }
 
+
+                        Log.d(TAG,"cameraperfered "+perferedindex);
 
                         try{
-                            drawDataOut[i][0] = drawDataX ;// - camDataIn.get(i).Data[0] * 10;
-                            drawDataOut[i][1] = drawDataY;// - camDataIn.get(i).Data[1] * 10;
-                            Log.d(TAG, "iiiiii " + drawDataX + " " + drawDataY + " " + String.valueOf(drawDataOut[i][0]) + " " + String.valueOf(drawDataOut[i][0]));
-                        }catch (Exception ec){
+                            drawDataOut[i][0] = drawDataX - camDataIn.get(perferedindex).Data[0]*80;
+                            drawDataOut[i][1] = drawDataY - camDataIn.get(perferedindex).Data[1]*80;
+                        }catch(Exception ex){
 
                         }
 
 
-                        //}
-
-
                     }
-                    Log.d(TAG, "iiiiii ");
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable("DrawPoints", drawDataOut);
-                    Message msg2 = new Message();
-                    msg2.setData(bundle);
-                    //DemoDrawUI.DrawStabilizerHandler.sendMessage(msg2);
 
-
-                    for (int j = 0; j < drawDataOut.length - 1; j++) {
-                        Log.d(TAG, "aaaaaaaaaaaaaaaaa " + drawDataOut[j][0] + " " + drawDataOut[j][1]);
-                    }
-                    //Log.d(TAG, "This is Override    " + String.valueOf(DrawPoints[2][0]) + " " + String.valueOf(DrawPoints[0][0]));
 
                     DemoDraw.paint2.setColor(Color.BLUE);
 
@@ -171,7 +169,6 @@ public class stabilize_v1 implements Runnable {
 
                 } else {
                     CalibrateMode = CalibrateMode - 1;
-
                     try {
                         double drawlength = Math.pow(Math.pow(drawDataIn.get(drawDataIn.size() - 1).Data[0] - drawDataIn.get(0).Data[0], 2) + Math.pow(drawDataIn.get(drawDataIn.size() - 1).Data[1] - drawDataIn.get(0).Data[1], 2), 0.5);
                         double camlength = 0;

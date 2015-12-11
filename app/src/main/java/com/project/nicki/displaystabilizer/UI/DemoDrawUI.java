@@ -160,7 +160,7 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
             //Runnable mproCamera = new proCamera() ;
             //Thread thread = new Thread(mproCamera);
             //thread.start();
-            Log.d("cameracamera ", "cameracamera ");
+            Log.d("cameracamera ", "QQQQQQQQQQQQQQQQQQQQQQ ");
             mRunnable.run();
         }
         return proCamera.proMat;
