@@ -49,9 +49,8 @@ public class DemoDraw extends View {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
-                if (msg.what == 1) {
-                    invalidate();
-                }
+                invalidate();
+
             }
         };
 
@@ -130,7 +129,7 @@ public class DemoDraw extends View {
 
                 Log.d(TAG, "AAAA up");
                 Message msgSTOP = new Message();
-
+                msgSTOP.what = 2;
                 float[] dataSTOP = new float[2];
                 long currTimeSTOP = System.currentTimeMillis();
                 Bundle drawposBundleSTOP = new Bundle();
@@ -141,8 +140,8 @@ public class DemoDraw extends View {
                 msgSTOP.setData(drawposBundleSTOP);
 
 
-                msgSTOP.what = 2;
-                //proDataFlow.drawHandler.sendMessage(msgSTOP);
+
+                proDataFlow.drawHandler.sendMessage(msgSTOP);
                 //stabilize_v1.getDatas.sendMessage(msgSTOP);
 
                 drawing = false;

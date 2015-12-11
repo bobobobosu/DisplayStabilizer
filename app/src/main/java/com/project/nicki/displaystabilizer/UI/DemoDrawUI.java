@@ -189,7 +189,7 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
 
                 DemoDraw.paint2.setColor(Color.BLUE);
 
-                for (int i = 0; i < DrawPoints.length - 2; i++) {
+                for (int i = 1; i < DrawPoints.length - 1; i++) {
                     DemoDraw.path2.moveTo(DrawPoints[i][0], DrawPoints[i][1]);
                     DemoDraw.path2.lineTo(DrawPoints[i + 1][0], DrawPoints[i + 1][1]);
                 }

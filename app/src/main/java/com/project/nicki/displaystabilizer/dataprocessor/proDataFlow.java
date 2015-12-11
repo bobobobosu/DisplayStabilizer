@@ -19,7 +19,7 @@ public class proDataFlow implements Runnable {
     public static Handler CameraHandler;
     public static Handler AcceHandler;
     public static Handler GyroHandler;
-    public boolean LOGSTATUS = true;
+    public static boolean LOGSTATUS = false;
 
     Runnable run = new Runnable() {
         @Override
@@ -54,6 +54,7 @@ public class proDataFlow implements Runnable {
                 super.handleMessage(msg);
                 switch (msg.what) {
                     case 0:
+                        LOGSTATUS = true;
                     case 1:
                         LOGSTATUS = true;
                         Log.d(TAG, "Start");
@@ -102,12 +103,12 @@ public class proDataFlow implements Runnable {
                 super.handleMessage(msg);
                 Bundle MovementBundle = new Bundle();
                 MovementBundle = msg.getData();
-                double[] MovementData = new double[3];
-                MovementData = MovementBundle.getDoubleArray("Movement");
+                float[] MovementData = new float[3];
+                MovementData = MovementBundle.getFloatArray("Movement");
                 final long CameraTime = MovementBundle.getLong("Time");
                 Log.d(TAG, "CameraDATA@ " + "Time:" + String.valueOf(CameraTime) + " X:" + String.valueOf(MovementData[0]) + " Y:" + String.valueOf(MovementData[1]));
 
-                final double[] finalMovementData = MovementData;
+                final float[] finalMovementData = MovementData;
                 DemoDrawUI.runOnUI(new Runnable() {
                     @Override
                     public void run() {

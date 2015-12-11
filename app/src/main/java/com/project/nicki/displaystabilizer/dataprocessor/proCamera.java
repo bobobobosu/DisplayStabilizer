@@ -24,7 +24,7 @@ import org.opencv.video.Video;
 public class proCamera implements Runnable {
     public static Mat nxtMat, preMat, proMat;
     public static long currTime;
-    public static double[] data;
+    public static float[] data;
     public double deltaX;
     public double deltaY;
     public int runNum = 0;
@@ -85,11 +85,11 @@ public class proCamera implements Runnable {
                     deltaY = pointn[5].y - pointp[5].y;
                     */
 
-                    data = new double[2];
-                    data[0] = deltaX;
-                    data[1] = deltaY;
+                    data = new float[2];
+                    data[0] = (float)deltaX;
+                    data[1] = (float)deltaY;
                     Bundle bundle = new Bundle();
-                    bundle.putDoubleArray("Movement", data);
+                    bundle.putFloatArray("Movement", data);
                     bundle.putLong("Time",currTime);
                     Message msg = new Message();
                     msg.setData(bundle);
