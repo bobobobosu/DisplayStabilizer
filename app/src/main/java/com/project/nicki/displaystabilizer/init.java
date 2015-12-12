@@ -26,6 +26,11 @@ public class init extends AppCompatActivity {
         new Thread(new stabilize_v1(getBaseContext())).start();
 
 
+        try {
+            Thread.sleep(0);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         Intent goto_DemoDrawUI = new Intent();
         overridePendingTransition(0, 0);
         goto_DemoDrawUI.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);

@@ -9,13 +9,22 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
+import com.project.nicki.displaystabilizer.dataprocessor.CircularBuffer;
 import com.project.nicki.displaystabilizer.dataprocessor.proAccelerometer;
+
+import android.os.Bundle;
+import android.os.Message;
+
+import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
+
+import java.util.Date;
 
 /**
  * Created by nicki on 10/27/2015.
  */
 public class getAccelerometer implements Runnable {
     public static float AcceX, AcceY, AcceZ;
+    public static long AcceTime;
     String ACCEBROADCAST_STRING = "ACCEBROADCAST";
     private String TAG = "getAccelerometer";
     private Context mContext;
@@ -27,6 +36,22 @@ public class getAccelerometer implements Runnable {
     public getAccelerometer(Context context) {
         mContext = context;
     }
+
+
+    //Noshake
+    private final int SENEOR_TYPE = Sensor.TYPE_LINEAR_ACCELERATION;
+    private final int ACCELEROMOTER_FPS = SensorManager.SENSOR_DELAY_FASTEST;
+    private final int BUFFER_SECOND = 4;
+    private final int FPS = 60;
+    private final int BUFFER_DATA_SIZE = BUFFER_SECOND * FPS;
+    private int OFFSET_SCALE = 30;
+    private SensorManager senSensorManager;
+    private Sensor senAccelerometer;
+    private CircularBuffer mBufferX;
+    private CircularBuffer mBufferY;
+    private int mScreenHeight, mScreenWidth;
+    private float[] data;
+
 
     @Override
     public void run() {
@@ -41,8 +66,38 @@ public class getAccelerometer implements Runnable {
                 AcceX = event.values[0];
                 AcceY = event.values[1];
                 AcceZ = event.values[2];
-                Log.d(TAG, String.valueOf(AcceX));
-                mRunnable.run();
+                //AcceTime = event.timestamp;
+                AcceTime = (new Date()).getTime()
+                        + (event.timestamp - System.nanoTime()) / 1000000L;
+
+                mBufferX = new CircularBuffer(BUFFER_DATA_SIZE, BUFFER_SECOND);
+                mBufferY = new CircularBuffer(BUFFER_DATA_SIZE, BUFFER_SECOND);
+
+
+                new Thread(new Runnable() {
+                    public void run() {
+                        mBufferX.insert(AcceX);
+                        mBufferY.insert(AcceY);
+                        final float dx = -mBufferX.convolveWithH() * OFFSET_SCALE;
+                        final float dy = -mBufferY.convolveWithH() * OFFSET_SCALE;
+                        data = new float[3];
+                        data[0] = dx;
+                        data[1] = dy;
+                        data[2] = AcceZ;
+                        Message msg = new Message();
+                        Bundle bundle = new Bundle();
+                        bundle.putFloatArray("Acce", data);
+                        bundle.putLong("Time", getAccelerometer.AcceTime);
+                        msg.setData(bundle);
+                        proDataFlow.AcceHandler.sendMessage(msg);
+                        Log.d(TAG, String.valueOf(dx) + " " + String.valueOf(dy) + " " + String.valueOf(AcceZ));
+                    }
+                }).start();
+
+
+
+
+                //mRunnable.run();
             }
 
             @Override

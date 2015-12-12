@@ -65,10 +65,17 @@ public class proDataFlow implements Runnable {
                         Log.d(TAG, "DrawDATA@ " + "Time:" + String.valueOf(DrawTime) + " X:" + String.valueOf(DrawData[0]) + " Y:" + String.valueOf(DrawData[1]));
                         sendData(LOGSTATUS, msg.getData(), 0);
 
+
+
                         DemoDrawUI.runOnUI(new Runnable() {
                             @Override
                             public void run() {
-                                DemoDrawUI.mlog_draw.setText("DrawDATA@ " + "Time:" + String.valueOf(DrawTime) + " X:" + String.valueOf(DrawData[0]) + " Y:" + String.valueOf(DrawData[1]));
+                                try{
+                                    DemoDrawUI.mlog_draw.setText("DrawDATA@ " + "Time:" + String.valueOf(DrawTime) + " X:" + String.valueOf(DrawData[0]) + " Y:" + String.valueOf(DrawData[1]));
+                                }catch (Exception ex){
+
+                                }
+
                             }
                         });
 
@@ -85,7 +92,12 @@ public class proDataFlow implements Runnable {
                         DemoDrawUI.runOnUI(new Runnable() {
                             @Override
                             public void run() {
-                                DemoDrawUI.mlog_draw.setText("DrawDATA@ " + "Time:" + String.valueOf(fDrawTime) + " X:" + String.valueOf(fDrawData[0]) + " Y:" + String.valueOf(fDrawData[1]));
+                                try{
+                                    DemoDrawUI.mlog_draw.setText("DrawDATA@ " + "Time:" + String.valueOf(fDrawTime) + " X:" + String.valueOf(fDrawData[0]) + " Y:" + String.valueOf(fDrawData[1]));
+                                }catch (Exception ex){
+
+                                }
+
                             }
                         });
                         //Bundle nullbundle = new Bundle();
@@ -112,7 +124,12 @@ public class proDataFlow implements Runnable {
                 DemoDrawUI.runOnUI(new Runnable() {
                     @Override
                     public void run() {
-                        DemoDrawUI.mlog_cam.setText("CameraDATA@ " + "Time:" + String.valueOf(CameraTime) + " X:" + String.valueOf(finalMovementData[0]) + " Y:" + String.valueOf(finalMovementData[1]));
+                        try{
+                            DemoDrawUI.mlog_cam.setText("CameraDATA@ " + "Time:" + String.valueOf(CameraTime) + " X:" + String.valueOf(finalMovementData[0]) + " Y:" + String.valueOf(finalMovementData[1]));
+                        }catch (Exception ex){
+
+                        }
+
                     }
                 });
                 sendData(LOGSTATUS, MovementBundle, 1);
@@ -136,7 +153,12 @@ public class proDataFlow implements Runnable {
                 DemoDrawUI.runOnUI(new Runnable() {
                     @Override
                     public void run() {
-                        DemoDrawUI.mlog_acce.setText("AcceDATA@ " + "Time:" + String.valueOf(AcceTime) + " X:" + String.valueOf(finalAcceData[0]) + " Y:" + String.valueOf(finalAcceData[1]));
+                        try{
+                            DemoDrawUI.mlog_acce.setText("AcceDATA@ " + "Time:" + String.valueOf(AcceTime) + "       X:" + String.valueOf(finalAcceData[0]) + " Y:" + String.valueOf(finalAcceData[1]));
+                        }catch (Exception ex){
+
+                        }
+
                     }
                 });
 
@@ -170,7 +192,12 @@ public class proDataFlow implements Runnable {
                 DemoDrawUI.runOnUI(new Runnable() {
                     @Override
                     public void run() {
-                        DemoDrawUI.mlog_gyro.setText("GyroDATA@ " + "Time:" + String.valueOf(GyroTime) + " X:" + String.valueOf(finalGyroData[0]) + " Y:" + String.valueOf(finalGyroData[1]));
+                        try{
+                            DemoDrawUI.mlog_gyro.setText("GyroDATA@ " + "Time:" + String.valueOf(GyroTime) + " X:" + String.valueOf(finalGyroData[0]) + " Y:" + String.valueOf(finalGyroData[1]));
+                        }catch (Exception ex){
+
+                        }
+
                     }
                 });
 

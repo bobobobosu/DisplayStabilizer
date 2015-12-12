@@ -54,7 +54,7 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS: {
                     Log.i(TAG, "OpenCV loaded successfully");
-                    mOpenCvCameraView.enableView();
+                    //mOpenCvCameraView.enableView();
                 }
                 break;
                 default: {
@@ -106,6 +106,7 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
         mlog_gyro = (TextView) findViewById(R.id.log_gyro);
 
         //mOpenCvCameraView.setMaxFrameSize(800, 600);
+
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.demo_draw_camera_surface_view);
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);

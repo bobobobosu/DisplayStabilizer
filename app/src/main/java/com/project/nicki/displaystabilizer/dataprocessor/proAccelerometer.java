@@ -1,10 +1,7 @@
 package com.project.nicki.displaystabilizer.dataprocessor;
 
 import android.content.Context;
-import android.os.Bundle;
-import android.os.Message;
-import android.util.Log;
-import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
+
 import com.project.nicki.displaystabilizer.dataprovider.getAccelerometer;
 
 /**
@@ -22,6 +19,18 @@ public class proAccelerometer implements Runnable {
     public proAccelerometer(Context context) {
         mContext = context;
     }
+
+
+    static final float NS2S = 1.0f / 1000000000.0f;
+    float[] last_values = null;
+    float[] velocity = null;
+    float[] position = null;
+    float[] acceleration = null;
+    long last_timestamp = 0;
+
+
+
+
     @Override
     public void run() {
         long currTime = System.currentTimeMillis();
@@ -41,6 +50,66 @@ public class proAccelerometer implements Runnable {
         proAcceY = getAccelerometer.AcceY - proGravY;
         proAcceZ = getAccelerometer.AcceZ - proGravZ;
 
+
+
+/*
+
+        if(last_values != null){
+            if(DemoDraw.drawing == false){
+                Arrays.fill(position,0);
+            }
+            if( Math.abs(acceleration[0])<0.5 &&  Math.abs(acceleration[1])<0.5 && Math.abs(acceleration[2])<0.5){
+                Arrays.fill(velocity,0);
+            }
+            float dt = (getAccelerometer.AcceTime - last_timestamp) * NS2S;
+
+            acceleration[0]=(float) proAcceX - (float) 0.0188;
+            acceleration[1]=(float) proAcceY - (float) 0.00217;
+            acceleration[2]=(float) proAcceZ + (float) 0.01857;
+
+            for(int index = 0; index < 3;++index){
+                velocity[index] += (acceleration[index] + last_values[index])/2 * dt;
+                position[index] += velocity[index] * dt;
+            }
+        }
+        else{
+            last_values = new float[3];
+            acceleration = new float[3];
+            velocity = new float[3];
+            position = new float[3];
+            velocity[0] = velocity[1] = velocity[2] = 0f;
+            position[0] = position[1] = position[2] = 0f;
+        }
+        System.arraycopy(acceleration, 0, last_values, 0, 3);
+        last_timestamp = getAccelerometer.AcceTime;
+
+        proAcceX = position[0];
+        proAcceY = position[1];
+        proAcceZ = position[2];
+
+
+        if(proAcceX>0){
+            Log.d(TAG,"GGGGGGG      XX+");
+        }else {
+            Log.d(TAG,"GGGGGGG      XXXX+");
+        }
+        if(proAcceY>0){
+            Log.d(TAG,"GGGGGGG      YY+");
+        }else {
+            Log.d(TAG,"GGGGGGG      YYYY+");
+        }
+        if(proAcceZ>0){
+            Log.d(TAG,"GGGGGGG      ZZ+");
+        }else{
+            Log.d(TAG,"GGGGGGG      ZZZZ+");
+        }
+*/
+
+
+
+
+
+        /*
         data = new float[3];
         data[0] = proAcceX;
         data[1] = proAcceY;
@@ -48,11 +117,16 @@ public class proAccelerometer implements Runnable {
         Message msg = new Message();
         Bundle bundle = new Bundle();
         bundle.putFloatArray("Acce",data);
-        bundle.putLong("Time",currTime);
+        bundle.putLong("Time",getAccelerometer.AcceTime);
         msg.setData(bundle);
         proDataFlow.AcceHandler.sendMessage(msg);
 
         Log.d(TAG, String.valueOf(proAcceX) + " " + String.valueOf(proAcceY) + " " + String.valueOf(proAcceZ));
+        */
 
     }
+
+
+
+
 }

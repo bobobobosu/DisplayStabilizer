@@ -116,42 +116,68 @@ public class stabilize_v1 implements Runnable {
             for (int i = 0; i < camDataIn.size(); i++) {
                 Log.d(TAG, "cameramovement " + String.valueOf(camDataIn.size()) + " " + String.valueOf(camDataIn.get(i).Data[0]) + " " + String.valueOf(camDataIn.get(i).Data[1]));
             }
-            Log.d(TAG,"SIZE: ="+camDataIn.size());
-            if (drawDataIn != null && camDataIn.size()>0) {
+            Log.d(TAG, "SIZE: =" + camDataIn.size());
+            if (drawDataIn != null ) {
                 if (CalibrateMode < 0) {
 
                     float[][] drawDataOut;
                     int Length = drawDataIn.size();
                     drawDataOut = new float[Length - 1][2];
 
-                    Log.d(TAG,"cameraperfered ");
+                    Log.d(TAG, "cameraperfered ");
+                    Log.d(TAG,"FIXNOFIXED"+" dx: yyyyyyyyy");
                     for (int i = 0; i < Length - 1; i++) {
 
                         float drawDataX = drawDataIn.get(i).Data[0];
                         float drawDataY = drawDataIn.get(i).Data[1];
 
 
-                        long timetocompare =  camDataIn.get(0).Time;
+                        long timetocompare = acceDataIn.get(0).Time;
                         int perferedindex = 0;
                         //Stabilization
-                        for(int k=0;k<camDataIn.size();k++){
-                            if(Math.abs(drawDataIn.get(i).Time-timetocompare)>Math.abs(drawDataIn.get(k).Time-timetocompare)){
-                                Log.d(TAG,"DEBUG stabil "+drawDataIn.get(i).Time+" "+drawDataIn.get(k)+" "+timetocompare+" "+k+" "+i);
-                                timetocompare = camDataIn.get(k).Time;
-                                perferedindex = k;
-                            }
+                        for (int k = 0; k < acceDataIn.size(); k++) {
+
+                                if (Math.abs(drawDataIn.get(i).Time - timetocompare) > Math.abs(drawDataIn.get(k).Time - timetocompare)) {
+                                    Log.d(TAG, "DEBUG stabil " +" this "+ drawDataIn.get(i).Time + " innnerloop " + drawDataIn.get(k).Time + " prevloop " + String.valueOf(timetocompare) + " innerk " + k + " this " + i);
+                                    timetocompare = acceDataIn.get(k).Time;
+                                    perferedindex = k;
+                                }
+
                         }
+                        Log.d(TAG, "cameraperfered " + perferedindex);
 
 
-                        Log.d(TAG,"cameraperfered "+perferedindex);
+                        float dx=0;
+                        float dy=0;
 
+                        for(int h = 0;h<perferedindex;h++){
+                            dx = dx + acceDataIn.get(perferedindex).Data[0];
+                            dy = dy + acceDataIn.get(perferedindex).Data[1];
+                            Log.d(TAG,"FIXNOFIXED"+" dx: "+String.valueOf(dx)+" per "+perferedindex);
+                        }
+                        drawDataOut[i][0] = drawDataX + dx *3;
+                        drawDataOut[i][1] = drawDataY + dy *3;
+                        Log.d(TAG,"FIXNOFIXED"+" BEF: "+drawDataX+" FIX "+dx * 10+" AFT "+drawDataOut[i][0]);
+
+                        /*
+                        drawDataOut[i][0] = 400;
+                        drawDataOut[i][1] = 400;
                         try{
-                            drawDataOut[i][0] = drawDataX - camDataIn.get(perferedindex).Data[0]*80;
-                            drawDataOut[i][1] = drawDataY - camDataIn.get(perferedindex).Data[1]*80;
-                        }catch(Exception ex){
+                        */
+
+                        /*
+                        for (int q = 0; q < perferedindex + 1; q++) {
+                            drawDataOut[i][0] = drawDataOut[i][0] - acceDataIn.get(q).Data[1] * 80;
+                            drawDataOut[i][1] = drawDataOut[i][1] - acceDataIn.get(q).Data[2] *80;
+*/
+/*
+                                drawDataOut[i][0] = drawDataOut[i][0] - camDataIn.get(q).Data[0]*3;
+                                drawDataOut[i][1] = drawDataOut[i][1] - camDataIn.get(q).Data[1]*3;
+
+
 
                         }
-
+                    */
 
                     }
 
@@ -165,7 +191,7 @@ public class stabilize_v1 implements Runnable {
                     Message msg3 = new Message();
                     msg3.what = 1;
                     DemoDraw.mhandler.sendMessage(msg3);
-
+                    Log.d(TAG, "FIXNOFIXED" + "LOOP");
 
                 } else {
                     CalibrateMode = CalibrateMode - 1;
@@ -190,4 +216,23 @@ public class stabilize_v1 implements Runnable {
             }
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
