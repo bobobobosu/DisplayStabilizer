@@ -67,8 +67,9 @@ public class getAccelerometer implements Runnable {
                 AcceY = event.values[1];
                 AcceZ = event.values[2];
                 //AcceTime = event.timestamp;
-                AcceTime = (new Date()).getTime()
-                        + (event.timestamp - System.nanoTime()) / 1000000L;
+                //AcceTime = (new Date()).getTime()
+                //        + (event.timestamp - System.nanoTime()) / 1000000L;
+                AcceTime = System.currentTimeMillis();
 
                 mBufferX = new CircularBuffer(BUFFER_DATA_SIZE, BUFFER_SECOND);
                 mBufferY = new CircularBuffer(BUFFER_DATA_SIZE, BUFFER_SECOND);

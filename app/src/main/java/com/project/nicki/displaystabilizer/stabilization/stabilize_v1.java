@@ -117,16 +117,16 @@ public class stabilize_v1 implements Runnable {
                 Log.d(TAG, "cameramovement " + String.valueOf(camDataIn.size()) + " " + String.valueOf(camDataIn.get(i).Data[0]) + " " + String.valueOf(camDataIn.get(i).Data[1]));
             }
             Log.d(TAG, "SIZE: =" + camDataIn.size());
-            if (drawDataIn != null ) {
+            if (drawDataIn != null) {
                 if (CalibrateMode < 0) {
 
                     float[][] drawDataOut;
                     int Length = drawDataIn.size();
-                    drawDataOut = new float[Length - 1][2];
+                    drawDataOut = new float[Length][2];
 
                     Log.d(TAG, "cameraperfered ");
-                    Log.d(TAG,"FIXNOFIXED"+" dx: yyyyyyyyy");
-                    for (int i = 0; i < Length - 1; i++) {
+                    Log.d(TAG, "FIXNOFIXED" + " dx: yyyyyyyyy");
+                    for (int i = 0; i < Length; i++) {
 
                         float drawDataX = drawDataIn.get(i).Data[0];
                         float drawDataY = drawDataIn.get(i).Data[1];
@@ -135,29 +135,57 @@ public class stabilize_v1 implements Runnable {
                         long timetocompare = acceDataIn.get(0).Time;
                         int perferedindex = 0;
                         //Stabilization
+                        /*
+                        Log.d(TAG, "DEBUG");
                         for (int k = 0; k < acceDataIn.size(); k++) {
+                            Log.d(TAG,"DEBUG this  "+String.valueOf(Math.abs(drawDataIn.get(i).Time - acceDataIn.get(k).Time)) );
+                            Log.d(TAG,"DEBUG bef   "+ String.valueOf(Math.abs(drawDataIn.get(i).Time - timetocompare)));
+                            if (Math.abs(drawDataIn.get(i).Time - acceDataIn.get(k).Time) < Math.abs(drawDataIn.get(i).Time - timetocompare)) {
+                                Log.d(TAG, "DEBUG stabil " + " this " + drawDataIn.get(i).Time + " innnerloop " + drawDataIn.get(k).Time + " prevloop " + String.valueOf(timetocompare) + " innerk " + k + " this " + i);
+                                timetocompare = acceDataIn.get(k).Time;
+                                perferedindex = k;
+                            }
 
-                                if (Math.abs(drawDataIn.get(i).Time - timetocompare) > Math.abs(drawDataIn.get(k).Time - timetocompare)) {
-                                    Log.d(TAG, "DEBUG stabil " +" this "+ drawDataIn.get(i).Time + " innnerloop " + drawDataIn.get(k).Time + " prevloop " + String.valueOf(timetocompare) + " innerk " + k + " this " + i);
-                                    timetocompare = acceDataIn.get(k).Time;
-                                    perferedindex = k;
-                                }
-
+                            // && drawDataIn.get(i).Time > acceDataIn.get(k).Time
                         }
-                        Log.d(TAG, "cameraperfered " + perferedindex);
-
-
-                        float dx=0;
-                        float dy=0;
-
-                        for(int h = 0;h<perferedindex;h++){
-                            dx = dx + acceDataIn.get(perferedindex).Data[0];
-                            dy = dy + acceDataIn.get(perferedindex).Data[1];
-                            Log.d(TAG,"FIXNOFIXED"+" dx: "+String.valueOf(dx)+" per "+perferedindex);
+*/
+                        Log.d(TAG, "compare loop =================================================");
+                        for (int k = 0; k < acceDataIn.size()-1; k++) {
+                            Log.d(TAG, "compare  " +acceDataIn.get(k).Time+" "+drawDataIn.get(i).Time);
+                            if(acceDataIn.get(k).Time<drawDataIn.get(i).Time){
+                                perferedindex = k;
+                            }
+                            else {
+                                Log.d(TAG,"underflow");
+                                break;
+                            }
+                            Log.d(TAG, "compare loop " + perferedindex);
                         }
-                        drawDataOut[i][0] = drawDataX + dx *3;
-                        drawDataOut[i][1] = drawDataY + dy *3;
-                        Log.d(TAG,"FIXNOFIXED"+" BEF: "+drawDataX+" FIX "+dx * 10+" AFT "+drawDataOut[i][0]);
+                        Log.d(TAG, "cameraperfered " + perferedindex + " "+drawDataIn.get(i).Time+" "+acceDataIn.get(perferedindex).Time);
+
+                        float dx = 0;
+                        float dy = 0;
+
+
+
+/*
+                        dx = acceDataIn.get(perferedindex).Data[0] *((drawDataIn.get(i).Time - acceDataIn.get(perferedindex).Data[0])/(acceDataIn.get(perferedindex+1).Time - acceDataIn.get(perferedindex).Time))+
+                                acceDataIn.get(perferedindex+1).Data[0]*(acceDataIn.get(perferedindex +1).Time-drawDataIn.get(i).Time)/(acceDataIn.get(perferedindex+1).Time - acceDataIn.get(perferedindex).Time);
+                        dy = acceDataIn.get(perferedindex).Data[1] *((drawDataIn.get(i).Time - acceDataIn.get(perferedindex).Data[1])/(acceDataIn.get(perferedindex+1).Time - acceDataIn.get(perferedindex).Time))+
+                                acceDataIn.get(perferedindex+1).Data[1]*(acceDataIn.get(perferedindex +1).Time-drawDataIn.get(i).Time)/(acceDataIn.get(perferedindex+1).Time - acceDataIn.get(perferedindex).Time);
+                                */
+
+                        Log.d(TAG, "cameraperfered  " +perferedindex);
+
+                        for (int h = 0; h < perferedindex; h++) {
+                            dx = dx - acceDataIn.get(h).Data[0]*10;
+                            dy = dy - acceDataIn.get(h).Data[1]*10;
+                            Log.d(TAG, "FIXNOFIXED" + " dx: " + String.valueOf(dx) + " per " + perferedindex+" "+h);
+                        }
+                        Log.d(TAG,"dxdy "+dx+" "+dy);
+                        drawDataOut[i][0] = drawDataX - dx ;
+                        drawDataOut[i][1] = drawDataY - dy;
+                        Log.d(TAG, "FIXNOFIXED fin " + " BEF: " + String.valueOf(drawDataX) + " FIX " + String.valueOf(dx)+ " AFT " +String.valueOf(drawDataOut[i][0]) +"        munaully: "+String.valueOf(drawDataOut[i][0] = drawDataX + dx));
 
                         /*
                         drawDataOut[i][0] = 400;
@@ -216,23 +244,6 @@ public class stabilize_v1 implements Runnable {
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }
