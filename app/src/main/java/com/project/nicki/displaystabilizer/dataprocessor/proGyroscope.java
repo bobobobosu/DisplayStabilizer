@@ -11,7 +11,7 @@ import com.project.nicki.displaystabilizer.dataprovider.getGyroscope;
  */
 public class proGyroscope implements Runnable {
     private Context mContext;
-    private float proGyroX,proGyroY,proGyroZ;
+    public static float proGyroX,proGyroY,proGyroZ;
     private float[] data;
     private String TAG = "proGyroscope";
     public proGyroscope(Context context) {

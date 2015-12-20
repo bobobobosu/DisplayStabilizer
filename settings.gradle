@@ -1,2 +1,2 @@
-include ':app'
+include ':app', ':dsp-collection', ':JKalman'
 include ':openCVLibrary300'

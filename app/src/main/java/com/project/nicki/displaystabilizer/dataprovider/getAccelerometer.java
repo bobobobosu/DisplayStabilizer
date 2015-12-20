@@ -51,6 +51,7 @@ public class getAccelerometer implements Runnable {
     private CircularBuffer mBufferY;
     private int mScreenHeight, mScreenWidth;
     private float[] data;
+    public static float whenstaticX, whenstaticY;
 
 
     @Override
@@ -77,6 +78,25 @@ public class getAccelerometer implements Runnable {
 
                 new Thread(new Runnable() {
                     public void run() {
+                        /*
+                        if(whenstaticX == 0 || whenstaticY == 0){
+                            whenstaticX = Math.abs(AcceX);
+                            whenstaticY = Math.abs(AcceY);
+                        }else {
+                            whenstaticX = (whenstaticX+AcceX)/2;
+                            whenstaticY = (whenstaticY+AcceY)/2;
+                        }
+                        Log.d(TAG, "whenstatic " + whenstaticX + " " + whenstaticY);
+
+                        if(AcceX>-whenstaticX && AcceX<whenstaticX){
+                            AcceX = 0;
+                        }
+                        if(AcceY>-whenstaticY && AcceX<whenstaticY){
+                            AcceY = 0;
+                        }
+*/
+
+
                         mBufferX.insert(AcceX);
                         mBufferY.insert(AcceY);
                         final float dx = -mBufferX.convolveWithH() * OFFSET_SCALE;

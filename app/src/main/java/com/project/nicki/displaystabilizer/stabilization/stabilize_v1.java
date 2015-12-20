@@ -15,6 +15,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 
 import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
+import com.project.nicki.displaystabilizer.dataprovider.getAccelerometer;
 
 /**
  * Created by nicki on 11/15/2015.
@@ -26,7 +27,7 @@ public class stabilize_v1 implements Runnable {
     public boolean LOGSTATUS;
     public int bundlenum = 1;
     public Object[] DataCollected = new Object[4];
-    public int CalibrateMode = -1;
+    public int CalibrateMode = 100;
     public boolean switchLOGpre = false;
     public boolean switchLOGcur = false;
     public boolean switchLOG = false;
@@ -38,7 +39,9 @@ public class stabilize_v1 implements Runnable {
     private Context mContext;
     private long Time = 0;
     private float[] Data = new float[2];
-
+    private float dxwhenstatic, dywhenstatic;
+    private long tmpTime = System.currentTimeMillis();
+    private int stoppattern = 0;
 
     public stabilize_v1(Context context) {
         mContext = context;
@@ -57,34 +60,103 @@ public class stabilize_v1 implements Runnable {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
-
-
                 Bundle bundlegot = msg.getData();
-                if (DemoDraw.drawing == true && bundlegot != null) {
-                    if (msg.arg1 == 1) {
-                        if (bundlegot.getFloatArray("Movement") != null && bundlegot.getFloatArray("Movement")[0] > 0) {
+
+                //Calibration
+
+                if (CalibrateMode > 0) {
+                    if (msg.arg1 == 2) {
+                        CalibrateMode = CalibrateMode - 1;
+                        float accetmpX = bundlegot.getFloatArray("Acce")[0];
+                        float accetmpY = bundlegot.getFloatArray("Acce")[1];
+                        if (dxwhenstatic == 0 || dywhenstatic == 0) {
+                            dxwhenstatic = Math.abs(accetmpX);
+                            dywhenstatic = Math.abs(accetmpY);
+                        } else {
+                            dxwhenstatic = (dxwhenstatic + accetmpX) / 2;
+                            dywhenstatic = (dywhenstatic + accetmpY) / 2;
+                        }
+                        Log.d(TAG, "whenstatic " + dxwhenstatic + " " + dywhenstatic);
+                    }
+                }
+
+                    if (DemoDraw.drawing == true && bundlegot != null) {
+                        if (msg.arg1 == 1) {
                             CamDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Movement")));
                             Log.d(TAG, "cameracameracamera " + CamDataArr.size());
+
                         }
-                    }
-                    if (msg.arg1 == 0) {
-                        if (bundlegot.getFloatArray("Draw") != null) {
-                            DrawDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Draw")));
+                        if (msg.arg1 == 0) {
+                            if (bundlegot.getFloatArray("Draw") != null) {
+                                DrawDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Draw")));
+                            }
                         }
+
+                        if (msg.arg1 == 2) {
+                            if (bundlegot.getFloatArray("Acce")[0] > 0 && bundlegot.getFloatArray("Acce")[1] > 0) {
+                                bundlegot.getFloatArray("Acce")[0] = bundlegot.getFloatArray("Acce")[0] - dxwhenstatic;
+                                bundlegot.getFloatArray("Acce")[1] = bundlegot.getFloatArray("Acce")[1] - dywhenstatic;
+                                if (Math.abs(bundlegot.getFloatArray("Acce")[0]) < Math.abs(dxwhenstatic) && Math.abs(bundlegot.getFloatArray("Acce")[1]) < Math.abs(dywhenstatic)) {
+                                    stoppattern = stoppattern+1;
+                                    if(stoppattern>60){
+                                        bundlegot.getFloatArray("Acce")[0] = 0;
+                                        bundlegot.getFloatArray("Acce")[0] = 0;
+                                        stoppattern = 0;
+                                    }
+                                }
+
+                                AcceDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Acce")));
+                            }
+                        }
+
+
+
+                        if (msg.arg1 == 3) {
+                            GyroDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Gyro")));
+                        }
+                    }else if(DemoDraw.drawing == false && DrawDataArr.size() > 0 && AcceDataArr.size()>0){
+                        tmpTime = System.currentTimeMillis();
+                        DataCollected[0] = DrawDataArr;
+                        DataCollected[1] = CamDataArr;
+                        DataCollected[2] = AcceDataArr;
+                        DataCollected[3] = GyroDataArr;
+
+
+                        new Thread(new Stabilization(DataCollected)).start();
+                        Log.d(TAG, "Collect stopped");
+                        DataCollected = new Object[4];
+                        DrawDataArr = new ArrayList<stabilize_v1>();
+                        CamDataArr = new ArrayList<stabilize_v1>();
+                        AcceDataArr = new ArrayList<stabilize_v1>();
+                        GyroDataArr = new ArrayList<stabilize_v1>();
                     }
-                    if (msg.arg1 == 2) {
-                        AcceDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Acce")));
+
+/*
+                if (DrawDataArr.size() > 20 && AcceDataArr.size()>20 ) {
+                         tmpTime = System.currentTimeMillis();
+                        DataCollected[0] = DrawDataArr;
+                        DataCollected[1] = CamDataArr;
+                        DataCollected[2] = AcceDataArr;
+                        DataCollected[3] = GyroDataArr;
+
+
+                        new Thread(new Stabilization(DataCollected)).start();
+                        Log.d(TAG, "Collect stopped");
+                        DataCollected = new Object[4];
+                        DrawDataArr = new ArrayList<stabilize_v1>();
+                        CamDataArr = new ArrayList<stabilize_v1>();
+                        AcceDataArr = new ArrayList<stabilize_v1>();
+                        GyroDataArr = new ArrayList<stabilize_v1>();
+
                     }
-                    if (msg.arg1 == 3) {
-                        GyroDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Gyro")));
-                    }
-                } else if (DrawDataArr.size() > 0) {
+
+                //clean data if hands up
+                if(DemoDraw.drawing == false && DrawDataArr.size() > 0 && AcceDataArr.size()>0 )   {
+                    tmpTime = System.currentTimeMillis();
                     DataCollected[0] = DrawDataArr;
                     DataCollected[1] = CamDataArr;
                     DataCollected[2] = AcceDataArr;
                     DataCollected[3] = GyroDataArr;
-
-
                     new Thread(new Stabilization(DataCollected)).start();
                     Log.d(TAG, "Collect stopped");
                     DataCollected = new Object[4];
@@ -92,8 +164,8 @@ public class stabilize_v1 implements Runnable {
                     CamDataArr = new ArrayList<stabilize_v1>();
                     AcceDataArr = new ArrayList<stabilize_v1>();
                     GyroDataArr = new ArrayList<stabilize_v1>();
-
                 }
+                */
             }
         };
         Looper.loop();
@@ -118,7 +190,8 @@ public class stabilize_v1 implements Runnable {
             }
             Log.d(TAG, "SIZE: =" + camDataIn.size());
             if (drawDataIn != null) {
-                if (CalibrateMode < 0) {
+                if (CalibrateMode < 1
+                        ) {
 
                     float[][] drawDataOut;
                     int Length = drawDataIn.size();
@@ -150,18 +223,17 @@ public class stabilize_v1 implements Runnable {
                         }
 */
                         Log.d(TAG, "compare loop =================================================");
-                        for (int k = 0; k < acceDataIn.size()-1; k++) {
-                            Log.d(TAG, "compare  " +acceDataIn.get(k).Time+" "+drawDataIn.get(i).Time);
-                            if(acceDataIn.get(k).Time<drawDataIn.get(i).Time){
+                        for (int k = 0; k < acceDataIn.size() - 1; k++) {
+                            Log.d(TAG, "compare  " + acceDataIn.get(k).Time + " " + drawDataIn.get(i).Time);
+                            if (acceDataIn.get(k).Time < drawDataIn.get(i).Time) {
                                 perferedindex = k;
-                            }
-                            else {
-                                Log.d(TAG,"underflow");
+                            } else {
+                                Log.d(TAG, "underflow");
                                 break;
                             }
                             Log.d(TAG, "compare loop " + perferedindex);
                         }
-                        Log.d(TAG, "cameraperfered " + perferedindex + " "+drawDataIn.get(i).Time+" "+acceDataIn.get(perferedindex).Time);
+                        Log.d(TAG, "cameraperfered " + perferedindex + " " + drawDataIn.get(i).Time + " " + acceDataIn.get(perferedindex).Time);
 
                         float dx = 0;
                         float dy = 0;
@@ -175,17 +247,17 @@ public class stabilize_v1 implements Runnable {
                                 acceDataIn.get(perferedindex+1).Data[1]*(acceDataIn.get(perferedindex +1).Time-drawDataIn.get(i).Time)/(acceDataIn.get(perferedindex+1).Time - acceDataIn.get(perferedindex).Time);
                                 */
 
-                        Log.d(TAG, "cameraperfered  " +perferedindex);
+                        Log.d(TAG, "cameraperfered  " + perferedindex);
 
                         for (int h = 0; h < perferedindex; h++) {
-                            dx = dx - acceDataIn.get(h).Data[0]*10;
-                            dy = dy - acceDataIn.get(h).Data[1]*10;
-                            Log.d(TAG, "FIXNOFIXED" + " dx: " + String.valueOf(dx) + " per " + perferedindex+" "+h);
+                            dx = dx - acceDataIn.get(h).Data[0] * 30;
+                            dy = dy - acceDataIn.get(h).Data[1] * 30;
+                            Log.d(TAG, "FIXNOFIXED" + " dx: " + String.valueOf(dx) + " per " + perferedindex + " " + h);
                         }
-                        Log.d(TAG,"dxdy "+dx+" "+dy);
-                        drawDataOut[i][0] = drawDataX - dx ;
+                        Log.d(TAG, "dxdy " + dx + " " + dy);
+                        drawDataOut[i][0] = drawDataX - dx;
                         drawDataOut[i][1] = drawDataY - dy;
-                        Log.d(TAG, "FIXNOFIXED fin " + " BEF: " + String.valueOf(drawDataX) + " FIX " + String.valueOf(dx)+ " AFT " +String.valueOf(drawDataOut[i][0]) +"        munaully: "+String.valueOf(drawDataOut[i][0] = drawDataX + dx));
+                        Log.d(TAG, "FIXNOFIXED fin " + " BEF: " + String.valueOf(drawDataX) + " FIX " + String.valueOf(dx) + " AFT " + String.valueOf(drawDataOut[i][0]) + "        munaully: " + String.valueOf(drawDataOut[i][0] = drawDataX + dx));
 
                         /*
                         drawDataOut[i][0] = 400;
@@ -222,22 +294,7 @@ public class stabilize_v1 implements Runnable {
                     Log.d(TAG, "FIXNOFIXED" + "LOOP");
 
                 } else {
-                    CalibrateMode = CalibrateMode - 1;
-                    try {
-                        double drawlength = Math.pow(Math.pow(drawDataIn.get(drawDataIn.size() - 1).Data[0] - drawDataIn.get(0).Data[0], 2) + Math.pow(drawDataIn.get(drawDataIn.size() - 1).Data[1] - drawDataIn.get(0).Data[1], 2), 0.5);
-                        double camlength = 0;
-                        double camsumX = 0;
-                        double camsumY = 0;
-                        for (int k = 0; k < camDataIn.size(); k++) {
-                            camsumX = camsumX + camDataIn.get(k).Data[0];
-                            camsumY = camsumY + camDataIn.get(k).Data[1];
-                            Log.d(TAG, "CAMERAVALUE " + String.valueOf(camsumX) + " " + String.valueOf(camsumY));
-                        }
-                        camlength = Math.pow(Math.pow(camsumX, 2) + Math.pow(camsumY, 2), 0.5);
-                        Log.d(TAG, "drawlength " + String.valueOf(drawlength) + " camlength " + String.valueOf(camDataIn.get(0).Data[0]));
-                    } catch (Exception ex) {
 
-                    }
 
                 }
 

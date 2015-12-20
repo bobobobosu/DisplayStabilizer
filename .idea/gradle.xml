@@ -9,7 +9,9 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/JKalman" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/dsp-collection" />
             <option value="$PROJECT_DIR$/openCVLibrary300" />
           </set>
         </option>
