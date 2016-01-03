@@ -27,4 +27,13 @@ dependencies {
     compile project(':openCVLibrary300')
     compile project(':JKalman')
     compile project(':dsp-collection')
+    compile 'com.jakewharton:butterknife:7.0.1'
+    compile 'com.github.PhilJay:MPAndroidChart:v2.1.6'
+    compile project(':opencsv-2.1-1.0.0')
+    compile project(':EJML-core-0.28')
+    compile project(':EJML-dense64-0.28')
+    compile group: 'org.ddogleg', name: 'ddogleg', version: '0.8'
+}
+repositories {
+    maven { url "https://jitpack.io" }
 }

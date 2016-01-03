@@ -9,10 +9,14 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/EJML-core-0.28" />
+            <option value="$PROJECT_DIR$/EJML-dense64-0.28" />
             <option value="$PROJECT_DIR$/JKalman" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/butterknife-7.0.1" />
             <option value="$PROJECT_DIR$/dsp-collection" />
             <option value="$PROJECT_DIR$/openCVLibrary300" />
+            <option value="$PROJECT_DIR$/opencsv-2.1-1.0.0" />
           </set>
         </option>
       </GradleProjectSettings>

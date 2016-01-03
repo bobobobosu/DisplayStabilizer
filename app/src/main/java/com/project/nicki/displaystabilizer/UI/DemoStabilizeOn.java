@@ -19,6 +19,7 @@ import com.project.nicki.displaystabilizer.R;
 import com.project.nicki.displaystabilizer.stabilization.*;
 
 import java.util.Random;
+import butterknife.ButterKnife;
 
 public class DemoStabilizeOn extends AppCompatActivity {
     private String TAG = "DemoStabilization";
@@ -27,6 +28,7 @@ public class DemoStabilizeOn extends AppCompatActivity {
     float[] pos, tan;
     float speed, distance;
     MySurfaceView mySurfaceView;
+
 
     /** Called when the activity is first created. */
     @Override

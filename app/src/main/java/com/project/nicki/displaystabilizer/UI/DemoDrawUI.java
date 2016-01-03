@@ -12,7 +12,7 @@ import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.widget.TextView;
-
+import butterknife.ButterKnife;
 import com.project.nicki.displaystabilizer.R;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
 import com.project.nicki.displaystabilizer.dataprocessor.proCamera;

@@ -8,9 +8,21 @@ import com.project.nicki.displaystabilizer.dataprocessor.utils.Quaternion;
 import com.project.nicki.displaystabilizer.dataprovider.getAccelerometer;
 import com.project.nicki.displaystabilizer.dataprocessor.proAccelerometer;
 import com.project.nicki.displaystabilizer.dataprocessor.proGyroscope;
+
+import au.com.bytecode.opencsv.CSVWriter;
 import jkalman.JKalman;
 import jama.Matrix;
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 
 /**
  * Created by nickisverygood on 12/16/2015.
@@ -21,8 +33,8 @@ public class proDataProcess implements Runnable {
     public ArrayList<ArrayList<Integer>> data;
     public ArrayList<ArrayList<Integer>> dataRot;
     public double score = 0;
-    protected int capturedDataPoints;
-    protected int historyLength = 1000;
+    private int capturedDataPoints = 0;
+    private int historyLength2 = 10;
     protected int plotEveryNth = 10;//100;
     protected int plotCount = 0;
     protected int noChannels = 4;
@@ -35,6 +47,8 @@ public class proDataProcess implements Runnable {
     public float[] accVel = new float[3];
     float[] dataAcceGyro;
     float[] prevdataAcceGyro;
+    FileWriter mFileWriter;
+
     public proDataProcess() {
         madgwickAHRS = new MadgwickAHRSIMU(0.1d, new double[]{1, 0, 0, 0}, 256d);
         noChannels = 9;
@@ -46,8 +60,8 @@ public class proDataProcess implements Runnable {
         /*Add array for rotated data*/
         dataRot = new ArrayList<ArrayList<Integer>>(3);
         for (int i = 0; i < 3; ++i) {
-            dataRot.add(new ArrayList<Integer>(historyLength));
-            for (int j = 0; j < historyLength; ++j) {
+            dataRot.add(new ArrayList<Integer>(historyLength2));
+            for (int j = 0; j < historyLength2; ++j) {
                 dataRot.get(i).add(0);
 
             }
@@ -85,11 +99,11 @@ public class proDataProcess implements Runnable {
 
 
     static final float ALPHA = 0.15f;
-    protected float lowPass( float input, float output ) {
-           output = output + ALPHA * (input - output);
+
+    protected float lowPass(float input, float output) {
+        output = output + ALPHA * (input - output);
         return output;
     }
-
 
 
     private double dot(double[] a, double[] b) {
@@ -151,8 +165,8 @@ public class proDataProcess implements Runnable {
     }
 
 
-    public void decodeSensorPacket(float GyroX, float GyroY, float GyroZ, float AcceX, float AcceY, float AcceZ) {
-        if(dataAcceGyro != null){
+    public void decodeSensorPacket(float GyroX, float GyroY, float GyroZ, float AcceX, float AcceY, float AcceZ) throws IOException {
+        if (dataAcceGyro != null) {
             float[] prevdataAcceGyro = new float[6];
             prevdataAcceGyro = dataAcceGyro;
         }
@@ -184,9 +198,9 @@ public class proDataProcess implements Runnable {
             buffer.add(new ArrayList<Float>());
         }
         for (int i = 0; i < 6; ++i) {
-            try{
-                dataAcceGyro[i] = lowPass(dataAcceGyro[i],buffer.get(i).get(buffer.get(i).size()-2));
-            }catch(Exception ex){
+            try {
+                dataAcceGyro[i] = lowPass(dataAcceGyro[i], buffer.get(i).get(buffer.get(i).size() - 2));
+            } catch (Exception ex) {
             }
             if (buffer.get(i).size() < bufferlength) {
                 buffer.get(i).add(dataAcceGyro[i]);
@@ -202,16 +216,36 @@ public class proDataProcess implements Runnable {
 
     public void calPos(ArrayList<ArrayList<Float>> buffer) {
         for (int j = 0; j < 3; j++) {
-            accVel[j] = accVel[j] + buffer.get(j).get(buffer.get(j).size()-1)*50 ;
+            accVel[j] = accVel[j] + buffer.get(j).get(buffer.get(j).size() - 1) * 50;
         }
         for (int j = 0; j < 3; j++) {
-            accPos[j] = accPos[j] + accVel[j]*50 ;
+            accPos[j] = accPos[j] + accVel[j] * 50;
         }
-        Log.d(TAG,"Current Pos "+String.valueOf(accPos[0]));
+        Log.d(TAG, "Current Pos " + String.valueOf(accPos[0]));
     }
 
-    public void AHRS(float GyroX, float GyroY, float GyroZ, float AcceX, float AcceY, float AcceZ) {
-
+    public void AHRS(float GyroX, float GyroY, float GyroZ, float AcceX, float AcceY, float AcceZ) throws IOException {
+//init CSV logging
+        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+        String fileName = "AnalysisData.csv";
+        String filePath = baseDir + File.separator + fileName;
+        File f = new File(filePath);
+        CSVWriter writer = null;
+// File exist
+        if (f.exists() && !f.isDirectory()) {
+            try {
+                mFileWriter = new FileWriter(filePath, true);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            writer = new CSVWriter(mFileWriter);
+        } else {
+            try {
+                writer = new CSVWriter(new FileWriter(filePath));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         //Check sampling machine time
         int noChannels = 9;
         int historyLength = 1000;
@@ -244,19 +278,17 @@ public class proDataProcess implements Runnable {
                 data.get(i).add(0);
             }
         }
-        int capturedDataPoints = 0;
-        int plotCount = 0;
 
 
 		/*Calculate and set quaternion!!*/
         /*Scale the values*/
         double[] imuData = new double[6];
-        imuData[0] = ((double) AcceX) / 1000d;
-        imuData[1] = ((double) AcceY) / 1000d;
-        imuData[2] = ((double) AcceZ) / 1000d;
-        imuData[3] = ((double) GyroX) / (10d * 180d) * Math.PI;
-        imuData[4] = ((double) GyroY) / (10d * 180d) * Math.PI;
-        imuData[5] = ((double) GyroZ) / (10d * 180d) * Math.PI;
+        imuData[0] = ((double) AcceX) * 1000d;
+        imuData[1] = ((double) AcceY) * 1000d;
+        imuData[2] = ((double) AcceZ) * 1000d;
+        imuData[3] = ((double) GyroX) * (10d * 180d) * Math.PI;
+        imuData[4] = ((double) GyroY) * (10d * 180d) * Math.PI;
+        imuData[5] = ((double) GyroZ) * (10d * 180d) * Math.PI;
 
         double initTheta;
         double[] rotAxis;
@@ -295,44 +327,42 @@ public class proDataProcess implements Runnable {
             Quaternion rotatedQ = (quat.times(grf)).times(quat.conjugate());
             double[] rotatedVals = rotatedQ.getAxis();
             Log.d(TAG, "Got to rotating data X " + rotatedVals[0] + " Y " + rotatedVals[1] + " Z " + rotatedVals[2]);
+
+            String[] data1 = {"r1", String.valueOf(rotatedVals[0])};
+            writer.writeNext(data1);
+            writer.close();
             //System.out.println("Got to rotating data X "+rotatedVals[0]+" Y "+rotatedVals[1]+" Z "+rotatedVals[2]);
-			/*Assign the values to ArrayLists*/
+            /*Assign the values to ArrayLists*/
             for (int i = 0; i < 3; ++i) {
-                if (capturedDataPoints < historyLength) {
-                    dataRot.get(i).set(capturedDataPoints, (int) rotatedVals[i]);
+                if (capturedDataPoints +1< historyLength2) {
+                    dataRot.get(i).set(capturedDataPoints, (int) (rotatedVals[i] * 1000.0d + 500.0));
                 } else {
-                    dataRot.get(i).add((int) (rotatedVals[i] * 1000.0d + 500.0));
+                    dataRot.get(i).add((int) (rotatedVals[i]));
                     dataRot.get(i).remove(0);    //Remove the oldest value
                 }
             }
-        }
-
-        /*
-		//Assign the values to ArrayLists
-        for (int i = 0; i < noChannels; ++i) {
-            if (capturedDataPoints < historyLength) {
-                data.get(i).set(capturedDataPoints, (int) valuesIn[i]);
-            } else {
-                data.get(i).add((int) valuesIn[i]);
-                data.get(i).remove(0);    //Remove the oldest value
+            if (capturedDataPoints +1< historyLength2) {
+                capturedDataPoints++;
+            }
+            else{
+                capturedDataPoints = 100000;
             }
         }
 
-        if (capturedDataPoints < historyLength) {
-            ++capturedDataPoints;
-        }
-*/
 
     }
 
 
     @Override
     public void run() {
-
         while (true) {
             Log.d(TAG, String.valueOf(proGyroscope.proGyroX) + String.valueOf(proGyroscope.proGyroY) + String.valueOf(proGyroscope.proGyroZ) + String.valueOf(proAccelerometer.proAcceX) + String.valueOf(proAccelerometer.proAcceY) + String.valueOf(proAccelerometer.proAcceZ));
             if (proGyroscope.proGyroX != 0 && proGyroscope.proGyroX != 0 && proGyroscope.proGyroX != 0 && proAccelerometer.proAcceX != 0 && proAccelerometer.proAcceY != 0 && proAccelerometer.proAcceZ != 0) {
-                decodeSensorPacket(proGyroscope.proGyroX, proGyroscope.proGyroY, proGyroscope.proGyroZ, proAccelerometer.proAcceX, proAccelerometer.proAcceY, proAccelerometer.proAcceZ);
+                try {
+                    decodeSensorPacket(proGyroscope.proGyroX, proGyroscope.proGyroY, proGyroscope.proGyroZ, proAccelerometer.proAcceX, proAccelerometer.proAcceY, proAccelerometer.proAcceZ);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             try {
                 Thread.sleep(10);

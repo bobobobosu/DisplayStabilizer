@@ -36,7 +36,7 @@ public class getAccelerometer implements Runnable {
     public getAccelerometer(Context context) {
         mContext = context;
     }
-
+    private int init = 1;
 
     //Noshake
     private final int SENEOR_TYPE = Sensor.TYPE_LINEAR_ACCELERATION;
@@ -72,10 +72,18 @@ public class getAccelerometer implements Runnable {
                 //        + (event.timestamp - System.nanoTime()) / 1000000L;
                 AcceTime = System.currentTimeMillis();
 
+
                 mBufferX = new CircularBuffer(BUFFER_DATA_SIZE, BUFFER_SECOND);
                 mBufferY = new CircularBuffer(BUFFER_DATA_SIZE, BUFFER_SECOND);
 
 
+                new Thread(new proAccelerometer()).start();
+                /*
+                Runnable r1 =  new proAccelerometer();
+                r1.run();
+                */
+
+                //noshake
                 new Thread(new Runnable() {
                     public void run() {
                         /*
@@ -110,8 +118,9 @@ public class getAccelerometer implements Runnable {
                         bundle.putFloatArray("Acce", data);
                         bundle.putLong("Time", getAccelerometer.AcceTime);
                         msg.setData(bundle);
-                        proDataFlow.AcceHandler.sendMessage(msg);
+                        //proDataFlow.AcceHandler.sendMessage(msg);
                         Log.d(TAG, String.valueOf(dx) + " " + String.valueOf(dy) + " " + String.valueOf(AcceZ));
+                        mRunnable.run();
                     }
                 }).start();
 

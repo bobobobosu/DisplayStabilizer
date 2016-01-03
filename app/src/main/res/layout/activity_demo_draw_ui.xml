@@ -5,8 +5,8 @@
 
     <org.opencv.android.JavaCameraView
         android:id="@+id/demo_draw_camera_surface_view"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:visibility="gone"
         opencv:camera_id="any"
         opencv:show_fps="true" />

@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -20,9 +21,11 @@ public class DemoDraw extends View {
     public static boolean drawing = false;
     public static Paint paint2 = new Paint();
     public static Path path2 = new Path();
+    public static Rect rectangle;
     public static Handler mhandler;
-    public Paint paint = new Paint();
+    public static Paint paint = new Paint();
     public Path path = new Path();
+    public static int rectX,rectY,sideLength;
     protected Context mContext;
     private boolean clear = false;
 
@@ -44,6 +47,8 @@ public class DemoDraw extends View {
         paint2.setColor(Color.BLACK);
         paint2.setStyle(Paint.Style.STROKE);
         paint2.setStrokeJoin(Paint.Join.ROUND);
+
+
 
         mhandler = new Handler() {
             @Override
@@ -69,7 +74,9 @@ public class DemoDraw extends View {
         */
         canvas.drawPath(path, paint);
         canvas.drawPath(path2, paint2);
-
+        // create a rectangle that we'll draw later
+        rectangle = new Rect(rectX-sideLength,rectY-sideLength,rectX,rectY);
+        canvas.drawRect(rectangle, paint);
     }
 
 
@@ -96,7 +103,10 @@ public class DemoDraw extends View {
                 drawposBundleSTART.putLong("Time", currTimeSTART);
                 msgSTART.setData(drawposBundleSTART);
 
-                proDataFlow.drawHandler.sendMessage(msgSTART);
+                if(eventX != 0 || eventY!=0){
+                    proDataFlow.drawHandler.sendMessage(msgSTART);
+                }
+
                 //stabilize_v1.getDatas.sendMessage(msgSTART);
 
                 drawing = true;
@@ -118,8 +128,20 @@ public class DemoDraw extends View {
                 drawposBundleDRAWING.putLong("Time", currTimeDRAWING);
                 msgDRAWING.setData(drawposBundleDRAWING);
 
-                proDataFlow.drawHandler.sendMessage(msgDRAWING);
-                //stabilize_v1.getDatas.sendMessage(msgDRAWING);
+                if(eventX != 0 || eventY!=0){
+                    proDataFlow.drawHandler.sendMessage(msgDRAWING);
+                    //stabilize_v1.getDatas.sendMessage(msgDRAWING);
+                }
+
+
+
+
+                rectX = (int) eventX;
+                rectY = (int) eventY;
+
+                Log.d(TAG, "rectXY " + DemoDraw.rectX + " " + DemoDraw.rectY);
+                DemoDraw.sideLength = 200;
+                invalidate();
 
                 drawing = true;
                 path.lineTo(eventX, eventY);
@@ -140,9 +162,12 @@ public class DemoDraw extends View {
                 msgSTOP.setData(drawposBundleSTOP);
 
 
+                if(eventX != 0 || eventY!=0){
+                    proDataFlow.drawHandler.sendMessage(msgSTOP);
+                    //stabilize_v1.getDatas.sendMessage(msgSTOP);
+                }
 
-                proDataFlow.drawHandler.sendMessage(msgSTOP);
-                //stabilize_v1.getDatas.sendMessage(msgSTOP);
+
 
                 drawing = false;
                 // nothing to do
