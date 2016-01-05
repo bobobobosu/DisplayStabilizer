@@ -81,7 +81,7 @@ public class stabilize_v1 implements Runnable {
                     }
                 }
 
-                if (DemoDraw.drawing == true && bundlegot != null ) {
+                if (DemoDraw.drawing <2 && bundlegot != null ) {
                     if (msg.arg1 == 1) {
                         CamDataArr.add(new stabilize_v1(bundlegot.getLong("Time"), bundlegot.getFloatArray("Movement")));
                         Log.d(TAG, "cameracameracamera " + CamDataArr.size());
@@ -125,7 +125,7 @@ public class stabilize_v1 implements Runnable {
                     }
                     */
 
-                } else if (DemoDraw.drawing == false && DrawDataArr.size() > 0 && AcceDataArr.size() > 0) {
+                } else if (DemoDraw.drawing <2 && DrawDataArr.size() > 0 && AcceDataArr.size() > 0) {
                     tmpTime = System.currentTimeMillis();
                     DataCollected[0] = DrawDataArr;
                     DataCollected[1] = CamDataArr;

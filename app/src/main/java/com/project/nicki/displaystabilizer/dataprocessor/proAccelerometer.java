@@ -52,43 +52,64 @@ public class proAccelerometer implements Runnable {
     public void run() {
         long currTime = System.currentTimeMillis();
 
+
         if (kalman == null || m == null) {
             try {
-                kalman = new JKalman(4, 2);
+                //kalman = new JKalman(4, 2);
+                JKalman kalman = new JKalman(6, 3);
             } catch (Exception e) {
                 e.printStackTrace();
             }
             Random rand = new Random(System.currentTimeMillis() % 2011);
             double x = 0;
             double y = 0;
-            // constant velocity
-            double dx = rand.nextDouble();
-            double dy = rand.nextDouble();
+            double z = 0;
+
             // init
-            Matrix s = new Matrix(4, 1); // state [x, y, dx, dy, dxy]
-            Matrix c = new Matrix(4, 1); // corrected state [x, y, dx, dy, dxy]
-            Matrix m = new Matrix(2, 1); // measurement [x]
+
+            //Matrix s = new Matrix(4, 1); // state [x, y, dx, dy, dxy]
+            //Matrix c = new Matrix(4, 1); // corrected state [x, y, dx, dy, dxy]
+            //Matrix m = new Matrix(2, 1); // measurement [x]
+            Matrix s = new Matrix(6, 1); // state [x, y, z, dx, dy, dz]
+            Matrix c = new Matrix(6, 1); // corrected state
+            Matrix m = new Matrix(3, 1); // measurement [x, y, z]
+
+            //m.set(0, 0, x);
+            //m.set(1, 0, y);
             m.set(0, 0, x);
             m.set(1, 0, y);
+            m.set(2, 0, z);
+
             // transitions for x, y, dx, dy
-            double[][] tr = {{1, 0, 1, 0},
-                    {0, 1, 0, 1},
-                    {0, 0, 1, 0},
-                    {0, 0, 0, 1}};
+            /*
+            double[][] tr =
+                    {{1, 0, 1, 0},
+                            {0, 1, 0, 1},
+                            {0, 0, 1, 0},
+                            {0, 0, 0, 1}};
+            kalman.setTransition_matrix(new Matrix(tr));
+            */
+            double[][] tr = { {1, 0, 0, 1, 0, 0},
+                    {0, 1, 0, 0, 1, 0},
+                    {0, 0, 1, 0, 0, 1},
+                    {0, 0, 0, 1, 0, 0},
+                    {0, 0, 0, 0, 1, 0},
+                    {0, 0, 0, 0, 0, 1} };
             kalman.setTransition_matrix(new Matrix(tr));
             // 1s somewhere?
             kalman.setError_cov_post(kalman.getError_cov_post().identity());
         }
 
-// check state before
+        // check state before
         s = kalman.Predict();
 
         // function init :)
         // m.set(1, 0, rand.nextDouble());
         try{
-            Matrix m = new Matrix(2, 1); // measurement [x]
+            Matrix m = new Matrix(3, 1); // measurement [x]
             m.set(0, 0, (double) getAccelerometer.AcceX);
             m.set(1, 0, (double) getAccelerometer.AcceY);
+            m.set(1, 0, (double) getAccelerometer.AcceZ);
             // look better
             c = kalman.Correct(m);
             s = kalman.Predict();
@@ -114,5 +135,54 @@ public class proAccelerometer implements Runnable {
 
     }
 
+    public void oldKalman(float X,float Y){
+        if (kalman == null || m == null) {
+            try {
+                kalman = new JKalman(4, 2);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            Random rand = new Random(System.currentTimeMillis() % 2011);
+            double x = 0;
+            double y = 0;
+            // constant velocity
+            double dx = rand.nextDouble();
+            double dy = rand.nextDouble();
+            // init
+            Matrix s = new Matrix(4, 1); // state [x, y, dx, dy, dxy]
+            Matrix c = new Matrix(4, 1); // corrected state [x, y, dx, dy, dxy]
+            Matrix m = new Matrix(2, 1); // measurement [x]
+            m.set(0, 0, x);
+            m.set(1, 0, y);
+            // transitions for x, y, dx, dy
+            double[][] tr =
+                    {{1, 0, 1, 0},
+                            {0, 1, 0, 1},
+                            {0, 0, 1, 0},
+                            {0, 0, 0, 1}};
+            kalman.setTransition_matrix(new Matrix(tr));
+            // 1s somewhere?
+            kalman.setError_cov_post(kalman.getError_cov_post().identity());
+        }
+
+        // check state before
+        s = kalman.Predict();
+
+        // function init :)
+        // m.set(1, 0, rand.nextDouble());
+        try{
+            Matrix m = new Matrix(2, 1); // measurement [x]
+            m.set(0, 0, (double) getAccelerometer.AcceX);
+            m.set(1, 0, (double) getAccelerometer.AcceY);
+            // look better
+            c = kalman.Correct(m);
+            s = kalman.Predict();
+            Log.d(TAG, "<Kalman> " + ";" + m.get(0, 0) + ";" + m.get(1, 0) + ";"
+                    + s.get(0, 0) + ";" + s.get(1, 0) + ";" + s.get(2, 0) + ";" + s.get(3, 0) + ";"
+                    + c.get(0, 0) + ";" + c.get(1, 0) + ";" + c.get(2, 0) + ";" + c.get(3, 0) + ";");
+        }catch(Exception ex){
+
+        }
+    }
 
 }

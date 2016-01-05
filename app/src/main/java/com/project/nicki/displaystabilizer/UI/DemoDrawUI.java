@@ -151,7 +151,7 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
     }
 
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        if (DemoDraw.drawing == true) {
+        if (DemoDraw.drawing <2) {
             Log.d(TAG, "onCameraFrame");
             //mRgba = inputFrame.gray();
             curMat = inputFrame.gray();

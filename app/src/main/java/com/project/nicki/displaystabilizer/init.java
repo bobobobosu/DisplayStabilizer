@@ -18,6 +18,7 @@ import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 import com.project.nicki.displaystabilizer.dataprovider.getAccelerometer;
 import com.project.nicki.displaystabilizer.dataprovider.getGyroscope;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v1;
+import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
 import org.ejml.data.DenseMatrix64F;
 
@@ -51,8 +52,19 @@ public class init extends AppCompatActivity {
         //TEST();
         /////////////////////////////////////////////
 
-         new Thread(new proDataFlow(getBaseContext())).start();
-        new Thread(new stabilize_v1(getBaseContext())).start();
+        //clean csvs
+        /*
+        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+        String fileName = "stabilize_v2.csv";
+        String filePath = baseDir + File.separator + fileName;
+        File f = new File(filePath);
+        if(f.exists()){
+            f.delete();
+        }
+        */
+        new Thread(new proDataFlow(getBaseContext())).start();
+        //new Thread(new stabilize_v1(getBaseContext())).start();
+        new Thread(new stabilize_v2(getBaseContext())).start();
         new Thread(new getAcceGyro(getBaseContext())).start();
         Intent goto_DemoDrawUI = new Intent();
         overridePendingTransition(0, 0);
@@ -97,83 +109,41 @@ public class init extends AppCompatActivity {
 
     }
 
-    /*
-    private void TEST() {
-        ArrayList<proAcceGyroCali> csvdata = new ArrayList<proAcceGyroCali>();
-        try {
-            String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-            String fileName = "rAnalysisData.csv";
-            String filePath = baseDir + File.separator + fileName;
-            CSVReader reader = new CSVReader(new FileReader(filePath), '\n');
-            try {
-                for (String[] k : reader.readAll()) {
-                    for (String v : k) {
-                        Log.d(TAG, "csv " + String.valueOf(v));
-                        float[] gotdata = new float[3];
-                        String[] parts = v.split(",");
-                        gotdata[0] = Float.parseFloat(parts[0]);
-                        gotdata[1] = Float.parseFloat(parts[1]);
-                        gotdata[2] = Float.parseFloat(parts[2]);
-                        csvdata.add(new proAcceGyroCali(100, gotdata));
-                        Log.d(TAG,"datd "+gotdata[0]+" "+gotdata[1]+" "+gotdata[2]);
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+    public class sensordata {
+        private long Time;
+        private float[] Data = new float[3];
+        public sensordata(){
+            this(0, new float[]{0, 0, 0});
         }
-
-//Calibration init;
-        ///理想error model值
-        LevenbergMarquardt mLM = new LevenbergMarquardt(new LevenbergMarquardt.Function() {
-            @Override
-            public void compute(DenseMatrix64F param, DenseMatrix64F x, DenseMatrix64F y, ArrayList<proAcceGyroCali> data) {
-                for (int i = 0; i < x.getNumElements(); i++) {
-                    DenseMatrix64F getxfromdata = new DenseMatrix64F(3, 1);
-                    getxfromdata.set(0, 0, data.get(i).Data[0]);
-                    getxfromdata.set(1, 0, data.get(i).Data[1]);
-                    getxfromdata.set(2, 0, data.get(i).Data[2]);
-                    y.set(i, 0, acceCali(getxfromdata, param));
-
-                }
-            }
-        });
-        DenseMatrix64F mpara = new DenseMatrix64F(9, 1);
-        mpara.set(0, 0, 0);
-        mpara.set(1, 0, 0);
-        mpara.set(2, 0, 0);
-        mpara.set(3, 0, 1);
-        mpara.set(4, 0, 1);
-        mpara.set(5, 0, 1);
-        mpara.set(6, 0, 0);
-        mpara.set(7, 0, 0);
-        mpara.set(8, 0, 0);
-
-
-        //隨便假設輸入data
-        DenseMatrix64F mX = new DenseMatrix64F(csvdata.size(), 1);
-        for (int i = 0; i < csvdata.size(); i++) {
-            mX.set(i, 0, i);
+        public sensordata(long time,float[] data){
+            this.Time = time;
+            this.Data[0] = data[0];
+            this.Data[1] = data[1];
+            this.Data[2] = data[2];
         }
-
-        //設定理想結果:重力加速度
-        DenseMatrix64F mY = new DenseMatrix64F(csvdata.size(), 1);
-        for (int i = 0; i < csvdata.size(); i++) {
-            mY.set(i, 0, Math.pow(g, 1));
+        public void setsensordata(long time,float[] data){
+            this.Time = time;
+            this.Data[0] = data[0];
+            this.Data[1] = data[1];
+            this.Data[2] = data[2];
         }
-        //optimize
-        mLM.optimize(mpara, mX, mY, csvdata);
-
-        //LogCSV("","","",String.valueOf(mLM.getParameters().get(6, 0)),String.valueOf(mLM.getParameters().get(7, 0)),String.valueOf(mLM.getParameters().get(8,0)));
-        Log.d(TAG, "LM: cost b/a: " + String.valueOf(mLM.getInitialCost()) + " " + mLM.getFinalCost());
-        for (int l = 0; l < 9; l++) {
-            Log.d(TAG, "LM: param " + String.valueOf(l) + " " + String.valueOf(mLM.getParameters().get(l, 0)));
+        public void setTime(long time){
+            this.Time = time;
         }
-        Log.d(TAG, "LM: endded");
-
+        public void setData(float[] data){
+            this.Data[0] = data[0];
+            this.Data[1] = data[1];
+            this.Data[2] = data[2];
+        }
+        public long getTime(){
+            return Time;
+        }
+        public float[] getData(){
+            return Data;
+        }
     }
+
+
 
     public double acceCali(DenseMatrix64F x, DenseMatrix64F param) {
         double returey1 = 0;
@@ -215,6 +185,6 @@ public class init extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
     }
-    */
+    
 }
 

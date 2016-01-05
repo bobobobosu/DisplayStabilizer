@@ -15,10 +15,12 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
+import com.project.nicki.displaystabilizer.stabilization.stabilize_v1;
+import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
 public class DemoDraw extends View {
     private static final String TAG = "DemoDraw";
-    public static boolean drawing = false;
+    public static int drawing = 0;
     public static Paint paint2 = new Paint();
     public static Path path2 = new Path();
     public static Rect rectangle;
@@ -104,12 +106,13 @@ public class DemoDraw extends View {
                 msgSTART.setData(drawposBundleSTART);
 
                 if(eventX != 0 || eventY!=0){
-                    proDataFlow.drawHandler.sendMessage(msgSTART);
+                    //proDataFlow.drawHandler.sendMessage(msgSTART);
+                    stabilize_v2.getDatas.sendMessage(msgSTART);
                 }
 
                 //stabilize_v1.getDatas.sendMessage(msgSTART);
 
-                drawing = true;
+                drawing = 0;
                 path.moveTo(eventX, eventY);
                 return true;
             case MotionEvent.ACTION_MOVE:
@@ -130,6 +133,8 @@ public class DemoDraw extends View {
 
                 if(eventX != 0 || eventY!=0){
                     proDataFlow.drawHandler.sendMessage(msgDRAWING);
+                    //s7tabilize_v1.mhandler.sendMessage(msgDRAWING);
+                    //stabilize_v2.getDatas.sendMessage(msgDRAWING);
                     //stabilize_v1.getDatas.sendMessage(msgDRAWING);
                 }
 
@@ -143,7 +148,12 @@ public class DemoDraw extends View {
                 DemoDraw.sideLength = 200;
                 invalidate();
 
-                drawing = true;
+                drawing = 1;
+                for (int i = 0; i < event.getHistorySize(); i++) {
+                    float historicalX = event.getHistoricalX(i);
+                    float historicalY = event.getHistoricalY(i);
+                    path.lineTo(historicalX, historicalY);
+                }
                 path.lineTo(eventX, eventY);
                 break;
             case MotionEvent.ACTION_UP:
@@ -169,11 +179,11 @@ public class DemoDraw extends View {
 
 
 
-                drawing = false;
+                drawing = 2;
                 // nothing to do
                 break;
             default:
-                drawing = false;
+                drawing = 2;
                 return false;
         }
 

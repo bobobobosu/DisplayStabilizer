@@ -200,7 +200,7 @@ public class LevenbergMarquardt {
         double lambda = initialLambda;
         // the difference between the current and previous cost
         double difference = 1000;
-        for (int l = 0; l < 9; l++) {
+        for (int l = 0; l < tempParam.getNumElements(); l++) {
             Log.d("LM inside", String.valueOf(l) + " " + String.valueOf(tempParam.get(l, 0)));
         }
         //for( int iter = 0; iter < 20 || difference < 1e-6 ; iter++ ) {
@@ -222,20 +222,32 @@ public class LevenbergMarquardt {
 
                 
                 double cost = cost(tempParam, X, Y, data);
-                for (int l = 0; l < 9; l++) {
+                for (int l = 0; l < tempParam.getNumElements(); l++) {
                     Log.d("LM inside", String.valueOf(l) + " " + String.valueOf(tempParam.get(l, 0)));
                 }
                 Log.d("LM inside", String.valueOf(cost));
                 if (cost < prevCost) {
+                    //my add
+                    boolean use = true;
+                    for(int j=0 ; j<tempParam.getNumElements() ; j++){
+                        if(Double.isNaN(tempParam.get(j,0))){
+                            use = false;
+                        }
+                    }
+                    if(use = true){
                     // the candidate parameters produced better results so use it
-                    foundBetter = true;
-                    param.set(tempParam);
-                    difference = prevCost - cost;
-                    prevCost = cost;
-                    lambda /= 10.0;
+                        foundBetter = true;
+                        param.set(tempParam);
+                        difference = prevCost - cost;
+                        prevCost = cost;
+                        lambda /= 10.0;
+                    }else{
+                        lambda *= 10.0;
+                    }
                 } else {
                     lambda *= 10.0;
                 }
+
             }
 
             // it reached a point where it can't improve so exit

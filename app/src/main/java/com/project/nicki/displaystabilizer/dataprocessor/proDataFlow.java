@@ -9,6 +9,7 @@ import android.util.Log;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Quaternion;
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v1;
+import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
 /**
  * Created by nicki on 11/14/2015.
@@ -52,6 +53,26 @@ public class proDataFlow implements Runnable {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
+                Log.d(TAG, "Start");
+                Bundle DrawBundle = new Bundle();
+                DrawBundle = msg.getData();
+                final float[] DrawData = DrawBundle.getFloatArray("Draw");
+                final long DrawTime = DrawBundle.getLong("Time");
+                Log.d(TAG, "DrawDATA@ " + "Time:" + String.valueOf(DrawTime) + " X:" + String.valueOf(DrawData[0]) + " Y:" + String.valueOf(DrawData[1]));
+                sendData(LOGSTATUS, msg.getData(), 0);
+                DemoDrawUI.runOnUI(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            DemoDrawUI.mlog_draw.setText("DrawDATA@ " + "Time:" + String.valueOf(DrawTime) + " X:" + String.valueOf(DrawData[0]) + " Y:" + String.valueOf(DrawData[1]));
+                        } catch (Exception ex) {
+
+                        }
+
+                    }
+                });
+
+                /*
                 switch (msg.what) {
                     case 0:
                         LOGSTATUS = true;
@@ -106,6 +127,7 @@ public class proDataFlow implements Runnable {
 
 
                 }
+                */
 
             }
         };
@@ -212,6 +234,27 @@ public class proDataFlow implements Runnable {
 
     public void sendData(boolean LOGSTATUS, Bundle data, int type) {
         Message message = new Message();
+        message.what = 1;
+        switch (type) {
+            case 0:
+                message.arg1 = 0;
+                break;
+            case 1:
+                message.arg1 = 1;
+                break;
+            case 2:
+                message.arg1 = 2;
+                break;
+            case 3:
+                message.arg1 = 3;
+                break;
+        }
+
+        Log.d(TAG, "TEST " + String.valueOf(message.arg1));
+        message.setData(data);
+        //stabilize_v1.getDatas.sendMessage(message);
+        stabilize_v2.getDatas.sendMessage(message);
+        /*
         if (LOGSTATUS == true) {
             message.what = 1;
             switch (type) {
@@ -231,7 +274,8 @@ public class proDataFlow implements Runnable {
 
             Log.d(TAG, "TEST " + String.valueOf(message.arg1));
             message.setData(data);
-            stabilize_v1.getDatas.sendMessage(message);
+            //stabilize_v1.getDatas.sendMessage(message);
+            stabilize_v2.getDatas.sendMessage(message);
         } else {
             switch (type) {
                 case 0:
@@ -253,8 +297,10 @@ public class proDataFlow implements Runnable {
             message.what = 0;
 
             message.setData(data);
-            stabilize_v1.getDatas.sendMessage(message);
+            //stabilize_v1.getDatas.sendMessage(message);
+            stabilize_v2.getDatas.sendMessage(message);
         }
+        */
 
     }
 

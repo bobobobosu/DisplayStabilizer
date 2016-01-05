@@ -26,6 +26,7 @@ import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
 import com.project.nicki.displaystabilizer.dataprocessor.proDataProcess;
 import com.project.nicki.displaystabilizer.dataprocessor.proGyroscope;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -34,39 +35,45 @@ import java.util.ArrayList;
  */
 public class getAcceGyro implements Runnable {
     private Context mContext;
+
     public getAcceGyro(Context context) {
         mContext = context;
     }
+
     private SensorManager mSensorManager;
     private Sensor mGSensor; //gyro
     private Sensor mLSensor; //linear acce
     private Sensor mMSensor; //magn
+    private Sensor mRSensor; //raw acce
     private SensorEventListener mSensorEventListener;
     private HandlerThread mHandlerThread;
     private String TAG = "getAcceGyro";
 
+
     public getAcceGyro() {
     }
+
     @Override
     public void run() {
 
-
-
-
         final proAcceGyroCali mproAcceGyroCali = new proAcceGyroCali(mContext);
+        //mproAcceGyroCali.TEST();
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
-        mLSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mLSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         mGSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         mMSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        mRSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mHandlerThread = new HandlerThread("getAcceGyro");
         mHandlerThread.start();
+
         Handler mHandler = new Handler(mHandlerThread.getLooper());
         mSensorEventListener = new SensorEventListener() {
+            long initTime = System.currentTimeMillis();
             @Override
             public void onSensorChanged(SensorEvent event) {
-                //if(proAcceGyroCali.Calibrated == false){
+                if(System.currentTimeMillis()-initTime>5000){
                     mproAcceGyroCali.CircularBuffer(event);
-                //}
+                }
             }
 
             @Override
@@ -75,8 +82,9 @@ public class getAcceGyro implements Runnable {
             }
         };
         mSensorManager.registerListener(mSensorEventListener, mGSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
-        mSensorManager.registerListener(mSensorEventListener, mLSensor, SensorManager.SENSOR_DELAY_FASTEST,mHandler);
-        mSensorManager.registerListener(mSensorEventListener, mMSensor, SensorManager.SENSOR_DELAY_FASTEST,mHandler);
+        mSensorManager.registerListener(mSensorEventListener, mLSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
+        mSensorManager.registerListener(mSensorEventListener, mMSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
+        mSensorManager.registerListener(mSensorEventListener, mRSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
     }
 
 
