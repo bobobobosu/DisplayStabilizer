@@ -5,8 +5,10 @@ package com.project.nicki.displaystabilizer.dataprocessor;
  */
 
 import android.content.Context;
+import android.graphics.Point;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
@@ -63,6 +65,21 @@ public class proAcceGyroCali extends getAcceGyro {
     private float[] AcceYsam = new float[Asamplenum];
     private float[] AcceZsam = new float[Asamplenum];
     private int Aintsam = 0;
+
+
+    //noshake
+    private final int SENEOR_TYPE = Sensor.TYPE_LINEAR_ACCELERATION;
+    private final int ACCELEROMOTER_FPS = SensorManager.SENSOR_DELAY_FASTEST;
+    private final int BUFFER_SECOND = 4;
+    private final int FPS = 60;
+    private final int BUFFER_DATA_SIZE = BUFFER_SECOND * FPS;
+    private int OFFSET_SCALE = 30;
+    private SensorManager senSensorManager;
+    private Sensor senAccelerometer;
+    private CircularBuffer mBufferX;
+    private CircularBuffer mBufferY;
+    private int mScreenHeight, mScreenWidth;
+    private boolean noshakeinit = false;
 
     //for staticdetetc()
     public ArrayList<sensordata> lAcceCircular = new ArrayList<>();
@@ -122,7 +139,20 @@ public class proAcceGyroCali extends getAcceGyro {
     }
 
 
-    public void CircularBuffer(SensorEvent mSensorEvent) {
+    public void CircularBuffer(final SensorEvent mSensorEvent) {
+        if(noshakeinit == false){
+            //noshake
+            //noshake
+            //Display display = mContext.getWindowManager().getDefaultDisplay();
+            Point size = new Point();
+            //display.getSize(size);
+            mScreenWidth  = 1440;
+            mScreenHeight = 2560;
+            mBufferX = new CircularBuffer(BUFFER_DATA_SIZE, BUFFER_SECOND);
+            mBufferY = new CircularBuffer(BUFFER_DATA_SIZE, BUFFER_SECOND);
+            noshakeinit = true;
+        }
+
         if (mSensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER && Calibrated == false) {
             //LogCSV(String.valueOf(mSensorEvent.values[0]), String.valueOf(mSensorEvent.values[1]), String.valueOf(mSensorEvent.values[2]),"","","");
             rawAcceAll.add(new sensordata(mSensorEvent.timestamp,mSensorEvent.values));
@@ -219,6 +249,8 @@ public class proAcceGyroCali extends getAcceGyro {
             Calibrated = false;
 
 
+
+
             if(Calibrated == true && paramgot!=null){
                 sensordata msensordata = new sensordata(mSensorEvent.timestamp,mSensorEvent.values);
                 sensordata msensordataCALI = RawAcceCali(msensordata,paramgot);
@@ -234,6 +266,31 @@ public class proAcceGyroCali extends getAcceGyro {
 
                 //mSensorVals = lowPass(mSensorEvent.values.clone(), mSensorVals);
                 float[] kalmaned = KalmanFilter(mSensorEvent.values);
+                //noshake
+                final float x = kalmaned[0];
+                final float y = kalmaned[1];
+                final float z = mSensorEvent.values[2];
+                new Thread(new Runnable() {
+                    public void run() {
+                        Log.d("HELLO","HELLO 3 ");
+                        mBufferX.insert(x);
+                        mBufferY.insert(y);
+                        final float dx = -mBufferX.convolveWithH() * OFFSET_SCALE;
+                        final float dy = -mBufferY.convolveWithH() * OFFSET_SCALE;
+                        LogCSV(String.valueOf(dx),String.valueOf(dy),"","","","");
+                        Message msg = new Message();
+                        Bundle bundle = new Bundle();
+                        msg.arg1 = 2;
+                        bundle.putFloatArray("Acce",new float[]{dx,dy,0});
+                        //bundle.putLong("Time", (new Date()).getTime()
+                        //        + (mSensorEvent.timestamp - System.nanoTime()) / 1000000L);
+                        bundle.putLong("Time", System.currentTimeMillis());
+                        msg.setData(bundle);
+                        proDataFlow.AcceHandler.sendMessage(msg);
+
+
+                    }
+                }).start();
                 sensordata msensordata = new sensordata(System.currentTimeMillis(),kalmaned);
                 DenseMatrix64F mpara = new DenseMatrix64F(6, 1);
                 mpara.set(0, 0, 1.0090734231345496);
@@ -246,21 +303,16 @@ public class proAcceGyroCali extends getAcceGyro {
                 if(getcaliLogSTATUS == true){
                     msensordataCALI.setData(new float[]{0,0,0});
                 }
+                /*
                 LogCSV(String.valueOf(mSensorEvent.values[0]),
                         String.valueOf(mSensorEvent.values[1]),
                         String.valueOf(mSensorEvent.values[2]),
                         String.valueOf(msensordata.getData()[0]),
                         String.valueOf(msensordata.getData()[1]),
                         String.valueOf(msensordata.getData()[2]));
+                        */
 
-                Message msg = new Message();
-                Bundle bundle = new Bundle();
-                bundle.putFloatArray("Acce",msensordata.getData());
-                //bundle.putLong("Time", (new Date()).getTime()
-                //        + (mSensorEvent.timestamp - System.nanoTime()) / 1000000L);
-                bundle.putLong("Time",System.currentTimeMillis());
-                msg.setData(bundle);
-                proDataFlow.AcceHandler.sendMessage(msg);
+
 
             }
 
@@ -329,8 +381,6 @@ public class proAcceGyroCali extends getAcceGyro {
         }
     }
 
-
-
     public class sensordata {
         private long Time;
         private float[] Data = new float[3];
@@ -398,6 +448,7 @@ public class proAcceGyroCali extends getAcceGyro {
         }
         return getcaliLogSTATUS;
     }
+
     protected long getEventTimestampInMills(SensorEvent event) {
         long timestamp = event.timestamp / 1000 / 1000;
 
@@ -551,7 +602,6 @@ public class proAcceGyroCali extends getAcceGyro {
         }
         return mResult;
     }
-
 
     public double acceCali(DenseMatrix64F x, DenseMatrix64F param) {
         for (int i = 0; i < param.getNumElements(); i++) {

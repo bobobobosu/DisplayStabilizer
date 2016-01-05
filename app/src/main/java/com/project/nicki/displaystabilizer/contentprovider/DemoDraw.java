@@ -95,7 +95,7 @@ public class DemoDraw extends View {
                 Log.d(TAG, "AAAA down");
                 Message msgSTART = new Message();
                 msgSTART.what = 0;
-
+                msgSTART.arg1= 0;
                 float[] dataSTART = new float[2];
                 long currTimeSTART = System.currentTimeMillis();
                 Bundle drawposBundleSTART = new Bundle();
@@ -106,8 +106,8 @@ public class DemoDraw extends View {
                 msgSTART.setData(drawposBundleSTART);
 
                 if(eventX != 0 || eventY!=0){
-                    //proDataFlow.drawHandler.sendMessage(msgSTART);
-                    stabilize_v2.getDatas.sendMessage(msgSTART);
+                    proDataFlow.drawHandler.sendMessage(msgSTART);
+                    //stabilize_v2.getDatas.sendMessage(msgSTART);
                 }
 
                 //stabilize_v1.getDatas.sendMessage(msgSTART);
@@ -120,7 +120,7 @@ public class DemoDraw extends View {
                 Log.d(TAG, "AAAA Drawing");
                 Message msgDRAWING = new Message();
                 msgDRAWING.what = 1;
-
+                msgDRAWING.arg1 = 0;
                 float[] dataDRAWING = new float[2];
                 long currTimeDRAWING = System.currentTimeMillis();
                 Message msgDrawing = new Message();
@@ -133,7 +133,7 @@ public class DemoDraw extends View {
 
                 if(eventX != 0 || eventY!=0){
                     proDataFlow.drawHandler.sendMessage(msgDRAWING);
-                    //s7tabilize_v1.mhandler.sendMessage(msgDRAWING);
+                    //stabilize_v1.mhandler.sendMessage(msgDRAWING);
                     //stabilize_v2.getDatas.sendMessage(msgDRAWING);
                     //stabilize_v1.getDatas.sendMessage(msgDRAWING);
                 }
@@ -161,7 +161,7 @@ public class DemoDraw extends View {
 
                 Log.d(TAG, "AAAA up");
                 Message msgSTOP = new Message();
-                msgSTOP.what = 2;
+                msgSTOP.what = 0;
                 float[] dataSTOP = new float[2];
                 long currTimeSTOP = System.currentTimeMillis();
                 Bundle drawposBundleSTOP = new Bundle();

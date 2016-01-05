@@ -39,14 +39,18 @@ public class stabilize_v2 implements Runnable {
     ArrayList<sensordata> stastrokedeltabuffer = new ArrayList<sensordata>();
     //tmps
     long prevTime = 0;
-    float[] prevStroke ;
-    boolean drawSTATUS =false;
-    boolean prevdrawSTATUS=false;
+    float[] prevStroke = null;
+    boolean drawSTATUS = false;
+    boolean prevdrawSTATUS = false;
+    boolean init = false;
+
     public stabilize_v2(Context context) {
         mContext = context;
     }
+
     //constants
     float toDrawScalar = 3;
+
     public class sensordata {
         private long Time;
         private float[] Data = new float[3];
@@ -101,12 +105,12 @@ public class stabilize_v2 implements Runnable {
                 super.handleMessage(msg);
                 Bundle bundlegot = msg.getData();
                 prevdrawSTATUS = drawSTATUS;
-                if(DemoDraw.drawing<2){
+                if (DemoDraw.drawing < 2) {
                     drawSTATUS = true;
-                }else{
+                } else {
                     drawSTATUS = false;
                 }
-                if(prevdrawSTATUS == false && drawSTATUS == true){
+                if (prevdrawSTATUS == false && drawSTATUS == true || init == false) {
                     strokebuffer = new ArrayList<sensordata>();
                     strokedeltabuffer = new ArrayList<sensordata>();
                     accebuffer = new ArrayList<sensordata>();
@@ -118,101 +122,122 @@ public class stabilize_v2 implements Runnable {
                     initPosY = new Position(0, 0);
                     mrk4 = new RK4();
                     prevTime = 0;
-                    prevStroke =new float[2];
-                    drawSTATUS =false;
-                    prevdrawSTATUS=false;
-                }else {
+                    prevStroke = null;
+                    init = true;
+                }
+                /////Load into buffer
+                //draw
+                if (msg.arg1 == 0) {
+                    Log.d(TAG, "draw: "+ bundlegot.getFloatArray("Draw")[0]+" " + bundlegot.getFloatArray("Draw")[1] + " " + drawSTATUS);
+                    strokebuffer.add(new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Draw")));
+                    if (strokebuffer.size() > 2) {
+                        strokedeltabuffer.add(getlatestdelta(strokebuffer));
+                    }
+                }
+                //acce
+                //mod: noshake
+                if(msg.arg1 == 2 ){
+                    LogCSV(String.valueOf(bundlegot.getFloatArray("Acce")[0]), String.valueOf(bundlegot.getFloatArray("Acce")[1]),  String.valueOf(bundlegot.getLong("Time")), "", "", "");
+                    Log.d(TAG, "load " + String.valueOf(bundlegot.getLong("Time")) + " " + String.valueOf(bundlegot.getFloatArray("Acce")[0]) + " " + String.valueOf(bundlegot.getFloatArray("Acce")[1]));
+                    posbuffer.add(new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Acce")));
+                    if(posbuffer.size()>2){
+                        posdeltabuffer.add(getlatestdelta(posbuffer));
 
+                    }
+                }
+                if(strokedeltabuffer.size()>1 &&posdeltabuffer.size()>1){
+                    float[] tmp = new float[]{strokebuffer.get(strokebuffer.size()-1).getData()[0]+posdeltabuffer.get(posdeltabuffer.size()-1).getData()[0],
+                            strokebuffer.get(strokebuffer.size()-1).getData()[1]+posdeltabuffer.get(posdeltabuffer.size()-1).getData()[1]};
+                }
+                /*
+                //mod: integration
+                if (msg.arg1 == 2) {
+                    Log.d(TAG,"dxdy: "+bundlegot.getFloatArray("Acce")[0]+" "+bundlegot.getFloatArray("Acce")[1]);
+                    //rk4
+                    mrk4.integrate(initPosX, 0, 0.01, bundlegot.getFloatArray("Acce")[0]);
+                    mrk4.integrate(initPosY, 0, 0.01, bundlegot.getFloatArray("Acce")[1]);
+                    meularIntegration.addNew(bundlegot.getFloatArray("Acce"), bundlegot.getLong("Time"));
 
-                    //draw
-                    if (msg.arg1 == 0) {
-                        Log.d(TAG, "delta2: " + bundlegot.getFloatArray("Draw")[0] + " " + drawSTATUS);
-                        strokebuffer.add(new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Draw")));
-                        if (strokebuffer.size() > 1) {
-                            strokedeltabuffer.add(getlatestdelta(strokebuffer));
-                            Log.d(TAG, "delta: " + getlatestdelta(strokebuffer).getData()[0]);
+                    LogCSV(String.valueOf(initPosX.pos),
+                            String.valueOf(initPosY.pos),
+                            String.valueOf(meularIntegration.getPos()[0]),
+                            String.valueOf(meularIntegration.getPos()[1]), "", "");
+
+                    meularIntegration.addNew(bundlegot.getFloatArray("Acce"), bundlegot.getLong("Time"));
+                    posbuffer.add(meularIntegration.getData());
+                    if (posbuffer.size() > 1) {
+                        posdeltabuffer.add(getlatestdelta(posbuffer));
+                        if (posdeltabuffer.size() > 0) {
                         }
                     }
-                    //acce
-                    if (msg.arg1 == 2) {
-                        //rk4
-                        mrk4.integrate(initPosX, 0, 0.01, bundlegot.getFloatArray("Acce")[0]);
-                        mrk4.integrate(initPosY, 0, 0.01, bundlegot.getFloatArray("Acce")[1]);
-                        meularIntegration.addNew(bundlegot.getFloatArray("Acce"), bundlegot.getLong("Time"));
-
-                        LogCSV(String.valueOf(initPosX.pos),
-                                String.valueOf(initPosY.pos),
-                                String.valueOf(meularIntegration.getPos()[0]),
-                                String.valueOf(meularIntegration.getPos()[1]), "", "");
-
-                        meularIntegration.addNew(bundlegot.getFloatArray("Acce"), bundlegot.getLong("Time"));
-                        posbuffer.add(meularIntegration.getData());
-                        if (posbuffer.size() > 1) {
-                            posdeltabuffer.add(getlatestdelta(posbuffer));
-                            if (posdeltabuffer.size() > 0) {
-
-                            /*
-                            LogCSV(String.valueOf(posdeltabuffer.get(posdeltabuffer.size()-1).getData()[0])
-                                    ,String.valueOf(posdeltabuffer.get(posdeltabuffer.size()-1).getData()[1])
-                                    ,String.valueOf(posdeltabuffer.get(posdeltabuffer.size()-1).getData()[2])
-                                    ,String.valueOf(posbuffer.get(posbuffer.size()-1).getData()[0])
-                                    ,String.valueOf(posbuffer.get(posbuffer.size()-1).getData()[1])
-                                    ,String.valueOf(posbuffer.get(posbuffer.size()-1).getData()[2]));
-                                    */
-                            }
-                        }
-                        Log.d(TAG, "POSITION: " + String.valueOf(meularIntegration.getPos()[0]) + " " + String.valueOf(initPosX.pos));
-                        if (drawSTATUS == true) {
-                            accebuffer.add(new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Acce")));
-                        }
+                    Log.d(TAG, "POSITION: " + String.valueOf(meularIntegration.getPos()[0]) + " " + String.valueOf(initPosX.pos));
+                    if (drawSTATUS == true) {
+                        accebuffer.add(new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Acce")));
                     }
-
-
-                    Log.d(TAG,"stop");
-                    //stabilize
-                    if(strokedeltabuffer.size()>1 &&  posdeltabuffer.size()>1 && posbuffer.size()>1){
-                        sensordata stastrokedelta= new sensordata();
-                        stastrokedelta.setTime(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime());
-                        stastrokedelta.setData(new float[]{
-                                posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] + strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0],
-                                posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] + strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1]});
-                        Log.d(TAG, "stab: " +posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0]+" "+posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1]);
-                        stastrokedeltabuffer.add(stastrokedelta);
-                        //draw results
-                        DemoDraw.paint2.setColor(Color.BLUE);
-                        if(prevStroke != null){
-                            DemoDraw.path2.moveTo(prevStroke[0], prevStroke[1]);
-                            DemoDraw.path2.lineTo(
-                                    prevStroke[0]+stastrokedeltabuffer.get(stastrokedeltabuffer.size()-1).getData()[0],
-                                    prevStroke[1]+stastrokedeltabuffer.get(stastrokedeltabuffer.size()-1).getData()[1]);
-                            prevStroke[0] += stastrokedeltabuffer.get(stastrokedeltabuffer.size()-1).getData()[0];
-                            prevStroke[1] += stastrokedeltabuffer.get(stastrokedeltabuffer.size()-1).getData()[1];
-                        }else {
-                            prevStroke = new float[]{
-                                    strokebuffer.get(2).getData()[0],
-                                    strokebuffer.get(2).getData()[1]};
-                        }
-                        Log.d(TAG, "drawpos: " + prevStroke[0]+" "+prevStroke[1]);
-                    /*
-                    for(int k=0 ; k<stastrokedeltabuffer.size(); k++){
-                        for(int m=0 ; m<startDraw.length;m++){
-                            Log.d(TAG,"stastrokedeltabuffer "+stastrokedeltabuffer.get(k).getData()[m]);
-                            startDraw[m] += stastrokedeltabuffer.get(k).getData()[m];
-                        }
-                        DemoDraw.path2.moveTo(startDraw[0],startDraw[1]);
-                        DemoDraw.path2.lineTo(
-                                startDraw[0]+stastrokedeltabuffer.get(k).getData()[0],
-                                startDraw[1]+stastrokedeltabuffer.get(k).getData()[1]);
-                    }
-                    */
-                    }
-
-
-                    Message msg3 = new Message();
-                    msg3.what = 1;
-                    DemoDraw.mhandler.sendMessage(msg3);
                 }
 
+
+                Log.d(TAG, "stop");
+                */
+                //use noshake
+                Log.d(TAG,"testing: "+strokedeltabuffer.size() +" "+strokebuffer.size()+" "+ posdeltabuffer.size() +" "+ posbuffer.size());
+                if (strokedeltabuffer.size() > 1 && posdeltabuffer.size() > 1 && posbuffer.size() > 1) {
+                    sensordata stastrokedelta = new sensordata();
+                    stastrokedelta.setTime(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime());
+                    stastrokedelta.setData(new float[]{
+                            posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] + strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0],
+                            posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] + strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1]});
+                    Log.d(TAG, "stab: " + posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] + " " + posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1]);
+                    stastrokedeltabuffer.add(stastrokedelta);
+                    //draw results
+                    DemoDraw.paint2.setColor(Color.BLUE);
+                    if (prevStroke != null) {
+                        DemoDraw.path2.moveTo(prevStroke[0], prevStroke[1]);
+                        DemoDraw.path2.lineTo(
+                                prevStroke[0] + stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0],
+                                prevStroke[1] + stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1]);
+                        prevStroke[0] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0];
+                        prevStroke[1] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1];
+                    } else {
+                        prevStroke = new float[]{
+                                strokebuffer.get(2).getData()[0],
+                                strokebuffer.get(2).getData()[1]};
+                        Log.d(TAG,"initprevStrock "+strokebuffer.get(2).getData()[0]+" "+strokebuffer.get(2).getData()[1]);
+                    }
+                    Log.d(TAG, "drawpos: " + prevStroke[0] + " " + prevStroke[1]);
+                }
+
+                //stabilize
+                /*
+                if (strokedeltabuffer.size() > 1 && posdeltabuffer.size() > 1 && posbuffer.size() > 1) {
+                    sensordata stastrokedelta = new sensordata();
+                    stastrokedelta.setTime(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime());
+                    stastrokedelta.setData(new float[]{
+                            posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] + strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0],
+                            posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] + strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1]});
+                    Log.d(TAG, "stab: " + posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] + " " + posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1]);
+                    stastrokedeltabuffer.add(stastrokedelta);
+                    //draw results
+                    DemoDraw.paint2.setColor(Color.BLUE);
+                    if (prevStroke != null) {
+                        DemoDraw.path2.moveTo(prevStroke[0], prevStroke[1]);
+                        DemoDraw.path2.lineTo(
+                                prevStroke[0] + stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0],
+                                prevStroke[1] + stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1]);
+                        prevStroke[0] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0];
+                        prevStroke[1] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1];
+                    } else {
+                        prevStroke = new float[]{
+                                strokebuffer.get(2).getData()[0],
+                                strokebuffer.get(2).getData()[1]};
+                    }
+                    Log.d(TAG, "drawpos: " + prevStroke[0] + " " + prevStroke[1]);
+                }
+                */
+
+                Message msg3 = new Message();
+                msg3.what = 1;
+                DemoDraw.mhandler.sendMessage(msg3);
             }
 
 
@@ -225,7 +250,7 @@ public class stabilize_v2 implements Runnable {
         //compute delta
         float[] deltaFloat = new float[strokebuffer.get(0).getData().length];
         for (int i = 0; i < strokebuffer.get(0).getData().length; i++) {
-            deltaFloat[i] = (strokebuffer.get(strokebuffer.size() - 1).getData()[i] - strokebuffer.get(strokebuffer.size() - 2).getData()[i])*toDrawScalar;
+            deltaFloat[i] = (strokebuffer.get(strokebuffer.size() - 1).getData()[i] - strokebuffer.get(strokebuffer.size() - 2).getData()[i]) * toDrawScalar;
         }
         msensordata.setTime(strokebuffer.get(strokebuffer.size() - 1).getTime());
         msensordata.setData(deltaFloat);
