@@ -11,13 +11,12 @@ import android.util.Log;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 
-import org.opencv.core.Mat;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 
 import au.com.bytecode.opencsv.CSVWriter;
 
@@ -26,9 +25,8 @@ import au.com.bytecode.opencsv.CSVWriter;
  */
 public class stabilize_v2 implements Runnable {
     public static Handler getDatas;
-    private String csvName = "stabilize_v2.csv";
-    private String TAG = "stabilize_v2";
-    private Context mContext;
+    //draw to DemoDraw
+    public static List<Point> toDraw = new ArrayList<Point>();
     FileWriter mFileWriter;
     //buffers
     ArrayList<sensordata> strokebuffer = new ArrayList<sensordata>();
@@ -36,6 +34,7 @@ public class stabilize_v2 implements Runnable {
     ArrayList<sensordata> accebuffer = new ArrayList<sensordata>();
     ArrayList<sensordata> posbuffer = new ArrayList<sensordata>();
     ArrayList<sensordata> posdeltabuffer = new ArrayList<sensordata>();
+    ArrayList<sensordata> stastrokebuffer = new ArrayList<sensordata>();
     ArrayList<sensordata> stastrokedeltabuffer = new ArrayList<sensordata>();
     //tmps
     long prevTime = 0;
@@ -43,53 +42,14 @@ public class stabilize_v2 implements Runnable {
     boolean drawSTATUS = false;
     boolean prevdrawSTATUS = false;
     boolean init = false;
+    //constants
+    float toDrawScalar = 3;
+    private String csvName = "stabilize_v2.csv";
+    private String TAG = "stabilize_v2";
+    private Context mContext;
 
     public stabilize_v2(Context context) {
         mContext = context;
-    }
-
-    //constants
-    float toDrawScalar = 3;
-
-    public class sensordata {
-        private long Time;
-        private float[] Data = new float[3];
-
-        public sensordata() {
-            this(0, new float[]{0, 0, 0});
-        }
-
-        public sensordata(long time, float[] data) {
-            this.Time = time;
-            for (int i = 0; i < data.length; i++) {
-                this.Data[i] = data[i];
-            }
-        }
-
-        public void setsensordata(long time, float[] data) {
-            this.Time = time;
-            for (int i = 0; i < data.length; i++) {
-                this.Data[i] = data[i];
-            }
-        }
-
-        public void setTime(long time) {
-            this.Time = time;
-        }
-
-        public void setData(float[] data) {
-            for (int i = 0; i < data.length; i++) {
-                this.Data[i] = data[i];
-            }
-        }
-
-        public long getTime() {
-            return Time;
-        }
-
-        public float[] getData() {
-            return Data;
-        }
     }
 
     @Override
@@ -100,22 +60,20 @@ public class stabilize_v2 implements Runnable {
             Position initPosX = new Position(0, 0);
             Position initPosY = new Position(0, 0);
             RK4 mrk4 = new RK4();
+
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
                 Bundle bundlegot = msg.getData();
                 prevdrawSTATUS = drawSTATUS;
-                if (DemoDraw.drawing < 2) {
-                    drawSTATUS = true;
-                } else {
-                    drawSTATUS = false;
-                }
+                drawSTATUS = DemoDraw.drawing < 2;
                 if (prevdrawSTATUS == false && drawSTATUS == true || init == false) {
                     strokebuffer = new ArrayList<sensordata>();
                     strokedeltabuffer = new ArrayList<sensordata>();
                     accebuffer = new ArrayList<sensordata>();
                     posbuffer = new ArrayList<sensordata>();
                     posdeltabuffer = new ArrayList<sensordata>();
+                    stastrokebuffer = new ArrayList<sensordata>();
                     stastrokedeltabuffer = new ArrayList<sensordata>();
                     meularIntegration = new calEularIntegration();
                     initPosX = new Position(0, 0);
@@ -124,11 +82,12 @@ public class stabilize_v2 implements Runnable {
                     prevTime = 0;
                     prevStroke = null;
                     init = true;
+                    toDraw = new ArrayList<Point>();
                 }
                 /////Load into buffer
                 //draw
                 if (msg.arg1 == 0) {
-                    Log.d(TAG, "draw: "+ bundlegot.getFloatArray("Draw")[0]+" " + bundlegot.getFloatArray("Draw")[1] + " " + drawSTATUS);
+                    Log.d(TAG, "draw: " + bundlegot.getFloatArray("Draw")[0] + " " + bundlegot.getFloatArray("Draw")[1] + " " + drawSTATUS);
                     strokebuffer.add(new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Draw")));
                     if (strokebuffer.size() > 2) {
                         strokedeltabuffer.add(getlatestdelta(strokebuffer));
@@ -136,18 +95,18 @@ public class stabilize_v2 implements Runnable {
                 }
                 //acce
                 //mod: noshake
-                if(msg.arg1 == 2 ){
-                    LogCSV(String.valueOf(bundlegot.getFloatArray("Acce")[0]), String.valueOf(bundlegot.getFloatArray("Acce")[1]),  String.valueOf(bundlegot.getLong("Time")), "", "", "");
+                if (msg.arg1 == 2) {
+                    LogCSV(String.valueOf(bundlegot.getFloatArray("Acce")[0]), String.valueOf(bundlegot.getFloatArray("Acce")[1]), String.valueOf(bundlegot.getLong("Time")), "", "", "");
                     Log.d(TAG, "load " + String.valueOf(bundlegot.getLong("Time")) + " " + String.valueOf(bundlegot.getFloatArray("Acce")[0]) + " " + String.valueOf(bundlegot.getFloatArray("Acce")[1]));
                     posbuffer.add(new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Acce")));
-                    if(posbuffer.size()>2){
+                    if (posbuffer.size() > 2) {
                         posdeltabuffer.add(getlatestdelta(posbuffer));
 
                     }
                 }
-                if(strokedeltabuffer.size()>1 &&posdeltabuffer.size()>1){
-                    float[] tmp = new float[]{strokebuffer.get(strokebuffer.size()-1).getData()[0]+posdeltabuffer.get(posdeltabuffer.size()-1).getData()[0],
-                            strokebuffer.get(strokebuffer.size()-1).getData()[1]+posdeltabuffer.get(posdeltabuffer.size()-1).getData()[1]};
+                if (strokedeltabuffer.size() > 1 && posdeltabuffer.size() > 1) {
+                    float[] tmp = new float[]{strokebuffer.get(strokebuffer.size() - 1).getData()[0] + posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0],
+                            strokebuffer.get(strokebuffer.size() - 1).getData()[1] + posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1]};
                 }
                 /*
                 //mod: integration
@@ -180,7 +139,7 @@ public class stabilize_v2 implements Runnable {
                 Log.d(TAG, "stop");
                 */
                 //use noshake
-                Log.d(TAG,"testing: "+strokedeltabuffer.size() +" "+strokebuffer.size()+" "+ posdeltabuffer.size() +" "+ posbuffer.size());
+                Log.d(TAG, "testing: " + strokedeltabuffer.size() + " " + strokebuffer.size() + " " + posdeltabuffer.size() + " " + posbuffer.size());
                 if (strokedeltabuffer.size() > 1 && posdeltabuffer.size() > 1 && posbuffer.size() > 1) {
                     sensordata stastrokedelta = new sensordata();
                     stastrokedelta.setTime(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime());
@@ -198,11 +157,24 @@ public class stabilize_v2 implements Runnable {
                                 prevStroke[1] + stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1]);
                         prevStroke[0] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0];
                         prevStroke[1] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1];
+
+                        //sumof stastrokedeltabuffer
+                        stastrokebuffer.add(new sensordata(stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getTime(), prevStroke));
+                        //cal how far is fram prevStroke to finger(now)
+                        float tofinger[] = new float[]{strokebuffer.get(0).getData()[0] - prevStroke[0],
+                                strokebuffer.get(0).getData()[1] - prevStroke[1]};
+                        toDraw = new ArrayList<Point>();
+                        for (sensordata msensordata : stastrokebuffer) {
+                            Point todrawPoint = new Point();
+                            todrawPoint.x = msensordata.getData()[0] + tofinger[0];
+                            todrawPoint.y = msensordata.getData()[1] + tofinger[1];
+                            toDraw.add(todrawPoint);
+                        }
                     } else {
                         prevStroke = new float[]{
                                 strokebuffer.get(2).getData()[0],
                                 strokebuffer.get(2).getData()[1]};
-                        Log.d(TAG,"initprevStrock "+strokebuffer.get(2).getData()[0]+" "+strokebuffer.get(2).getData()[1]);
+                        Log.d(TAG, "initprevStrock " + strokebuffer.get(2).getData()[0] + " " + strokebuffer.get(2).getData()[1]);
                     }
                     Log.d(TAG, "drawpos: " + prevStroke[0] + " " + prevStroke[1]);
                 }
@@ -291,6 +263,62 @@ public class stabilize_v2 implements Runnable {
             writer.close();
         } catch (IOException e) {
             //e.printStackTrace();
+        }
+    }
+
+    public static class Point implements Serializable {
+        public float x;
+        public float y;
+        public float dx;
+        public float dy;
+
+        public void setX(float x) {
+            this.x = x;
+        }
+
+        public void setY(float y) {
+            this.y = y;
+        }
+    }
+
+    public class sensordata {
+        private long Time;
+        private float[] Data = new float[3];
+
+        public sensordata() {
+            this(0, new float[]{0, 0, 0});
+        }
+
+        public sensordata(long time, float[] data) {
+            this.Time = time;
+            for (int i = 0; i < data.length; i++) {
+                this.Data[i] = data[i];
+            }
+        }
+
+        public void setsensordata(long time, float[] data) {
+            this.Time = time;
+            for (int i = 0; i < data.length; i++) {
+                this.Data[i] = data[i];
+            }
+        }
+
+        public long getTime() {
+            return Time;
+        }
+
+        public void setTime(long time) {
+            this.Time = time;
+        }
+
+        public float[] getData() {
+            return Data;
+        }
+
+        public void setData(float[] data) {
+            for (int i = 0; i < data.length; i++) {
+                this.Data[i] = data[i];
+            }
         }
     }
 
