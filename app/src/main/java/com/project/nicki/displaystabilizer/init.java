@@ -7,33 +7,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
-import com.project.nicki.displaystabilizer.UI.data_visualize;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
-import com.project.nicki.displaystabilizer.dataprocessor.proAccelerometer;
-import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
-import com.project.nicki.displaystabilizer.dataprocessor.utils.LM;
-import com.project.nicki.displaystabilizer.dataprocessor.utils.LMfunc;
-import com.project.nicki.displaystabilizer.dataprocessor.utils.LevenbergMarquardt;
 import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
-import com.project.nicki.displaystabilizer.dataprovider.getAccelerometer;
-import com.project.nicki.displaystabilizer.dataprovider.getGyroscope;
-import com.project.nicki.displaystabilizer.stabilization.stabilize_v1;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
 import org.ejml.data.DenseMatrix64F;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-
-import au.com.bytecode.opencsv.CSVReader;
 import jama.Matrix;
-
-import java.util.Arrays;
-
-import static java.lang.Math.cos;
 
 public class init extends AppCompatActivity {
     String TAG = "init";
@@ -62,7 +42,7 @@ public class init extends AppCompatActivity {
             f.delete();
         }
         */
-        new Thread(new proDataFlow(getBaseContext())).start();
+        //new Thread(new proDataFlow(getBaseContext())).start();
         //new Thread(new stabilize_v1(getBaseContext())).start();
         new Thread(new stabilize_v2(getBaseContext())).start();
         new Thread(new getAcceGyro(getBaseContext())).start();
@@ -109,42 +89,6 @@ public class init extends AppCompatActivity {
 
     }
 
-    public class sensordata {
-        private long Time;
-        private float[] Data = new float[3];
-        public sensordata(){
-            this(0, new float[]{0, 0, 0});
-        }
-        public sensordata(long time,float[] data){
-            this.Time = time;
-            this.Data[0] = data[0];
-            this.Data[1] = data[1];
-            this.Data[2] = data[2];
-        }
-        public void setsensordata(long time,float[] data){
-            this.Time = time;
-            this.Data[0] = data[0];
-            this.Data[1] = data[1];
-            this.Data[2] = data[2];
-        }
-        public void setTime(long time){
-            this.Time = time;
-        }
-        public void setData(float[] data){
-            this.Data[0] = data[0];
-            this.Data[1] = data[1];
-            this.Data[2] = data[2];
-        }
-        public long getTime(){
-            return Time;
-        }
-        public float[] getData(){
-            return Data;
-        }
-    }
-
-
-
     public double acceCali(DenseMatrix64F x, DenseMatrix64F param) {
         double returey1 = 0;
         double[][] rawMatrix = {{x.get(0, 0), x.get(1, 0), x.get(2, 0)}};
@@ -184,6 +128,47 @@ public class init extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+    }
+
+    public class sensordata {
+        private long Time;
+        private float[] Data = new float[3];
+
+        public sensordata() {
+            this(0, new float[]{0, 0, 0});
+        }
+
+        public sensordata(long time, float[] data) {
+            this.Time = time;
+            this.Data[0] = data[0];
+            this.Data[1] = data[1];
+            this.Data[2] = data[2];
+        }
+
+        public void setsensordata(long time, float[] data) {
+            this.Time = time;
+            this.Data[0] = data[0];
+            this.Data[1] = data[1];
+            this.Data[2] = data[2];
+        }
+
+        public long getTime() {
+            return Time;
+        }
+
+        public void setTime(long time) {
+            this.Time = time;
+        }
+
+        public float[] getData() {
+            return Data;
+        }
+
+        public void setData(float[] data) {
+            this.Data[0] = data[0];
+            this.Data[1] = data[1];
+            this.Data[2] = data[2];
+        }
     }
     
 }

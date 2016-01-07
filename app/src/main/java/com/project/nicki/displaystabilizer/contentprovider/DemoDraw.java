@@ -15,7 +15,6 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
 import java.util.ArrayList;
@@ -93,7 +92,6 @@ public class DemoDraw extends View {
 
         canvas.drawPath(path, paint);
         canvas.drawPath(path2, paint2);
-        canvas.drawPath(path3, paint3);
         // create a rectangle that we'll draw later
         //rectangle = new Rect(rectX-sideLength,rectY-sideLength,rectX,rectY);
         rectangle = new Rect(
@@ -119,6 +117,7 @@ public class DemoDraw extends View {
                 clear = true;
                 path.reset();
                 path2.reset();
+                path3.reset();
                 invalidate();
                 Log.d(TAG, "AAAA down");
                 Message msgSTART = new Message();
@@ -192,7 +191,7 @@ public class DemoDraw extends View {
                 drawposBundleSTOP.putLong("Time", currTimeSTOP);
                 msgSTOP.setData(drawposBundleSTOP);
                 if (eventX != 0 || eventY != 0) {
-                    proDataFlow.drawHandler.sendMessage(msgSTOP);
+                    //proDataFlow.drawHandler.sendMessage(msgSTOP);
                     //stabilize_v1.getDraw.sendMessage(msgSTOP);
                 }
                 drawing = 2;
@@ -212,7 +211,7 @@ public class DemoDraw extends View {
     //todraw
     private void drawCanvas(Canvas canvas, List<stabilize_v2.Point> pts) {
         if (pts.size() > 1) {
-            Path path = new Path();
+            path3 = new Path();
             final int SMOOTH_VAL = 6;
             for (int i = pts.size() - 2; i < pts.size(); i++) {
                 if (i >= 0) {
@@ -238,13 +237,13 @@ public class DemoDraw extends View {
                 stabilize_v2.Point point = pts.get(i);
                 if (first) {
                     first = false;
-                    path.moveTo(point.x, point.y);
+                    path3.moveTo(point.x, point.y);
                 } else {
                     stabilize_v2.Point prev = pts.get(i - 1);
-                    path.cubicTo(prev.x + prev.dx, prev.y + prev.dy, point.x - point.dx, point.y - point.dy, point.x, point.y);
+                    path3.cubicTo(prev.x + prev.dx, prev.y + prev.dy, point.x - point.dx, point.y - point.dy, point.x, point.y);
                 }
             }
-            canvas.drawPath(path, paint3);
+            canvas.drawPath(path3, paint3);
         } else {
             if (pts.size() == 1) {
                 stabilize_v2.Point point = pts.get(0);

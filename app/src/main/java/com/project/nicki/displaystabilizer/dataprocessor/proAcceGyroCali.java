@@ -180,7 +180,9 @@ public class proAcceGyroCali extends getAcceGyro {
                 bundle.putFloatArray("Acce", msensordataCALI.getData());
                 bundle.putLong("Time", System.currentTimeMillis());
                 msg.setData(bundle);
-                proDataFlow.AcceHandler.sendMessage(msg);
+                msg.arg1 = 2;
+                //proDataFlow.AcceHandler.sendMessage(msg);
+                stabilize_v2.getSensor.sendMessage(msg);
                 //Log.d(TAG, "LM: STATUS CALI true");
                 //LogCSV(String.valueOf(mSensorEvent.values[0]),String.valueOf(mSensorEvent.values[1]),String.valueOf(mSensorEvent.values[2]),String.valueOf(msensordataCALI.getData()[0]),String.valueOf(msensordataCALI.getData()[1]),String.valueOf(msensordataCALI.getData()[2]));
             }else {
@@ -201,10 +203,12 @@ public class proAcceGyroCali extends getAcceGyro {
                         Message msg = new Message();
                         Bundle bundle = new Bundle();
                         msg.arg1 = 2;
-                        bundle.putFloatArray("Acce",new float[]{dx,dy,0});
+                        bundle.putFloatArray("Acce", new float[]{dx, dy, 0});
                         bundle.putLong("Time", System.currentTimeMillis());
                         msg.setData(bundle);
-                        proDataFlow.AcceHandler.sendMessage(msg);
+                        msg.arg1 = 2;
+                        //proDataFlow.AcceHandler.sendMessage(msg);
+                        stabilize_v2.getSensor.sendMessage(msg);
 
 
                     }
@@ -268,9 +272,11 @@ public class proAcceGyroCali extends getAcceGyro {
             bundle.putFloatArray("Acce", msensordata.getData());
             bundle.putLong("Time", System.currentTimeMillis());
             msg.setData(bundle);
+            msg.arg1 = 2;
             stabilize_v2.setcX(-3000);
             stabilize_v2.setcY(-3000);
-            proDataFlow.AcceHandler.sendMessage(msg);
+            //proDataFlow.AcceHandler.sendMessage(msg);
+            stabilize_v2.getSensor.sendMessage(msg);
 
         }
     }

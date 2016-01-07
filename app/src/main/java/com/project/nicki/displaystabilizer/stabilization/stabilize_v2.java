@@ -1,7 +1,6 @@
 package com.project.nicki.displaystabilizer.stabilization;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -73,17 +72,9 @@ public class stabilize_v2 implements Runnable {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
-
-            }
-        };
-        getDraw = new Handler() {
-
-
-            //noshake
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
                 Bundle bundlegot = msg.getData();
+                tmpaccesensordata = bundle2sensordata(bundlegot);
+                Log.d(TAG, "get!!!!!");
                 prevdrawSTATUS = drawSTATUS;
                 drawSTATUS = DemoDraw.drawing < 2;
 
@@ -95,10 +86,8 @@ public class stabilize_v2 implements Runnable {
                         cX = Math.abs(strokebuffer.get(strokebuffer.size() - 1).getData()[0] - strokebuffer.get(0).getData()[0]) / Math.abs(posbuffer.get(posbuffer.size() - 1).getData()[0] - posbuffer.get(0).getData()[0]);
                         cY = Math.abs(strokebuffer.get(strokebuffer.size() - 1).getData()[1] - strokebuffer.get(0).getData()[1]) / Math.abs(posbuffer.get(posbuffer.size() - 1).getData()[1] - posbuffer.get(0).getData()[1]);
                     }
-
                     strokebuffer = new ArrayList<sensordata>();
                     strokedeltabuffer = new ArrayList<sensordata>();
-                    accebuffer = new ArrayList<sensordata>();
                     posbuffer = new ArrayList<sensordata>();
                     posdeltabuffer = new ArrayList<sensordata>();
                     stastrokebuffer = new ArrayList<sensordata>();
@@ -109,89 +98,119 @@ public class stabilize_v2 implements Runnable {
                     toDraw = new ArrayList<Point>();
                     tmpaccesensordata = null;
                 }
+            }
+        };
+        getDraw = new Handler() {
+            //noshake
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                Bundle bundlegot = msg.getData();
+                prevdrawSTATUS = drawSTATUS;
+                drawSTATUS = DemoDraw.drawing < 2;
 
-
-                if (msg.arg1 == 2) {
-                    tmpaccesensordata = bundle2sensordata(bundlegot);
-                }
-                if (msg.arg1 == 0 && tmpaccesensordata != null) {
-                    //buffer Pos
-                    if (tmpaccesensordata != null) {
-                        posbuffer.add(tmpaccesensordata);
-                        tmpaccesensordata = null;
-                    }
-                    if (posbuffer.size() > 1) {
-                        posdeltabuffer.add(getlatestdelta(posbuffer));
-                        if (posdeltabuffer.size() > 1) {
-                            if (posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * posdeltabuffer.get(posdeltabuffer.size() - 2).getData()[0] < 0) {
-                                Log.d(TAG, "reversed: " + posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0]);
-                            }
-                        }
-                    }
-                    //buffer Draw
-                    strokebuffer.add(bundle2sensordata(bundlegot));
-                    if (strokebuffer.size() > 1) {
-                        strokedeltabuffer.add(getlatestdelta(strokebuffer));
-                    }
-
-                    //get stabilized result
-                    if (strokedeltabuffer.size() > 0 && posdeltabuffer.size() > 0 && posbuffer.size() > 0) {
-                        sensordata stastrokedelta = new sensordata();
-                        stastrokedelta.setTime(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime());
-                        stastrokedelta.setData(new float[]{
-                                strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * cX,
-                                strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY});
-                        stastrokedeltabuffer.add(stastrokedelta);
-                        //draw results
-                        DemoDraw.paint2.setColor(Color.BLUE);
-                        if (prevStroke != null) {
-                            //sumof stastrokedeltabuffer
-                            prevStroke[0] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0];
-                            prevStroke[1] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1];
-                            stastrokebuffer.add(new sensordata(stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getTime(), prevStroke));
-                            //cal how far is fram prevStroke to finger(now)
-                            float tofinger[] = new float[]{strokebuffer.get(strokebuffer.size() - 1).getData()[0] - prevStroke[0],
-                                    strokebuffer.get(strokebuffer.size() - 1).getData()[1] - prevStroke[1]};
-                            toDraw = new ArrayList<Point>();
-                            for (sensordata msensordata : stastrokebuffer) {
-                                Point todrawPoint = new Point();
-                                todrawPoint.x = msensordata.getData()[0] + tofinger[0];
-                                todrawPoint.y = msensordata.getData()[1] + tofinger[1];
-                                toDraw.add(todrawPoint);
-                            }
-                            bbox.set(toDraw);
-                        } else {
-                            prevStroke = new float[]{
-                                    strokebuffer.get(0).getData()[0],
-                                    strokebuffer.get(0).getData()[1]};
-                            prevStroke = new float[]{0, 0};
-                        }
-                        Log.d(TAG, "drawpos: " + prevStroke[0] + " " + prevStroke[1]);
-                    }
+                //init
+                if (prevdrawSTATUS == false && drawSTATUS == true || init == false) {
                     //refresh view
                     Message msg3 = new Message();
                     msg3.what = 1;
                     DemoDraw.mhandler.sendMessage(msg3);
-
-                    if (
-                            tmpaccesensordata != null &&
-                                    posbuffer.size() > 0 &&
-                                    posdeltabuffer.size() > 0 &&
-                                    strokebuffer.size() > 0 &&
-                                    strokedeltabuffer.size() > 0 &&
-                                    stastrokebuffer.size() > 0 &&
-                                    stastrokedeltabuffer.size() > 0) {
-                        LogCSV(
-                                String.valueOf(tmpaccesensordata.getTime()),
-                                String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getTime()),
-                                String.valueOf(strokebuffer.get(strokebuffer.size() - 1).getTime()),
-                                String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime()),
-                                String.valueOf(stastrokebuffer.get(stastrokebuffer.size() - 1).getTime()),
-                                String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime()));
+                    if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
+                        //cX = Math.abs(getSumArray(strokedeltabuffer).get(strokedeltabuffer.size()-1 +1).getData()[0])/Math.abs(getSumArray(posdeltabuffer).get(posdeltabuffer.size() - 1).getData()[0]);
+                        //cY = Math.abs(getSumArray(strokedeltabuffer).get(strokedeltabuffer.size()-1 +1).getData()[1])/Math.abs(getSumArray(posdeltabuffer).get(posdeltabuffer.size()-1).getData()[1]);
+                        cX = Math.abs(strokebuffer.get(strokebuffer.size() - 1).getData()[0] - strokebuffer.get(0).getData()[0]) / Math.abs(posbuffer.get(posbuffer.size() - 1).getData()[0] - posbuffer.get(0).getData()[0]);
+                        cY = Math.abs(strokebuffer.get(strokebuffer.size() - 1).getData()[1] - strokebuffer.get(0).getData()[1]) / Math.abs(posbuffer.get(posbuffer.size() - 1).getData()[1] - posbuffer.get(0).getData()[1]);
                     }
+                    strokebuffer = new ArrayList<sensordata>();
+                    strokedeltabuffer = new ArrayList<sensordata>();
+                    posbuffer = new ArrayList<sensordata>();
+                    posdeltabuffer = new ArrayList<sensordata>();
+                    stastrokebuffer = new ArrayList<sensordata>();
+                    stastrokedeltabuffer = new ArrayList<sensordata>();
+                    prevTime = 0;
+                    prevStroke = null;
+                    init = true;
+                    toDraw = new ArrayList<Point>();
+                    tmpaccesensordata = null;
 
                 }
+
+
+                //buffer Pos
+                if (tmpaccesensordata != null) {
+                    posbuffer.add(tmpaccesensordata);
+                    tmpaccesensordata = null;
+                }
+                if (posbuffer.size() > 1) {
+                    posdeltabuffer.add(getlatestdelta(posbuffer));
+                    if (posdeltabuffer.size() > 1) {
+                        if (posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * posdeltabuffer.get(posdeltabuffer.size() - 2).getData()[0] < 0) {
+                            Log.d(TAG, "reversed: " + posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0]);
+                        }
+                    }
+                }
+                //buffer Draw
+                strokebuffer.add(bundle2sensordata(bundlegot));
+                if (strokebuffer.size() > 1) {
+                    strokedeltabuffer.add(getlatestdelta(strokebuffer));
+                }
+
+                //get stabilized result
+                if (strokedeltabuffer.size() > 0 && posdeltabuffer.size() > 0 && posbuffer.size() > 0) {
+                    sensordata stastrokedelta = new sensordata();
+                    stastrokedelta.setTime(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime());
+                    stastrokedelta.setData(new float[]{
+                            strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * cX,
+                            strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY});
+                    stastrokedeltabuffer.add(stastrokedelta);
+                    if (prevStroke != null) {
+                        //sumof stastrokedeltabuffer
+                        prevStroke[0] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0];
+                        prevStroke[1] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1];
+                        stastrokebuffer.add(new sensordata(stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getTime(), prevStroke));
+                        //cal how far is fram prevStroke to finger(now)
+                        float tofinger[] = new float[]{strokebuffer.get(strokebuffer.size() - 1).getData()[0] - prevStroke[0],
+                                strokebuffer.get(strokebuffer.size() - 1).getData()[1] - prevStroke[1]};
+                        toDraw = new ArrayList<Point>();
+                        for (sensordata msensordata : stastrokebuffer) {
+                            Point todrawPoint = new Point();
+                            todrawPoint.x = msensordata.getData()[0] + tofinger[0];
+                            todrawPoint.y = msensordata.getData()[1] + tofinger[1];
+                            toDraw.add(todrawPoint);
+                        }
+                        bbox.set(toDraw);
+                    } else {
+                        prevStroke = new float[]{
+                                strokebuffer.get(0).getData()[0],
+                                strokebuffer.get(0).getData()[1]};
+                        prevStroke = new float[]{0, 0};
+                    }
+                    Log.d(TAG, "drawpos: " + prevStroke[0] + " " + prevStroke[1]);
+                }
+                //refresh view
+                Message msg3 = new Message();
+                msg3.what = 1;
+                DemoDraw.mhandler.sendMessage(msg3);
+                if (
+                        tmpaccesensordata != null &&
+                                posbuffer.size() > 0 &&
+                                posdeltabuffer.size() > 0 &&
+                                strokebuffer.size() > 0 &&
+                                strokedeltabuffer.size() > 0 &&
+                                stastrokebuffer.size() > 0 &&
+                                stastrokedeltabuffer.size() > 0) {
+                    LogCSV(
+                            String.valueOf(tmpaccesensordata.getTime()),
+                            String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getTime()),
+                            String.valueOf(strokebuffer.get(strokebuffer.size() - 1).getTime()),
+                            String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime()),
+                            String.valueOf(stastrokebuffer.get(stastrokebuffer.size() - 1).getTime()),
+                            String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime()));
+                }
+
             }
+
+
         };
         Looper.loop();
     }
