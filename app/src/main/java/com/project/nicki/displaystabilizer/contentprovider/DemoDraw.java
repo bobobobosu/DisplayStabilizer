@@ -31,7 +31,7 @@ public class DemoDraw extends View {
     public static Handler mhandler;
     public static Paint paint = new Paint();
     public static Paint paint3 = new Paint();
-    public static int rectX,rectY,sideLength;
+    public static int rectX, rectY, sideLength;
     public Path path = new Path();
     protected Context mContext;
     private boolean clear = false;
@@ -91,21 +91,27 @@ public class DemoDraw extends View {
         drawCanvas(canvas, stabilize_v2.toDraw);
 
 
-
-
         canvas.drawPath(path, paint);
         canvas.drawPath(path2, paint2);
         canvas.drawPath(path3, paint3);
         // create a rectangle that we'll draw later
-        rectangle = new Rect(rectX-sideLength,rectY-sideLength,rectX,rectY);
+        //rectangle = new Rect(rectX-sideLength,rectY-sideLength,rectX,rectY);
+        rectangle = new Rect(
+                (int) stabilize_v2.bbox.getXmin(),
+                (int) stabilize_v2.bbox.getYmin(),
+                (int) stabilize_v2.bbox.getXmax(),
+                (int) stabilize_v2.bbox.getYmax());
+        Log.d(TAG, "bbox:: " +
+                (int) stabilize_v2.bbox.getXmin() + " " +
+                (int) stabilize_v2.bbox.getYmin() + " " +
+                (int) stabilize_v2.bbox.getXmax() + " " +
+                (int) stabilize_v2.bbox.getYmax());
         canvas.drawRect(rectangle, paint);
     }
 
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-
-
         float eventX = event.getX();
         float eventY = event.getY();
         switch (event.getAction()) {
@@ -117,7 +123,7 @@ public class DemoDraw extends View {
                 Log.d(TAG, "AAAA down");
                 Message msgSTART = new Message();
                 msgSTART.what = 0;
-                msgSTART.arg1= 0;
+                msgSTART.arg1 = 0;
                 float[] dataSTART = new float[2];
                 long currTimeSTART = System.currentTimeMillis();
                 Bundle drawposBundleSTART = new Bundle();
@@ -127,12 +133,12 @@ public class DemoDraw extends View {
                 drawposBundleSTART.putLong("Time", currTimeSTART);
                 msgSTART.setData(drawposBundleSTART);
 
-                if(eventX != 0 || eventY!=0){
-                    proDataFlow.drawHandler.sendMessage(msgSTART);
-                    //stabilize_v2.getDatas.sendMessage(msgSTART);
+                if (eventX != 0 || eventY != 0) {
+                    //proDataFlow.drawHandler.sendMessage(msgSTART);
+                    stabilize_v2.getDraw.sendMessage(msgSTART);
                 }
 
-                //stabilize_v1.getDatas.sendMessage(msgSTART);
+                //stabilize_v1.getDraw.sendMessage(msgSTART);
 
                 drawing = 0;
                 path.moveTo(eventX, eventY);
@@ -153,15 +159,14 @@ public class DemoDraw extends View {
                 drawposBundleDRAWING.putLong("Time", currTimeDRAWING);
                 msgDRAWING.setData(drawposBundleDRAWING);
 
-                if(eventX != 0 || eventY!=0){
-                    proDataFlow.drawHandler.sendMessage(msgDRAWING);
+                if (eventX != 0 || eventY != 0) {
+                    //proDataFlow.drawHandler.sendMessage(msgDRAWING);
                     //stabilize_v1.mhandler.sendMessage(msgDRAWING);
-                    //stabilize_v2.getDatas.sendMessage(msgDRAWING);
-                    //stabilize_v1.getDatas.sendMessage(msgDRAWING);
+                    stabilize_v2.getDraw.sendMessage(msgDRAWING);
+                    //stabilize_v1.getDraw.sendMessage(msgDRAWING);
                 }
                 rectX = (int) eventX;
                 rectY = (int) eventY;
-
                 Log.d(TAG, "rectXY " + DemoDraw.rectX + " " + DemoDraw.rectY);
                 DemoDraw.sideLength = 200;
                 invalidate();
@@ -186,9 +191,9 @@ public class DemoDraw extends View {
                 drawposBundleSTOP.putFloatArray("Draw", dataSTOP);
                 drawposBundleSTOP.putLong("Time", currTimeSTOP);
                 msgSTOP.setData(drawposBundleSTOP);
-                if(eventX != 0 || eventY!=0){
+                if (eventX != 0 || eventY != 0) {
                     proDataFlow.drawHandler.sendMessage(msgSTOP);
-                    //stabilize_v1.getDatas.sendMessage(msgSTOP);
+                    //stabilize_v1.getDraw.sendMessage(msgSTOP);
                 }
                 drawing = 2;
                 // nothing to do

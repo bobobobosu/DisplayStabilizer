@@ -6,9 +6,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
-import com.project.nicki.displaystabilizer.dataprocessor.utils.Quaternion;
+
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
-import com.project.nicki.displaystabilizer.stabilization.stabilize_v1;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
 /**
@@ -252,8 +251,8 @@ public class proDataFlow implements Runnable {
 
         Log.d(TAG, "TEST " + String.valueOf(message.arg1));
         message.setData(data);
-        //stabilize_v1.getDatas.sendMessage(message);
-        stabilize_v2.getDatas.sendMessage(message);
+        //stabilize_v1.getDraw.sendMessage(message);
+        stabilize_v2.getDraw.sendMessage(message);
         /*
         if (LOGSTATUS == true) {
             message.what = 1;
@@ -274,8 +273,8 @@ public class proDataFlow implements Runnable {
 
             Log.d(TAG, "TEST " + String.valueOf(message.arg1));
             message.setData(data);
-            //stabilize_v1.getDatas.sendMessage(message);
-            stabilize_v2.getDatas.sendMessage(message);
+            //stabilize_v1.getDraw.sendMessage(message);
+            stabilize_v2.getDraw.sendMessage(message);
         } else {
             switch (type) {
                 case 0:
@@ -297,8 +296,8 @@ public class proDataFlow implements Runnable {
             message.what = 0;
 
             message.setData(data);
-            //stabilize_v1.getDatas.sendMessage(message);
-            stabilize_v2.getDatas.sendMessage(message);
+            //stabilize_v1.getDraw.sendMessage(message);
+            stabilize_v2.getDraw.sendMessage(message);
         }
         */
 

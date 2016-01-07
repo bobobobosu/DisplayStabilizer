@@ -1,38 +1,18 @@
 package com.project.nicki.displaystabilizer.dataprovider;
 
-import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.Point;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
-import android.os.Message;
-import android.util.Log;
-import android.view.Display;
-import android.widget.TextView;
 
-import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
-import com.project.nicki.displaystabilizer.R;
-import com.project.nicki.displaystabilizer.dataprocessor.CircularBuffer;
-import com.project.nicki.displaystabilizer.dataprocessor.proAccelerometer;
-import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
-import com.project.nicki.displaystabilizer.dataprocessor.proDataProcess;
-import com.project.nicki.displaystabilizer.dataprocessor.proGyroscope;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 
 import au.com.bytecode.opencsv.CSVWriter;
 
@@ -40,12 +20,9 @@ import au.com.bytecode.opencsv.CSVWriter;
  * Created by nickisverygood on 12/17/2015.
  */
 public class getAcceGyro implements Runnable {
+    String csvName = "getAcceGyro.csv";
+    FileWriter mFileWriter;
     private Context mContext;
-
-    public getAcceGyro(Context context) {
-        mContext = context;
-    }
-
     private SensorManager mSensorManager;
     private Sensor mGSensor; //gyro
     private Sensor mLSensor; //linear acce
@@ -54,10 +31,11 @@ public class getAcceGyro implements Runnable {
     private SensorEventListener mSensorEventListener;
     private HandlerThread mHandlerThread;
     private String TAG = "getAcceGyro";
-    String csvName = "getAcceGyro.csv";
 
 
-    FileWriter mFileWriter;
+    public getAcceGyro(Context context) {
+        mContext = context;
+    }
     public getAcceGyro() {
     }
 
@@ -82,8 +60,10 @@ public class getAcceGyro implements Runnable {
             long initTime = System.currentTimeMillis();
             @Override
             public void onSensorChanged(SensorEvent event) {
-                if(System.currentTimeMillis()-initTime>5000){
-                    mproAcceGyroCali.CircularBuffer(event);
+                if (System.currentTimeMillis() - initTime > 1) {
+                    mproAcceGyroCali.Controller(event);
+                    //mproAcceGyroCali.RK4(event);
+                    //mproAcceGyroCali.Calibration(event);
                 }
             }
 
