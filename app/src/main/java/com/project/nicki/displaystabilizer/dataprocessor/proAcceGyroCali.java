@@ -273,8 +273,8 @@ public class proAcceGyroCali extends getAcceGyro {
             bundle.putLong("Time", System.currentTimeMillis());
             msg.setData(bundle);
             msg.arg1 = 2;
-            stabilize_v2.setcX(-3000);
-            stabilize_v2.setcY(-3000);
+            //stabilize_v2.setcX(-10000);
+            //stabilize_v2.setcY(-10000);
             //proDataFlow.AcceHandler.sendMessage(msg);
             stabilize_v2.getSensor.sendMessage(msg);
 
