@@ -11,11 +11,14 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.WindowManager;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
-import butterknife.ButterKnife;
+
 import com.project.nicki.displaystabilizer.R;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
 import com.project.nicki.displaystabilizer.dataprocessor.proCamera;
+import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -33,6 +36,8 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
     public static TextView mlog_gyro;
     public static Handler proCameraHandler, goto_results;
     public static Handler UIHandler;
+    public static SeekBar mseekBar_cX;
+    public static SeekBar mseekBar_cY;
 
     static {
         UIHandler = new Handler(Looper.getMainLooper());
@@ -73,6 +78,9 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        int progress = 0;
         DD = new DemoDraw(this);
         DD = (DemoDraw) findViewById(R.id.view);
         HandlerThread handlerThread = new HandlerThread("HandlerThread");
@@ -104,7 +112,40 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
         mlog_cam = (TextView) findViewById(R.id.log_cam);
         mlog_acce = (TextView) findViewById(R.id.log_acce);
         mlog_gyro = (TextView) findViewById(R.id.log_gyro);
+        mseekBar_cX = (SeekBar) findViewById(R.id.seekBar_cX);
+        mseekBar_cX.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                stabilize_v2.setcX((float) seekBar.getProgress() - 10000);
+            }
 
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+        mseekBar_cY = (SeekBar) findViewById(R.id.seekBar_cY);
+        mseekBar_cY.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                stabilize_v2.setcY((float) seekBar.getProgress() - 10000);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
         //mOpenCvCameraView.setMaxFrameSize(800, 600);
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.demo_draw_camera_surface_view);
@@ -116,7 +157,6 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
 
 
     }
-
 
     //from getFrontcam
     @Override
@@ -151,7 +191,7 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
     }
 
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        if (DemoDraw.drawing <2) {
+        if (DemoDraw.drawing < 2) {
             Log.d(TAG, "onCameraFrame");
             //mRgba = inputFrame.gray();
             curMat = inputFrame.gray();

@@ -8,7 +8,9 @@ import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 
+import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
+import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -60,10 +62,21 @@ public class getAcceGyro implements Runnable {
             long initTime = System.currentTimeMillis();
             @Override
             public void onSensorChanged(SensorEvent event) {
+                DemoDrawUI.runOnUI(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            DemoDrawUI.mlog_draw.setText("cX= " + String.valueOf(stabilize_v2.getcX()));
+                            DemoDrawUI.mlog_cam.setText("cY= " + String.valueOf(stabilize_v2.getcY()));
+                        } catch (Exception ex) {
+
+                        }
+                    }
+                });
                 if (System.currentTimeMillis() - initTime > 1) {
-                    mproAcceGyroCali.Controller(event);
+                    //mproAcceGyroCali.Controller(event);
                     //mproAcceGyroCali.RK4(event);
-                    //mproAcceGyroCali.Calibration(event);
+                    mproAcceGyroCali.Calibration(event);
                 }
             }
 

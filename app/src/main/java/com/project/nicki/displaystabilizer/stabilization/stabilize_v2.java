@@ -56,13 +56,21 @@ public class stabilize_v2 implements Runnable {
         mContext = context;
     }
 
-    //setConstants
-    public static void setcX(float cX) {
-        stabilize_v2.cX = cX;
+    public static float getcY() {
+        return cY;
     }
 
     public static void setcY(float cY) {
         stabilize_v2.cY = cY;
+    }
+
+    public static float getcX() {
+        return cX;
+    }
+
+    //setConstants
+    public static void setcX(float cX) {
+        stabilize_v2.cX = cX;
     }
 
     @Override
@@ -99,6 +107,8 @@ public class stabilize_v2 implements Runnable {
                     toDraw = new ArrayList<Point>();
                     tmpaccesensordata = null;
                 }
+
+
             }
         };
         getDraw = new Handler() {
