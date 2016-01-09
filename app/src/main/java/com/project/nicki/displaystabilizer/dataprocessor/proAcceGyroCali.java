@@ -65,6 +65,10 @@ public class proAcceGyroCali extends getAcceGyro {
     public ArrayList<sensordata> lAcceCircular = new ArrayList<>();
     public boolean caliLogSTATUS = false;
     public List<Double> cirbuffer = new ArrayList<Double>();
+    //allantest
+    public Rolling ling = new Rolling(50);
+    public calAllan tmpallan = new calAllan();
+    public List<sensordata> cirbuff = new ArrayList<sensordata>();
     String TAG = "proAcceGyroCali";
     String csvName = "proAcceGyroCali.csv";
     ArrayList<sensordata> tmpcalibuffer = new ArrayList<>();
@@ -127,7 +131,6 @@ public class proAcceGyroCali extends getAcceGyro {
     private int caliLogSTATUSnum = 0;
     private boolean precaliLogSTATUS = caliLogSTATUS;
 
-
     public proAcceGyroCali(Context context) {
         super(context);
         //LM init
@@ -186,8 +189,26 @@ public class proAcceGyroCali extends getAcceGyro {
     }
 
     public void Controller(SensorEvent mSensorEvent) {
+        if (mSensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+            ling.add((double) mSensorEvent.values[0]);
+            sensordata mmsensordata = new sensordata(mSensorEvent.timestamp, new float[]{(float) ling.getAverage(), (float) ling.getAverage(), (float) ling.getAverage()});
+            if (cirbuff.size() < 100) {
+                cirbuff.add(mmsensordata);
+            } else {
+                cirbuff.add(mmsensordata);
+                cirbuff.remove(0);
+                calAllan mcalAllan = new calAllan();
+                sensordata mtmpallan = mcalAllan.getAvgAllan(cirbuff);
+                LogCSV(
+                        String.valueOf(mtmpallan.getData()[0]),
+                        String.valueOf(mtmpallan.getData()[1]),
+                        String.valueOf(mtmpallan.getData()[2]),
+                        "", "", "");
+            }
+        }
+
         //RK4(mSensorEvent);
-        Eular(mSensorEvent);
+        //Eular(mSensorEvent);
     }
 
     public void NoShake(final SensorEvent mSensorEvent) {
@@ -1002,6 +1023,46 @@ public class proAcceGyroCali extends getAcceGyro {
 
     //Allan Variance
     public class calAllan {
+        public sensordata getAvgAllan(List<sensordata> msensordatas) {
+            List<sensordata> mcircular = new ArrayList<sensordata>();
+            List<sensordata> mbincircular = new ArrayList<sensordata>();
+            for (sensordata mmsensordata : msensordatas) {
+                mcircular.add(mmsensordata);
+                if (mcircular.size() > 9) {
+                    float[] sumData = new float[mmsensordata.getData().length];
+                    for (int i = 0; i < mcircular.size(); i++) {
+                        for (int j = 0; j < mmsensordata.getData().length; j++) {
+                            sumData[j] += mcircular.get(i).getData()[j];
+                        }
+                    }
+
+                    for (int j = 0; j < mmsensordata.getData().length; j++) {
+                        sumData[j] /= mcircular.size();
+                    }
+                    sensordata tmpbin = new sensordata(mcircular.get(0).getTime(), sumData);
+                    mbincircular.add(tmpbin);
+                    mcircular = new ArrayList<sensordata>();
+                }
+            }
+
+            sensordata returnallan = new sensordata();
+            float[] tmpsum = new float[mbincircular.get(0).getData().length];
+            for (int i = 1; i < mbincircular.size(); i++) {
+                for (int j = 0; j < mbincircular.get(i).getData().length; j++) {
+                    tmpsum[j] += (float) Math.pow(mbincircular.get(i).getData()[j] - mbincircular.get(i - 1).getData()[j], 2);
+                }
+            }
+            float[] returnallandata = new float[mbincircular.get(0).getData().length];
+            for (int g = 0; g < mbincircular.get(0).getData().length; g++) {
+                returnallandata[g] = tmpsum[g] / (2 * (mbincircular.size() - 1));
+            }
+            returnallan.setData(returnallandata);
+            return returnallan;
+        }
+    }
+
+    //Allan Variance2
+    public class calAllan2 {
         private int n;
         private List<Double> tau = new ArrayList<Double>();
         private List<Double> D = new ArrayList<Double>();
@@ -1016,7 +1077,7 @@ public class proAcceGyroCali extends getAcceGyro {
 
         private double u, uu;
 
-        public calAllan(double[] y, int tau0) {
+        public void calAllan(double[] y, int tau0) {
             n = y.length;
             int jj = (int) Math.floor(Math.log((n - 1) / 3) / Math.log(2));
             for (int j = 1; j <= jj; j++) {
