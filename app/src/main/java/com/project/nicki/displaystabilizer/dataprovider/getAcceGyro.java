@@ -74,9 +74,9 @@ public class getAcceGyro implements Runnable {
                     }
                 });
                 if (System.currentTimeMillis() - initTime > 1) {
-                    //mproAcceGyroCali.Controller(event);
+                    mproAcceGyroCali.Controller(event);
                     //mproAcceGyroCali.RK4(event);
-                    mproAcceGyroCali.Calibration(event);
+                    //mproAcceGyroCali.Calibration(event);
                 }
             }
 
