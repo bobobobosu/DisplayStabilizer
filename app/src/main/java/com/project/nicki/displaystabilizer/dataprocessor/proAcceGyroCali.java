@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
 
+import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LevenbergMarquardt;
 import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
@@ -39,10 +40,7 @@ import jkalman.JKalman;
 
 
 public class proAcceGyroCali extends getAcceGyro {
-    //low pass
-    static final float ALPHA = 0.25f; // if ALPHA = 1 OR 0, no filter applies.
     public static boolean getcaliLogSTATUS = false;
-    public static boolean Calibrated = false;
     //noshake
     private final int SENEOR_TYPE = Sensor.TYPE_LINEAR_ACCELERATION;
     private final int ACCELEROMOTER_FPS = SensorManager.SENSOR_DELAY_FASTEST;
@@ -54,48 +52,43 @@ public class proAcceGyroCali extends getAcceGyro {
     //for staticdetetc()
     public ArrayList<sensordata> lAcceCircular = new ArrayList<>();
     public boolean caliLogSTATUS = false;
-    public List<Double> cirbuffer = new ArrayList<Double>();
-    //allantest
-    public Rolling ling;
-    public calAllan tmpallan = new calAllan();
     public List<sensordata> cirbuff = new ArrayList<sensordata>();
     //init
     public boolean controllerinit = false;
     public boolean Calibrationinit = false;
     public boolean ctrlerCalibrationinit = false;
+    public boolean NoShakeinit = false;
     public Rolling avg1;
     public Rolling avg2;
     public Rolling avg3;
+    highPass RK4_HP_a_X = new highPass(0.99f);
+    highPass RK4_HP_v_Y = new highPass(0.99f);
+    highPass RK4_HP_p_X = new highPass(0.99f);
+    highPass Eular_HP_a_Y = new highPass(0.99f);
+    highPass Eular_HP_v_Y = new highPass(0.99f);
+    highPass Eular_HP_p_Y = new highPass(0.99f);
     String TAG = "proAcceGyroCali";
     String csvName = "proAcceGyroCali.csv";
     ArrayList<sensordata> tmpcalibuffer = new ArrayList<>();
     ArrayList<ArrayList<sensordata>> caliAccebuffer;
-    //Kalman Filter
-    JKalman kalman = null;
-    Matrix s, c, m;
+
     double g = 9.806 - (1 / 2) * (9.832 - 9.780) * Math.cos(2 * 25.048212 * Math.PI / 180);
-    //low pass
-    float[] mSensorVals;
     //LogEverything
     ArrayList<sensordata> rawAcceAll = new ArrayList<sensordata>();
     //rk4
     Rolling avg = new Rolling(50);
-    RK4 mrk4 = new RK4();
-    Position initX = new Position(0, 0);
-    highPass Eular_HP_a = new highPass(0.99f);
-    highPass Eular_HP_v = new highPass(0.99f);
-    highPass Eular_HP_p = new highPass(0.99f);
-    RK4 mrk42 = new RK4();
-    Position initX2 = new Position(0, 0);
-    highPass h2 = new highPass(0.99f);
-    highPass hv2 = new highPass(0.99f);
-    highPass hp2 = new highPass(0.99f);
+    RK4 mrk4_X = new RK4();
+    Position RK4_initX = new Position(0, 0);
+    highPass Eular_HP_a_X = new highPass(0.99f);
+    highPass Eular_HP_v_X = new highPass(0.99f);
+    highPass Eular_HP_p_X = new highPass(0.99f);
+    RK4 mrk4_Y = new RK4();
+    Position RK4_initY = new Position(0, 0);
+    highPass RK4_HP_a_Y = new highPass(0.99f);
+    highPass RK4_HP_v_X = new highPass(0.99f);
+    highPass RK4_HP_p_Y = new highPass(0.99f);
     //eular
     calEular mcalEular = new calEular();
-    Rolling eavg = new Rolling(50);
-    highPass eh = new highPass(0.99f);
-    highPass ehv = new highPass(0.99f);
-    highPass ehp = new highPass(0.99f);
     LevenbergMarquardt mLM;
     DenseMatrix64F paramgot;
     FileWriter mFileWriter;
@@ -105,16 +98,21 @@ public class proAcceGyroCali extends getAcceGyro {
     private float[] AcceZsam = new float[Asamplenum];
     private int Aintsam = 0;
     private int OFFSET_SCALE = 30;
-
     private CircularBuffer mBufferX = new CircularBuffer(50, 10);
     private CircularBuffer mBufferY = new CircularBuffer(50, 10);
-    private int mScreenHeight, mScreenWidth;
     private boolean didCalibraiotn = false;
     private float[] lAcceXsam = new float[Asamplenum];
     private float[] lAcceYsam = new float[Asamplenum];
     private float[] lAcceZsam = new float[Asamplenum];
-
+    private KalmanFilter Eularkal_a = new KalmanFilter();
+    private KalmanFilter Eularkal_v = new KalmanFilter();
+    private KalmanFilter Eularkal_p = new KalmanFilter();
+    private KalmanFilter RK4kal_a = new KalmanFilter();
+    private KalmanFilter RK4kal_v = new KalmanFilter();
+    private KalmanFilter RK4kal_p = new KalmanFilter();
+    private KalmanFilter NoShakekal = new KalmanFilter();
     private boolean precaliLogSTATUS = caliLogSTATUS;
+    private display mdisplay = new display();
 
     public proAcceGyroCali(Context context) {
         super(context);
@@ -134,45 +132,6 @@ public class proAcceGyroCali extends getAcceGyro {
         });
     }
 
-    public static float getVarianceMagnitude(float a, float b, float c) {
-        BigDecimal Ba = new BigDecimal(String.valueOf(a));
-        BigDecimal Bb = new BigDecimal(String.valueOf(b));
-        BigDecimal Bc = new BigDecimal(String.valueOf(c));
-        MathContext mc = new MathContext(50, RoundingMode.HALF_DOWN);
-        BigDecimal BVarianceMagnitude = new BigDecimal(String.valueOf(Ba.pow(2).add(Bb.pow(2).add(Bc.pow(2)))), mc);
-        double dVarianceMagnitude = Math.pow(BVarianceMagnitude.doubleValue(), 0.5);
-        float VarianceMagnitude = (float) dVarianceMagnitude;
-        return VarianceMagnitude;
-    }
-
-    public static double[][] multiplyByMatrix(double[][] m1, double[][] m2) {
-        int m1ColLength = m1[0].length; // m1 columns length
-        int m2RowLength = m2.length;    // m2 rows length
-        if (m1ColLength != m2RowLength) return null; // matrix multiplication is not possible
-        int mRRowLength = m1.length;    // m result rows length
-        int mRColLength = m2[0].length; // m result columns length
-        double[][] mResult = new double[mRRowLength][mRColLength];
-        for (int i = 0; i < mRRowLength; i++) {         // rows from m1
-            for (int j = 0; j < mRColLength; j++) {     // columns from m2
-                for (int k = 0; k < m1ColLength; k++) { // columns from m1
-                    mResult[i][j] += m1[i][k] * m2[k][j];
-                }
-            }
-        }
-        return mResult;
-    }
-
-    public static double[] convertFloatsToDoubles(float[] input) {
-        if (input == null) {
-            return null; // Or throw an exception - your choice
-        }
-        double[] output = new double[input.length];
-        for (int i = 0; i < input.length; i++) {
-            output[i] = input[i];
-        }
-        return output;
-    }
-
     public void Controller(SensorEvent mSensorEvent) {
         if (mSensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             //////////////////////////////init///////////////////////
@@ -182,6 +141,7 @@ public class proAcceGyroCali extends getAcceGyro {
                 avg2 = new Rolling(50);
                 avg3 = new Rolling(50);
                 cirbuff = new ArrayList<sensordata>();
+                mdisplay.displaystatus2("Initialized");
             } else {
                 sensordata thissensordata = new sensordata(mSensorEvent.timestamp, mSensorEvent.values);
                 //lowpass
@@ -204,6 +164,7 @@ public class proAcceGyroCali extends getAcceGyro {
                     sensordata Allan = mcalAllan.getAvgAllan(cirbuff);
                 }
                 //NoShake(thissensordata);
+                mdisplay.displaystatus2("Method: " + "Eular");
                 Eular(thissensordata);
 
             }
@@ -214,6 +175,68 @@ public class proAcceGyroCali extends getAcceGyro {
                 avg2 = new Rolling(50);
                 avg3 = new Rolling(50);
                 ctrlerCalibrationinit = true;
+                mdisplay.displaystatus1("Calibrating...");
+            } else {
+                sensordata thissensordata = new sensordata(mSensorEvent.timestamp, mSensorEvent.values);
+                //lowpass
+                float[] applylowpass = new float[thissensordata.getData().length];
+                applylowpass = lowPass(thissensordata.getData(), applylowpass, 0.25f);
+                thissensordata.setData(applylowpass);
+                //moving average
+                avg1.add((double) thissensordata.getData()[0]);
+                avg2.add((double) thissensordata.getData()[1]);
+                avg3.add((double) thissensordata.getData()[2]);
+                //MODE: Calibration
+                Calibration(thissensordata);
+            }
+        }
+    }
+
+
+    public void Controller(SensorEvent mSensorEvent) {
+        if (mSensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+            //////////////////////////////init///////////////////////
+            if (controllerinit == false) {
+                controllerinit = true;
+                avg1 = new Rolling(50);
+                avg2 = new Rolling(50);
+                avg3 = new Rolling(50);
+                cirbuff = new ArrayList<sensordata>();
+                mdisplay.displaystatus2("Initialized");
+            } else {
+                sensordata thissensordata = new sensordata(mSensorEvent.timestamp, mSensorEvent.values);
+                //lowpass
+                float[] applylowpass = new float[thissensordata.getData().length];
+                applylowpass = lowPass(thissensordata.getData(), applylowpass, 0.25f);
+                thissensordata.setData(applylowpass);
+                //moving average
+                avg1.add((double) thissensordata.getData()[0]);
+                avg2.add((double) thissensordata.getData()[1]);
+                avg3.add((double) thissensordata.getData()[2]);
+                thissensordata.setData(new float[]{(float) avg1.getAverage(), (float) avg2.getAverage(), (float) avg3.getAverage()});
+
+                //Allan
+                if (cirbuff.size() < 100) {
+                    cirbuff.add(thissensordata);
+                } else {
+                    cirbuff.add(thissensordata);
+                    cirbuff.remove(0);
+                    calAllan mcalAllan = new calAllan();
+                    sensordata Allan = mcalAllan.getAvgAllan(cirbuff);
+                }
+                //NoShake(thissensordata);
+                mdisplay.displaystatus2("Method: " + "Eular");
+                Eular(thissensordata);
+
+            }
+        }
+        if (mSensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER && didCalibraiotn == false) {
+            if (ctrlerCalibrationinit == false) {
+                avg1 = new Rolling(50);
+                avg2 = new Rolling(50);
+                avg3 = new Rolling(50);
+                ctrlerCalibrationinit = true;
+                mdisplay.displaystatus1("Calibrating...");
             } else {
                 sensordata thissensordata = new sensordata(mSensorEvent.timestamp, mSensorEvent.values);
                 //lowpass
@@ -232,82 +255,68 @@ public class proAcceGyroCali extends getAcceGyro {
 
     public void NoShake(sensordata sensordataIN) {
         sensordata msensordataCALI;
-        if (didCalibraiotn == true && paramgot != null) {
-            //calibrate use param
-            msensordataCALI = RawAcceCali(sensordataIN, paramgot);
+        if (NoShakeinit == false) {
+            NoShakekal = new KalmanFilter();
+            NoShakeinit = true;
+            OFFSET_SCALE = 30;
         } else {
-            DenseMatrix64F mpara = new DenseMatrix64F(6, 1);
-            mpara.set(0, 0, 1.0090734231345496);
-            mpara.set(1, 0, 0.914821159289414);
-            mpara.set(2, 0, 0.9766550810797668);
-            mpara.set(3, 0, 0.7745442786490917);
-            mpara.set(4, 0, 0.900701438639133);
-            mpara.set(5, 0, 0.7656634224611445);
-            msensordataCALI = RawAcceCali(sensordataIN, mpara);
-            if (getcaliLogSTATUS == true) {
-                msensordataCALI.setData(new float[]{0, 0, 0});
-            }
+            sensordataIN.setData(NoShakekal.calKalman(sensordataIN.getData()));
+            mBufferX.insert(sensordataIN.getData()[0]);
+            mBufferY.insert(sensordataIN.getData()[1]);
+            final float dx = -mBufferX.convolveWithH() * OFFSET_SCALE;
+            final float dy = -mBufferY.convolveWithH() * OFFSET_SCALE;
+            Message msg = new Message();
+            Bundle bundle = new Bundle();
+            msg.arg1 = 2;
+            bundle.putFloatArray("Acce", new float[]{dx, dy, 0});
+            bundle.putLong("Time", sensordataIN.getTime());
+            msg.setData(bundle);
+            stabilize_v2.getSensor.sendMessage(msg);
         }
-        //kalman
-        float[] kalmaned = KalmanFilter(msensordataCALI.getData());
-        final float x = kalmaned[0];
-        final float y = kalmaned[1];
-        final float z = sensordataIN.getData()[2];
-        Log.d("HELLO", "HELLO 3 ");
-        mBufferX.insert(x);
-        mBufferY.insert(y);
-        final float dx = -mBufferX.convolveWithH() * OFFSET_SCALE;
-        final float dy = -mBufferY.convolveWithH() * OFFSET_SCALE;
-        Message msg = new Message();
-        Bundle bundle = new Bundle();
-        msg.arg1 = 2;
-        bundle.putFloatArray("Acce", new float[]{dx, dy, 0});
-        bundle.putLong("Time", System.currentTimeMillis());
-        msg.setData(bundle);
-        msg.arg1 = 2;
-        stabilize_v2.getSensor.sendMessage(msg);
+
 
     }
 
     public void RK4(sensordata sensordataIN) {
         if (DemoDraw.drawing > 1) {
-            avg = new Rolling(50);
-            mrk4 = new RK4();
-            initX = new Position(0, 0);
-            Eular_HP_a = new highPass(0.99f);
-            Eular_HP_v = new highPass(0.99f);
-            Eular_HP_p = new highPass(0.99f);
-            avg2 = new Rolling(50);
-            mrk42 = new RK4();
-            initX2 = new Position(0, 0);
-            h2 = new highPass(0.99f);
-            hv2 = new highPass(0.99f);
-            hp2 = new highPass(0.99f);
+            mrk4_X = new RK4();
+            RK4_initX = new Position(0, 0);
+            RK4_HP_a_X = new highPass(0.99f);
+            RK4_HP_v_X = new highPass(0.99f);
+            RK4_HP_p_X = new highPass(0.99f);
+            mrk4_Y = new RK4();
+            RK4_initY = new Position(0, 0);
+            RK4_HP_a_Y = new highPass(0.99f);
+            RK4_HP_v_Y = new highPass(0.99f);
+            RK4_HP_p_Y = new highPass(0.99f);
         }
-        float highpassed = Eular_HP_a.calhighPass(sensordataIN.getData()[0]);
+        //high pass
+        //X
+        float highpassed = RK4_HP_a_X.calhighPass(sensordataIN.getData()[0]);
         if (Math.abs(highpassed) < 0.014) {
-            initX.v = 0;
+            RK4_initX.v = 0;
         }
-        initX.v = Eular_HP_v.calhighPass((float) initX.v);
-        //initX.pos = Eular_HP_p.calhighPass((float)initX.pos);
-        mrk4.integrate(initX, 0, 0.01, highpassed);
-
-        avg2.add(sensordataIN.getData()[1]);
-        float highpassed2 = h2.calhighPass(sensordataIN.getData()[1]);
+        RK4_initX.v = RK4_HP_v_X.calhighPass((float) RK4_initX.v);
+        mrk4_X.integrate(RK4_initX, 0, 0.01, highpassed);
+        //Y
+        float highpassed2 = RK4_HP_a_Y.calhighPass(sensordataIN.getData()[1]);
         if (Math.abs(highpassed2) < 0.014) {
-            initX2.v = 0;
+            RK4_initY.v = 0;
         }
-        initX2.v = hv2.calhighPass((float) initX2.v);
-        //initX.pos = Eular_HP_p.calhighPass((float)initX.pos);
+        RK4_initY.v = RK4_HP_v_X.calhighPass((float) RK4_initY.v);
+        mrk4_Y.integrate(RK4_initY, 0, 0.01, highpassed2);
 
-        mrk42.integrate(initX2, 0, 0.01, highpassed2);
+        //KF
+        sensordata sensordataOUT_a = new sensordata(sensordataIN.getTime(), RK4kal_a.calKalman(new float[]{(float) RK4_initX.a, (float) RK4_initY.a}));
+        sensordata sensordataOUT_v = new sensordata(sensordataIN.getTime(), RK4kal_v.calKalman(new float[]{(float) RK4_initX.v, (float) RK4_initY.v}));
+        sensordata sensordataOUT_p = new sensordata(sensordataIN.getTime(), RK4kal_p.calKalman(new float[]{(float) RK4_initX.pos, (float) RK4_initY.pos}));
 
-        Log.d(TAG, "forlogging " + String.valueOf(initX.pos) + " " + String.valueOf(initX2.pos));
-        sensordata msensordata = new sensordata(sensordataIN.getTime(), new float[]{(float) initX.pos, (float) initX2.pos});
+
+        Log.d(TAG, "forlogging " + String.valueOf(RK4_initX.pos) + " " + String.valueOf(RK4_initY.pos));
         Message msg = new Message();
         Bundle bundle = new Bundle();
-        bundle.putFloatArray("Acce", msensordata.getData());
-        bundle.putLong("Time", System.currentTimeMillis());
+        bundle.putFloatArray("Acce", sensordataOUT_p.getData());
+        bundle.putLong("Time", sensordataOUT_p.getTime());
         msg.setData(bundle);
         msg.arg1 = 2;
         //stabilize_v2.setcX(-10000);
@@ -316,21 +325,63 @@ public class proAcceGyroCali extends getAcceGyro {
         stabilize_v2.getSensor.sendMessage(msg);
     }
 
+    public static float getVarianceMagnitude(float a, float b, float c) {
+        BigDecimal Ba = new BigDecimal(String.valueOf(a));
+        BigDecimal Bb = new BigDecimal(String.valueOf(b));
+        BigDecimal Bc = new BigDecimal(String.valueOf(c));
+        MathContext mc = new MathContext(50, RoundingMode.HALF_DOWN);
+        BigDecimal BVarianceMagnitude = new BigDecimal(String.valueOf(Ba.pow(2).add(Bb.pow(2).add(Bc.pow(2)))), mc);
+        double dVarianceMagnitude = Math.pow(BVarianceMagnitude.doubleValue(), 0.5);
+        float VarianceMagnitude = (float) dVarianceMagnitude;
+        return VarianceMagnitude;
+    }
+
     public void Eular(sensordata sensordataIN) {
         if (DemoDraw.drawing > 1) {
-            Eular_HP_a = new highPass(0.99f);
-            Eular_HP_v = new highPass(0.99f);
-            Eular_HP_p = new highPass(0.99f);
+            Eular_HP_a_X = new highPass(0.99f);
+            Eular_HP_v_X = new highPass(0.99f);
+            Eular_HP_p_X = new highPass(0.99f);
+            Eular_HP_a_Y = new highPass(0.99f);
+            Eular_HP_v_Y = new highPass(0.99f);
+            Eular_HP_p_Y = new highPass(0.99f);
+            Eularkal_a = new KalmanFilter();
+            Eularkal_v = new KalmanFilter();
+            Eularkal_p = new KalmanFilter();
             mcalEular = new calEular();
         }
+
+        ///////HP
+        if (mcalEular.position == null) {
+            mcalEular.calc(sensordataIN);
+        }
+        //X
+        float highpassedX = Eular_HP_a_X.calhighPass(sensordataIN.getData()[0]);
+        if (Math.abs(highpassedX) < 0.014) {
+            mcalEular.velocity[0] = 0;
+        }
+        mcalEular.velocity[0] = Eular_HP_v_X.calhighPass(mcalEular.velocity[0]);
+        //Y
+        float highpassedY = Eular_HP_a_Y.calhighPass(sensordataIN.getData()[1]);
+        if (Math.abs(highpassedY) < 0.014) {
+            mcalEular.velocity[1] = 0;
+        }
+        mcalEular.velocity[1] = RK4_HP_v_X.calhighPass(mcalEular.velocity[1]);
+        sensordataIN.setData(new float[]{highpassedX, highpassedY, sensordataIN.getData()[2]});
+
+
+        /////////KF
+        sensordata sensordataOUT_a = new sensordata(sensordataIN.getTime(), Eularkal_a.calKalman(sensordataIN.getData()));
+        sensordata sensordataOUT_v = new sensordata(sensordataIN.getTime(), Eularkal_v.calKalman(mcalEular.velocity));
+        sensordata sensordataOUT_p = new sensordata(sensordataIN.getTime(), Eularkal_p.calKalman(mcalEular.position));
+
         mcalEular.calc(sensordataIN);
 
         Log.d(TAG, "forlogging " + String.valueOf(mcalEular.position[0]) + " " + String.valueOf(mcalEular.position[1]));
         sensordata sensordataOUT = new sensordata(sensordataIN.getTime(), new float[]{mcalEular.position[0], mcalEular.position[1]});
         Message msg = new Message();
         Bundle bundle = new Bundle();
-        bundle.putFloatArray("Acce", sensordataOUT.getData());
-        bundle.putLong("Time", System.currentTimeMillis());
+        bundle.putFloatArray("Acce", sensordataOUT_p.getData());
+        bundle.putLong("Time", sensordataOUT_p.getTime());
         msg.setData(bundle);
         msg.arg1 = 2;
         //stabilize_v2.setcX(-10000);
@@ -339,6 +390,23 @@ public class proAcceGyroCali extends getAcceGyro {
         stabilize_v2.getSensor.sendMessage(msg);
 
 
+    }
+
+    public static double[][] multiplyByMatrix(double[][] m1, double[][] m2) {
+        int m1ColLength = m1[0].length; // m1 columns length
+        int m2RowLength = m2.length;    // m2 rows length
+        if (m1ColLength != m2RowLength) return null; // matrix multiplication is not possible
+        int mRRowLength = m1.length;    // m result rows length
+        int mRColLength = m2[0].length; // m result columns length
+        double[][] mResult = new double[mRRowLength][mRColLength];
+        for (int i = 0; i < mRRowLength; i++) {         // rows from m1
+            for (int j = 0; j < mRColLength; j++) {     // columns from m2
+                for (int k = 0; k < m1ColLength; k++) { // columns from m1
+                    mResult[i][j] += m1[i][k] * m2[k][j];
+                }
+            }
+        }
+        return mResult;
     }
 
     public void Calibration(sensordata sensordataIN) {
@@ -378,7 +446,10 @@ public class proAcceGyroCali extends getAcceGyro {
 
             //(3)put values into tmpbuffer when static, add to LM buffer if size>100
             precaliLogSTATUS = caliLogSTATUS;
-            if (getVarianceMagnitude(AcceXvar, AcceYvar, AcceZvar) < 1.865) {
+
+            double tmpmagnitude = getVarianceMagnitude(AcceXvar, AcceYvar, AcceZvar);
+            mdisplay.displaystatus1("num: " + String.valueOf(4 - caliAccebuffer.size()) + " buff: " + tmpcalibuffer.size() + " static: " + Math.floor((1.865 - tmpmagnitude) * 100 / 1.865) + "%");
+            if (tmpmagnitude < 1.865) {
                 caliLogSTATUS = true;
                 if (tmpcalibuffer.size() < 100) {
                     tmpcalibuffer.add(sensordataIN);
@@ -390,7 +461,7 @@ public class proAcceGyroCali extends getAcceGyro {
             if (precaliLogSTATUS == true && caliLogSTATUS == false && tmpcalibuffer.size() > 90) {
                 //caliAccebuffer.add(mkArrayAverage(tmpcalibuffer));
                 caliAccebuffer.add(tmpcalibuffer);
-                Log.d(TAG, "LM: cali " + caliAccebuffer.size() + " tmp:" + tmpcalibuffer.size() + " " + Calibrated);
+                Log.d(TAG, "LM: cali " + caliAccebuffer.size() + " tmp:" + tmpcalibuffer.size());
                 tmpcalibuffer = new ArrayList<>();
             }
             Log.d(TAG, "hi");
@@ -398,28 +469,50 @@ public class proAcceGyroCali extends getAcceGyro {
             //(5)compute LM
             // if (caliAccebuffer.size() > 10 && Calibrated == false) {
 
-            if (caliAccebuffer.size() > 10) {
+            if (caliAccebuffer.size() > 3) {
+                mdisplay.displaystatus1("LM: Start");
                 //flatten all data
                 ArrayList<sensordata> allcaliAccebuffer = new ArrayList<>();
                 for (int j = 0; j < caliAccebuffer.size(); j++) {
                     for (int k = 0; k < caliAccebuffer.get(j).size(); k++) {
                         allcaliAccebuffer.add(caliAccebuffer.get(j).get(k));
                         Log.d(TAG, "LM: flattening " + String.valueOf(caliAccebuffer.get(j).get(k).getData()[0]) + " " + String.valueOf(caliAccebuffer.get(j).get(k).getData()[1]) + " " + String.valueOf(caliAccebuffer.get(j).get(k).getData()[2]));
+                        mdisplay.displaystatus1("LM: flattening " + String.valueOf(caliAccebuffer.get(j).get(k).getData()[0]) + " " + String.valueOf(caliAccebuffer.get(j).get(k).getData()[1]) + " " + String.valueOf(caliAccebuffer.get(j).get(k).getData()[2]));
                     }
                 }
                 //cal LM
-                Log.d(TAG, "LM: LM start");
-                Calibrated = true;
                 LM(mLM, allcaliAccebuffer);
                 //disp result
+
                 Log.d(TAG, "LM: cost b/a: " + String.valueOf(mLM.getInitialCost()) + " " + mLM.getFinalCost());
                 for (int l = 0; l < 6; l++) {
-                    Log.d(TAG, "LM: parm " + String.valueOf(l) + " " + String.valueOf(mLM.getParameters().get(l, 0)));
+                    Log.d(TAG, "LM: parm " + String.valueOf(mLM.getParameters().get(l, 0)));
+
                 }
+                mdisplay.displaystatus1("LM: parm: " +
+                                String.valueOf(Math.floor(mLM.getParameters().get(0, 0))) + " " +
+                                String.valueOf(Math.floor(mLM.getParameters().get(0, 0))) + " " +
+                                String.valueOf(Math.floor(mLM.getParameters().get(0, 0))) + " " +
+                                String.valueOf(Math.floor(mLM.getParameters().get(0, 0))) + " " +
+                                String.valueOf(Math.floor(mLM.getParameters().get(0, 0))) + " " +
+                                String.valueOf(Math.floor(mLM.getParameters().get(0, 0))) + " " +
+                                String.valueOf(Math.floor(mLM.getParameters().get(0, 0))) + " "
+                );
                 paramgot = mLM.getParameters();
                 didCalibraiotn = true;
             }
         }
+    }
+
+    public static double[] convertFloatsToDoubles(float[] input) {
+        if (input == null) {
+            return null; // Or throw an exception - your choice
+        }
+        double[] output = new double[input.length];
+        for (int i = 0; i < input.length; i++) {
+            output[i] = input[i];
+        }
+        return output;
     }
 
     public boolean detectStatic(sensordata msensordata) {
@@ -702,75 +795,6 @@ public class proAcceGyroCali extends getAcceGyro {
         //LogCSV("","","",String.valueOf(mLM.getParameters().get(6, 0)),String.valueOf(mLM.getParameters().get(7, 0)),String.valueOf(mLM.getParameters().get(8,0)));
     }
 
-    public float[] KalmanFilter(float[] invalues) {
-        if (kalman == null || m == null) {
-            try {
-                //kalman = new JKalman(4, 2);
-                kalman = new JKalman(6, 3);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            double x = 0;
-            double y = 0;
-            double z = 0;
-
-            // init
-
-            //Matrix s = new Matrix(4, 1); // state [x, y, dx, dy, dxy]
-            //Matrix c = new Matrix(4, 1); // corrected state [x, y, dx, dy, dxy]
-            //Matrix m = new Matrix(2, 1); // measurement [x]
-            Matrix s = new Matrix(6, 1); // state [x, y, z, dx, dy, dz]
-            Matrix c = new Matrix(6, 1); // corrected state
-            Matrix m = new Matrix(3, 1); // measurement [x, y, z]
-
-            //m.set(0, 0, x);
-            //m.set(1, 0, y);
-            m.set(0, 0, x);
-            m.set(1, 0, y);
-            m.set(2, 0, z);
-
-            // transitions for x, y, dx, dy
-            /*
-            double[][] tr =
-                    {{1, 0, 1, 0},
-                            {0, 1, 0, 1},
-                            {0, 0, 1, 0},
-                            {0, 0, 0, 1}};
-            kalman.setTransition_matrix(new Matrix(tr));
-            */
-            double[][] tr = {{1, 0, 0, 1, 0, 0},
-                    {0, 1, 0, 0, 1, 0},
-                    {0, 0, 1, 0, 0, 1},
-                    {0, 0, 0, 1, 0, 0},
-                    {0, 0, 0, 0, 1, 0},
-                    {0, 0, 0, 0, 0, 1}};
-            kalman.setTransition_matrix(new Matrix(tr));
-            // 1s somewhere?
-            kalman.setError_cov_post(kalman.getError_cov_post().identity());
-        }
-
-        // check state before
-        s = kalman.Predict();
-
-        // function init :)
-        // m.set(1, 0, rand.nextDouble());
-        try {
-            Matrix m = new Matrix(3, 1); // measurement [x]
-            m.set(0, 0, (double) invalues[0]);
-            m.set(1, 0, (double) invalues[1]);
-            m.set(2, 0, (double) invalues[2]);
-            // look better
-            c = kalman.Correct(m);
-            s = kalman.Predict();
-            Log.d(TAG, "<Kalman> " + ";" + m.get(0, 0) + ";" + m.get(1, 0) + ";"
-                    + s.get(0, 0) + ";" + s.get(1, 0) + ";" + s.get(2, 0) + ";" + s.get(3, 0) + ";"
-                    + c.get(0, 0) + ";" + c.get(1, 0) + ";" + c.get(2, 0) + ";" + c.get(3, 0) + ";");
-        } catch (Exception ex) {
-
-        }
-        return new float[]{(float) c.get(0, 0), (float) c.get(1, 0), (float) c.get(2, 0)};
-    }
-
     protected float[] lowPass(float[] input, float[] output, float v) {
         if (output == null) return input;
 
@@ -873,6 +897,81 @@ public class proAcceGyroCali extends getAcceGyro {
             ret[i] = (float) arr[i];
         }
         return ret;
+    }
+
+    public class KalmanFilter {
+        JKalman kalman = null;
+        Matrix s, c, m;
+
+        private float[] calKalman(float[] invalues) {
+            if (kalman == null || m == null) {
+                try {
+                    //kalman = new JKalman(4, 2);
+                    kalman = new JKalman(6, 3);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                double x = 0;
+                double y = 0;
+                double z = 0;
+
+                // init
+
+                //Matrix s = new Matrix(4, 1); // state [x, y, dx, dy, dxy]
+                //Matrix c = new Matrix(4, 1); // corrected state [x, y, dx, dy, dxy]
+                //Matrix m = new Matrix(2, 1); // measurement [x]
+                Matrix s = new Matrix(6, 1); // state [x, y, z, dx, dy, dz]
+                Matrix c = new Matrix(6, 1); // corrected state
+                Matrix m = new Matrix(3, 1); // measurement [x, y, z]
+
+                //m.set(0, 0, x);
+                //m.set(1, 0, y);
+                m.set(0, 0, x);
+                m.set(1, 0, y);
+                m.set(2, 0, z);
+
+                // transitions for x, y, dx, dy
+            /*
+            double[][] tr =
+                    {{1, 0, 1, 0},
+                            {0, 1, 0, 1},
+                            {0, 0, 1, 0},
+                            {0, 0, 0, 1}};
+            kalman.setTransition_matrix(new Matrix(tr));
+            */
+                double[][] tr = {{1, 0, 0, 1, 0, 0},
+                        {0, 1, 0, 0, 1, 0},
+                        {0, 0, 1, 0, 0, 1},
+                        {0, 0, 0, 1, 0, 0},
+                        {0, 0, 0, 0, 1, 0},
+                        {0, 0, 0, 0, 0, 1}};
+                kalman.setTransition_matrix(new Matrix(tr));
+                // 1s somewhere?
+                kalman.setError_cov_post(kalman.getError_cov_post().identity());
+            }
+
+            // check state before
+            s = kalman.Predict();
+
+            // function init :)
+            // m.set(1, 0, rand.nextDouble());
+            try {
+                Matrix m = new Matrix(3, 1); // measurement [x]
+                m.set(0, 0, (double) invalues[0]);
+                m.set(1, 0, (double) invalues[1]);
+                m.set(2, 0, (double) invalues[2]);
+                // look better
+                c = kalman.Correct(m);
+                s = kalman.Predict();
+                Log.d(TAG, "<Kalman> " + ";" + m.get(0, 0) + ";" + m.get(1, 0) + ";"
+                        + s.get(0, 0) + ";" + s.get(1, 0) + ";" + s.get(2, 0) + ";" + s.get(3, 0) + ";"
+                        + c.get(0, 0) + ";" + c.get(1, 0) + ";" + c.get(2, 0) + ";" + c.get(3, 0) + ";");
+            } catch (Exception ex) {
+
+            }
+            return new float[]{(float) c.get(0, 0), (float) c.get(1, 0), (float) c.get(2, 0)};
+        }
+
     }
 
     public class sensordata {
@@ -1091,8 +1190,8 @@ public class proAcceGyroCali extends getAcceGyro {
                 for (int g = m ; g <= n  - m; g++) {
                     z1.add(D.get(g));
                 }
-                for (int Eular_HP_a = 0; Eular_HP_a <= n - 2 * m; Eular_HP_a++) {
-                    z2.add(D.get(Eular_HP_a));
+                for (int Eular_HP_a_X = 0; Eular_HP_a_X <= n - 2 * m; Eular_HP_a_X++) {
+                    z2.add(D.get(Eular_HP_a_X));
                 }
                 u = 0;
                 for (int f = 0; f < z1.size() - 1; f++) {
@@ -1206,9 +1305,6 @@ public class proAcceGyroCali extends getAcceGyro {
 
             position.pos += dpdt * dt;
             position.v += dvdt * dt;
-            if (proAcceGyroCali.getcaliLogSTATUS == true) {
-                position.v = 0;
-            }
             return position;
         }
 
@@ -1252,4 +1348,33 @@ public class proAcceGyroCali extends getAcceGyro {
         }
     }
 
+    public class display {
+        public void displaystatus1(final String s) {
+            DemoDrawUI.runOnUI(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        DemoDrawUI.mlog_acce.setText(s);
+                    } catch (Exception ex) {
+
+                    }
+
+                }
+            });
+        }
+
+        public void displaystatus2(final String s) {
+            DemoDrawUI.runOnUI(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        DemoDrawUI.mlog_gyro.setText(s);
+                    } catch (Exception ex) {
+
+                    }
+
+                }
+            });
+        }
+    }
 }

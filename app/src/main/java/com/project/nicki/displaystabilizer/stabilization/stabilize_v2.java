@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
 
 import java.io.File;
@@ -416,5 +417,20 @@ public class stabilize_v2 implements Runnable {
         }
     }
 
+    public class display {
+        public void displaystatus(final String s) {
+            DemoDrawUI.runOnUI(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        DemoDrawUI.mlog_acce.setText(s);
+                    } catch (Exception ex) {
+
+                    }
+
+                }
+            });
+        }
+    }
 
 }
