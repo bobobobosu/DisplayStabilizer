@@ -136,6 +136,8 @@ public class proAcceGyroCali extends getAcceGyro {
     float RK4_staticOFFSET;
     int staticnum;
     Context mContext;
+    //gyro
+    gyrointegration mgyrointegration = new gyrointegration();
     private float[] prevEular;
     private calLowPass Eular_LP_a_X;
     private calLowPass Eular_LP_a_Y;
@@ -287,10 +289,9 @@ public class proAcceGyroCali extends getAcceGyro {
             } else {
 
                 //mtcpipdata.tcpipdatasend(mSensorEvent.values[0]);
-                //sensordata thissensordata = new sensordata(System.currentTimeMillis(), new float[]{mSensorEvent.values[0]*(float)Math.pow(10,14),mSensorEvent.values[1]*(float)Math.pow(10,14),mSensorEvent.values[2]*100000000});
                 sensordata thissensordata = new sensordata(System.currentTimeMillis(), new float[]{mSensorEvent.values[0], mSensorEvent.values[1], mSensorEvent.values[2]});
                 //LogCSV(String.valueOf(thissensordata.getData()[0]),String.valueOf(thissensordata.getData()[1]),String.valueOf(thissensordata.getData()[2]),"","","");
-/*
+
                 //Allan
                 if (cirbuff.size() < 100) {
                     cirbuff.add(thissensordata);
@@ -313,7 +314,7 @@ public class proAcceGyroCali extends getAcceGyro {
                     //thissensordata.setData(new float[]{(float) result[0][0], (float) result[0][1]});
                     //mrotateVector.rotate(new sensordata(mSensorEvent.timestamp, new float[]{mSensorEvent.values[0], mSensorEvent.values[1]}));
                 }
-                */
+
                 if (selectedMethod == 0) {
                     mdisplay.displaystatus2("Method: " + "NoShake");
                     //thissensordata = mrotateVector.rotate(thissensordata);
@@ -330,7 +331,12 @@ public class proAcceGyroCali extends getAcceGyro {
             }
         }
         if (mSensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            tmpgyrodata = new sensordata(mSensorEvent.timestamp, mSensorEvent.values);
+            if (DemoDraw.drawing == 0) {
+                mgyrointegration = new gyrointegration();
+            }
+            sensordata ttmpgyrodata = new sensordata(mSensorEvent.timestamp, mSensorEvent.values);
+            mgyrointegration.addgyro(ttmpgyrodata);
+            tmpgyrodata = mgyrointegration.getDelta();
         }
         if (mSensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER && didCalibraiotn == false) {
             if (ctrlerCalibrationinit == false) {
@@ -420,6 +426,7 @@ public class proAcceGyroCali extends getAcceGyro {
         //lowpass
         float[] applylowpass = RK4_LP_a_X.lowPass(sensordataIN.getData());
         sensordataIN.setData(applylowpass);
+
 
         //moving average
         RK4_avg1.add((double) sensordataIN.getData()[0]);
@@ -1076,6 +1083,28 @@ public class proAcceGyroCali extends getAcceGyro {
             ret[i] = (float) arr[i];
         }
         return ret;
+    }
+
+    public class gyrointegration {
+        sensordata newsensordata;
+        sensordata gyroDelta = new sensordata(0l, new float[]{0f, 0f, 0f});
+        float samplerate = 0.01f;
+
+        private void addgyro(sensordata ttmpgyrodata) {
+            newsensordata = ttmpgyrodata;
+            gyroDelta = new sensordata(
+                    ttmpgyrodata.getTime(),
+                    new float[]{
+                            gyroDelta.getData()[0] + ttmpgyrodata.getData()[0] * samplerate,
+                            gyroDelta.getData()[1] + ttmpgyrodata.getData()[1] * samplerate,
+                            gyroDelta.getData()[2] + ttmpgyrodata.getData()[2] * samplerate,
+                    }
+            );
+        }
+
+        private sensordata getDelta() {
+            return gyroDelta;
+        }
     }
 
     public class rotateVector {

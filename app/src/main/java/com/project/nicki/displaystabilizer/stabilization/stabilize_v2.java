@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
@@ -34,11 +35,16 @@ public class stabilize_v2 implements Runnable {
     //draw to DemoDraw
     public static List<Point> toDraw = new ArrayList<Point>();
     public static BoundingBox bbox = new BoundingBox();
+    public static boolean posdrawing = false;
+    public static boolean updatefakepos = false;
+    public static int oneorminusone = 1;
     //constants
     private static float cX;
     private static float cY;
     //mods
     public boolean CalibrationMode = true;
+    public ArrayList<sensordata> stroke2pos;
+    public int fakeposposition;
     FileWriter mFileWriter;
     //buffers
     ArrayList<sensordata> strokebuffer = new ArrayList<sensordata>();
@@ -146,18 +152,31 @@ public class stabilize_v2 implements Runnable {
             }
         };
         getDraw = new Handler() {
+
             //noshake
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
-
+                if (tmpaccesensordata == null) {
+                    return;
+                }
                 Bundle bundlegot = msg.getData();
                 prevdrawSTATUS = drawSTATUS;
                 drawSTATUS = DemoDraw.drawing < 2;
 
 
                 //init
-                if (prevdrawSTATUS == false && drawSTATUS == true || init == false || System.currentTimeMillis() - prev > 200) {
+                //if (prevdrawSTATUS == false && drawSTATUS == true || init == false || System.currentTimeMillis() - prev > 200) {
+                if (prevdrawSTATUS == false && drawSTATUS == true || init == false) {
+                    fakeposposition = 0;
+                    if (updatefakepos == true) {
+                        stroke2pos = strokedeltabuffer;
+                        Toast.makeText(mContext, "fakepos Updated " + stroke2pos.size(),
+                                Toast.LENGTH_LONG).show();
+                        updatefakepos = false;
+                    }
+                    fakeposposition = 0;
+
                     prev = System.currentTimeMillis();
                     if (stastrokedeltabuffer.size() > 0) {
                         double tmp = 0;
@@ -199,12 +218,7 @@ public class stabilize_v2 implements Runnable {
                 }
 
 
-                //buffer Pos
-                if (tmpaccesensordata != null) {
-                    posbuffer.add(tmpaccesensordata);
-                    posdeltabuffer.add(tmpaccesensordata);
-                    tmpaccesensordata = null;
-                }
+
 /*
                 if (posbuffer.size() > 1) {
                     posdeltabuffer.add(getlatestdelta(posbuffer));
@@ -223,6 +237,34 @@ public class stabilize_v2 implements Runnable {
                 //LogCSV(String.valueOf(bundle2sensordata(bundlegot).getData()[0]* com.project.nicki.displaystabilizer.init.pix2m),String.valueOf(bundle2sensordata(bundlegot).getData()[1]* com.project.nicki.displaystabilizer.init.pix2m),"","","","");
                 if (strokebuffer.size() > 1) {
                     strokedeltabuffer.add(getlatestdelta(strokebuffer));
+                }
+
+                //exit if set to draw2pos
+                Log.d(TAG, "fakepos: " + posdrawing);
+                if (posdrawing == true && stroke2pos != null && fakeposposition < stroke2pos.size() - 1) {
+                    //override pos
+                    // if (posdeltabuffer.size() > 1) {
+                    //    posdeltabuffer.remove(posdeltabuffer.size() - 1);
+                    //}
+                    //Log.d(TAG,"compar: "+posdeltabuffer.get(0).getData()[0] + " " + stroke2pos.get(0).getData()[0] );
+                    posdeltabuffer.add(new sensordata(stroke2pos.get(fakeposposition).getTime(), new float[]{
+                            stroke2pos.get(fakeposposition).getData()[0] * (float) com.project.nicki.displaystabilizer.init.pix2m * 100 * oneorminusone,
+                            stroke2pos.get(fakeposposition).getData()[1] * (float) com.project.nicki.displaystabilizer.init.pix2m * 100 * oneorminusone}));
+                    fakeposposition++;
+                    Log.d(TAG, "fakepos: " + fakeposposition);
+
+                } else {
+                    //buffer Pos
+                    if (tmpaccesensordata != null) {
+                        posbuffer.add(tmpaccesensordata);
+                        posdeltabuffer.add(tmpaccesensordata);
+                        tmpaccesensordata = null;
+                    }
+                }
+                if (posdeltabuffer != null && stroke2pos != null) {
+                    if (posdeltabuffer.size() > 0 && stroke2pos.size() > 0) {
+                        Log.d(TAG, "testhowbig " + String.valueOf(posdeltabuffer.get(0).getData()[0] + " " + stroke2pos.get(0).getData()[0] * (float) com.project.nicki.displaystabilizer.init.pix2m));
+                    }
                 }
 
                 //get stabilized result
@@ -328,7 +370,9 @@ public class stabilize_v2 implements Runnable {
             }
 
 
-        };
+        }
+
+        ;
         Looper.loop();
     }
 

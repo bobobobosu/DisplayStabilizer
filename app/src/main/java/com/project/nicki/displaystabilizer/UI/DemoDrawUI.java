@@ -15,9 +15,10 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.SeekBar;
-import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -56,6 +57,10 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
     public static EditText mMultiplier;
     public static Button mApplyPara;
     public static TextView mperformance;
+    //fakepos
+    public static CheckBox mfakeposonoff;
+    public static Button mupdatefakepos;
+    public static CheckBox minverse;
 
     static {
         UIHandler = new Handler(Looper.getMainLooper());
@@ -128,11 +133,12 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
 
         //TEXTVIEW
         mperformance = (TextView) findViewById(R.id.performance);
-        mlog_draw = (TextView) findViewById(R.id.log_draw);
-        mlog_cam = (TextView) findViewById(R.id.log_cam);
+        //mlog_draw = (TextView) findViewById(R.id.log_draw);
+        //mlog_cam = (TextView) findViewById(R.id.log_cam);
         mlog_acce = (TextView) findViewById(R.id.log_acce);
         mlog_gyro = (TextView) findViewById(R.id.log_gyro);
-        mseekBar_cX = (SeekBar) findViewById(R.id.seekBar_cX);
+        //mseekBar_cX = (SeekBar) findViewById(R.id.seekBar_cX);
+        /*
         mseekBar_cX.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -149,7 +155,9 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
 
             }
         });
-        mseekBar_cY = (SeekBar) findViewById(R.id.seekBar_cY);
+        */
+        //mseekBar_cY = (SeekBar) findViewById(R.id.seekBar_cY);
+        /*
         mseekBar_cY.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -166,7 +174,7 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
 
             }
         });
-
+*/
         integralspinner = (Spinner) findViewById(R.id.integralspinner);
         String[] integralmethods = {"NoShake", "RK4", "Euler"};
         integralList = new ArrayAdapter<String>(DemoDrawUI.this, R.layout.support_simple_spinner_dropdown_item, integralmethods);
@@ -180,6 +188,32 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 proAcceGyroCali.selectedMethod = 0;
+            }
+        });
+        //fakepos
+        mfakeposonoff = (CheckBox) findViewById(R.id.fakeposcheck);
+        mfakeposonoff.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                stabilize_v2.posdrawing = mfakeposonoff.isChecked();
+            }
+        });
+        mupdatefakepos = (Button) findViewById(R.id.updatefakepos);
+        mupdatefakepos.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stabilize_v2.updatefakepos = true;
+            }
+        });
+        minverse = (CheckBox) findViewById(R.id.inversefakepos);
+        minverse.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (minverse.isChecked()) {
+                    stabilize_v2.oneorminusone = -1;
+                } else {
+                    stabilize_v2.oneorminusone = 1;
+                }
             }
         });
         //mOpenCvCameraView.setMaxFrameSize(800, 600);
