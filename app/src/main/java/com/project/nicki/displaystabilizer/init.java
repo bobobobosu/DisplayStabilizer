@@ -2,9 +2,12 @@
 package com.project.nicki.displaystabilizer;
 
 import android.content.Intent;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
@@ -16,11 +19,25 @@ import org.ejml.data.DenseMatrix64F;
 import jama.Matrix;
 
 public class init extends AppCompatActivity {
+    public static double xdpc;
+    public static double ydpc;
+    public static double widthm, heightcm, widthpix, heightpix, pix2m;
     String TAG = "init";
     double g = 9.806-(1/2)*(9.832-9.780)*Math.cos(2*25.048212*Math.PI/180);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        widthm = dm.widthPixels * 0.0254 / dm.xdpi;
+        heightcm = dm.heightPixels * 0.0254 / dm.ydpi;
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        widthpix = size.x;
+        heightpix = size.y;
+        pix2m = widthm / widthpix;
+
         //new Thread(new getAccelerometer(getBaseContext())).start();
         //new Thread(new getGyroscope(getBaseContext())).start();
 
@@ -52,6 +69,10 @@ public class init extends AppCompatActivity {
         goto_DemoDrawUI.setClass(init.this, DemoDrawUI.class);
         startActivity(goto_DemoDrawUI);
 
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        double xdpc = metrics.xdpi / 2.54;
+        double ydpc = metrics.ydpi / 2.54;
 
         /*
         Intent goto_DemoDrawUI = new Intent();
@@ -170,6 +191,6 @@ public class init extends AppCompatActivity {
             this.Data[2] = data[2];
         }
     }
-    
+
 }
 

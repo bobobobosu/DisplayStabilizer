@@ -9,11 +9,16 @@ import android.util.Log;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
+import com.project.nicki.displaystabilizer.dataprocessor.CircularBuffer;
+import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,14 +28,15 @@ import au.com.bytecode.opencsv.CSVWriter;
  * Created by nickisverygood on 1/3/2016.
  */
 public class stabilize_v2 implements Runnable {
+    //public tcpipdata mtcpip = new tcpipdata();
     public static Handler getDraw;
     public static Handler getSensor;
     //draw to DemoDraw
     public static List<Point> toDraw = new ArrayList<Point>();
     public static BoundingBox bbox = new BoundingBox();
     //constants
-    private static float cX = 3000;
-    private static float cY = 3000;
+    private static float cX;
+    private static float cY;
     //mods
     public boolean CalibrationMode = true;
     FileWriter mFileWriter;
@@ -49,6 +55,11 @@ public class stabilize_v2 implements Runnable {
     boolean prevdrawSTATUS = false;
     boolean init = false;
     sensordata tmpaccesensordata;
+    display mdisplay = new display();
+    float[] Pos;
+    int deltaingStatus = 0;
+    sensordata tmp1accesensordata;
+    long prev = System.currentTimeMillis();
     private String csvName = "stabilize_v2.csv";
     private String TAG = "stabilize_v2";
     private Context mContext;
@@ -76,17 +87,37 @@ public class stabilize_v2 implements Runnable {
 
     @Override
     public void run() {
+        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+        String fileName = csvName;
+        String filePath = baseDir + File.separator + fileName;
+        File f = new File(filePath);
+        CSVWriter writer = null;
+        // File exist
+        if (f.exists()) {
+            f.delete();
+        }
         Looper.prepare();
         getSensor = new Handler() {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
+
                 Bundle bundlegot = msg.getData();
+                Pos = bundlegot.getFloatArray("Pos");
                 tmpaccesensordata = bundle2sensordata(bundlegot);
-                Log.d(TAG, "get!!!!!");
+                Log.d(TAG, "tmpaccesensordata: " + tmpaccesensordata.getData()[0] + " " + tmpaccesensordata.getData()[1]);
                 prevdrawSTATUS = drawSTATUS;
                 drawSTATUS = DemoDraw.drawing < 2;
 
+                if (deltaingStatus == 0) {
+                    tmp1accesensordata = tmpaccesensordata;
+                    tmpaccesensordata = new sensordata(tmp1accesensordata.getTime(), new float[]{0, 0});
+                    deltaingStatus = 1;
+                } else if (deltaingStatus == 1) {
+                    tmpaccesensordata = new sensordata(tmp1accesensordata.getTime(), new float[]{
+                            tmpaccesensordata.getData()[0] - tmp1accesensordata.getData()[1],
+                            tmpaccesensordata.getData()[1] - tmp1accesensordata.getData()[1]});
+                }
                 //init
                 if (prevdrawSTATUS == false && drawSTATUS == true || init == false) {
                     if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
@@ -107,6 +138,8 @@ public class stabilize_v2 implements Runnable {
                     init = true;
                     toDraw = new ArrayList<Point>();
                     tmpaccesensordata = null;
+                    Pos = null;
+                    deltaingStatus = 0;
                 }
 
 
@@ -117,12 +150,28 @@ public class stabilize_v2 implements Runnable {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
+
                 Bundle bundlegot = msg.getData();
                 prevdrawSTATUS = drawSTATUS;
                 drawSTATUS = DemoDraw.drawing < 2;
 
+
                 //init
-                if (prevdrawSTATUS == false && drawSTATUS == true || init == false) {
+                if (prevdrawSTATUS == false && drawSTATUS == true || init == false || System.currentTimeMillis() - prev > 200) {
+                    prev = System.currentTimeMillis();
+                    if (stastrokedeltabuffer.size() > 0) {
+                        double tmp = 0;
+                        for (int i = 0; i < stastrokedeltabuffer.size(); i++) {
+                            tmp += Math.pow(Math.pow(stastrokedeltabuffer.get(i).getData()[0], 2) + Math.pow(stastrokedeltabuffer.get(i).getData()[1], 2), 0.5);
+                        }
+                        tmp /= stastrokedeltabuffer.size();
+                        LogCSV("performance", String.valueOf(tmp), "", "", "", "", "");
+
+                        //setcX(cX+1);
+                        //setcY(cY+1);
+                        CircularBuffer.CONST_K += 0.05;
+                        mdisplay.diaplayperformance(String.valueOf(CircularBuffer.CONST_K));
+                    }
                     //refresh view
                     Message msg3 = new Message();
                     msg3.what = 1;
@@ -130,8 +179,8 @@ public class stabilize_v2 implements Runnable {
                     if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
                         //cX = Math.abs(getSumArray(strokedeltabuffer).get(strokedeltabuffer.size()-1 +1).getData()[0])/Math.abs(getSumArray(posdeltabuffer).get(posdeltabuffer.size() - 1).getData()[0]);
                         //cY = Math.abs(getSumArray(strokedeltabuffer).get(strokedeltabuffer.size()-1 +1).getData()[1])/Math.abs(getSumArray(posdeltabuffer).get(posdeltabuffer.size()-1).getData()[1]);
-                        cX = -(Math.abs(strokebuffer.get(strokebuffer.size() - 1).getData()[0] - strokebuffer.get(0).getData()[0])) / (Math.abs(posbuffer.get(posbuffer.size() - 1).getData()[0] - posbuffer.get(0).getData()[0]));
-                        cY = -(Math.abs(strokebuffer.get(strokebuffer.size() - 1).getData()[1] - strokebuffer.get(0).getData()[1])) / (Math.abs(posbuffer.get(posbuffer.size() - 1).getData()[1] - posbuffer.get(0).getData()[1]));
+                        //cX = -(Math.abs(strokebuffer.get(strokebuffer.size() - 1).getData()[0] - strokebuffer.get(0).getData()[0])) / (Math.abs(posbuffer.get(posbuffer.size() - 1).getData()[0] - posbuffer.get(0).getData()[0]));
+                        //cY = -(Math.abs(strokebuffer.get(strokebuffer.size() - 1).getData()[1] - strokebuffer.get(0).getData()[1])) / (Math.abs(posbuffer.get(posbuffer.size() - 1).getData()[1] - posbuffer.get(0).getData()[1]));
                         CalibrationMode = false;
                         Log.d(TAG, "multiplier: " + cX + " " + cY);
                     }
@@ -146,15 +195,17 @@ public class stabilize_v2 implements Runnable {
                     init = true;
                     toDraw = new ArrayList<Point>();
                     tmpaccesensordata = null;
-
+                    Pos = null;
                 }
 
 
                 //buffer Pos
                 if (tmpaccesensordata != null) {
                     posbuffer.add(tmpaccesensordata);
+                    posdeltabuffer.add(tmpaccesensordata);
                     tmpaccesensordata = null;
                 }
+/*
                 if (posbuffer.size() > 1) {
                     posdeltabuffer.add(getlatestdelta(posbuffer));
                     if (posdeltabuffer.size() > 1) {
@@ -163,19 +214,31 @@ public class stabilize_v2 implements Runnable {
                         }
                     }
                 }
+*/
                 //buffer Draw
                 strokebuffer.add(bundle2sensordata(bundlegot));
+
+                //mtcpip.tcpipdatasend((float) strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0], (float) strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1]);
+
+                //LogCSV(String.valueOf(bundle2sensordata(bundlegot).getData()[0]* com.project.nicki.displaystabilizer.init.pix2m),String.valueOf(bundle2sensordata(bundlegot).getData()[1]* com.project.nicki.displaystabilizer.init.pix2m),"","","","");
                 if (strokebuffer.size() > 1) {
                     strokedeltabuffer.add(getlatestdelta(strokebuffer));
                 }
 
                 //get stabilized result
-                if (strokedeltabuffer.size() > 0 && posdeltabuffer.size() > 0 && posbuffer.size() > 0) {
+                if (strokedeltabuffer.size() > 0 && posdeltabuffer.size() > 0) {
                     sensordata stastrokedelta = new sensordata();
                     stastrokedelta.setTime(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime());
                     stastrokedelta.setData(new float[]{
                             strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * cX,
                             strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY});
+                    /*
+                    LogCSV(
+                            String.valueOf(-strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0] * com.project.nicki.displaystabilizer.init.pix2m),
+                            String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0]),
+                            String.valueOf(-strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1]* com.project.nicki.displaystabilizer.init.pix2m),
+                            String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1]), "", "");
+                            */
                     stastrokedeltabuffer.add(stastrokedelta);
                     if (prevStroke != null) {
                         //sumof stastrokedeltabuffer
@@ -201,10 +264,49 @@ public class stabilize_v2 implements Runnable {
                     }
                     Log.d(TAG, "drawpos: " + prevStroke[0] + " " + prevStroke[1]);
                 }
+
                 //refresh view
                 Message msg3 = new Message();
                 msg3.what = 1;
                 DemoDraw.mhandler.sendMessage(msg3);
+
+                if (strokedeltabuffer.size() > 0 && posdeltabuffer.size() > 0 && Pos != null) {
+                    final ArrayList<sensordata> tmp = getSumArray(strokedeltabuffer);
+                    ArrayList<sensordata> tmp2 = getSumArray(posdeltabuffer);
+                    proAcceGyroCali.multiplier =
+                            (float) (Math.pow(Math.pow(tmp.get(tmp.size() - 1).getData()[0] * com.project.nicki.displaystabilizer.init.pix2m, 2) + Math.pow(tmp.get(tmp.size() - 1).getData()[1] * com.project.nicki.displaystabilizer.init.pix2m, 2), 0.5) /
+                                    Math.pow(Math.pow(tmp2.get(tmp2.size() - 1).getData()[0], 2) + Math.pow(tmp2.get(tmp2.size() - 1).getData()[1], 2), 0.5));
+                    Log.d(TAG, "multiplier: " + String.valueOf(proAcceGyroCali.multiplier));
+
+
+                    /*
+                    LogCSV(
+                            String.valueOf(tmp.get(tmp.size() - 1).getTime()),
+                            String.valueOf(tmp.get(tmp.size() - 1).getData()[0] * -1 * com.project.nicki.displaystabilizer.init.pix2m),
+                            String.valueOf(tmp.get(tmp.size() - 1).getData()[1] * -1 * com.project.nicki.displaystabilizer.init.pix2m),
+                            String.valueOf(tmp2.get(tmp2.size() - 1).getTime()),
+                            String.valueOf(tmp2.get(tmp2.size() - 1).getData()[0]),
+                            String.valueOf(tmp2.get(tmp2.size() - 1).getData()[1]));
+                            */
+
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // mtcpip.tcpipdatasend((float)(tmp.get(tmp.size() - 1).getData()[0] * -1 * com.project.nicki.displaystabilizer.init.pix2m),(float)(tmp.get(tmp.size() - 1).getData()[1] * -1 * com.project.nicki.displaystabilizer.init.pix2m));
+                        }
+                    }).start();
+
+                    LogCSV("strokeposlog",
+                            String.valueOf(tmp.get(tmp.size() - 1).getTime()),
+                            String.valueOf(tmp.get(tmp.size() - 1).getData()[0] * -1 * com.project.nicki.displaystabilizer.init.pix2m),
+                            String.valueOf(tmp.get(tmp.size() - 1).getData()[1] * -1 * com.project.nicki.displaystabilizer.init.pix2m),
+                            String.valueOf(tmp2.get(tmp2.size() - 1).getTime()),
+                            String.valueOf(Pos[0]),
+                            String.valueOf(Pos[1]));
+                }
+
+                //compare(strokedeltabuffer,posdeltabuffer);
+
                 if (
                         tmpaccesensordata != null &&
                                 posbuffer.size() > 0 &&
@@ -213,13 +315,14 @@ public class stabilize_v2 implements Runnable {
                                 strokedeltabuffer.size() > 0 &&
                                 stastrokebuffer.size() > 0 &&
                                 stastrokedeltabuffer.size() > 0) {
+                    /*
                     LogCSV(
                             String.valueOf(tmpaccesensordata.getTime()),
                             String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getTime()),
                             String.valueOf(strokebuffer.get(strokebuffer.size() - 1).getTime()),
                             String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime()),
                             String.valueOf(stastrokebuffer.get(stastrokebuffer.size() - 1).getTime()),
-                            String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime()));
+                            String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime()));*/
                 }
 
             }
@@ -227,6 +330,31 @@ public class stabilize_v2 implements Runnable {
 
         };
         Looper.loop();
+    }
+
+
+    private void compare(ArrayList<sensordata> data1, ArrayList<sensordata> data2) {
+        int num;
+        if (data1.size() > data2.size()) {
+            num = data1.size();
+        } else {
+            num = data2.size();
+        }
+        for (int j = 0; j < num; j++) {
+            if (data1.get(j) == null) {
+                data1.add(new sensordata(0, new float[]{0, 0}));
+            }
+            if (data2.get(j) == null) {
+                data2.add(new sensordata(0, new float[]{0, 0}));
+            }
+            LogCSV("compare",
+                    String.valueOf(data1.get(j).getTime()),
+                    String.valueOf(data1.get(j).getData()[0]),
+                    String.valueOf(data1.get(j).getData()[1]),
+                    String.valueOf(data2.get(j).getTime()),
+                    String.valueOf(data2.get(j).getData()[0]),
+                    String.valueOf(data2.get(j).getData()[1]));
+        }
     }
 
     private float vectlen(float[] data) {
@@ -259,6 +387,7 @@ public class stabilize_v2 implements Runnable {
                 tmp_data_sum[j] += sensordatas.get(i).getData()[j];
             }
             returnArray.add(new sensordata(sensordatas.get(i).getTime(), tmp_data_sum));
+            //LogCSV(String.valueOf(tmp_data_sum[0]), String.valueOf(tmp_data_sum[1]), "", "", "", "");
         }
         return returnArray;
     }
@@ -275,10 +404,11 @@ public class stabilize_v2 implements Runnable {
         return msensordata;
     }
 
-    public void LogCSV(String a, String b, String c, String d, String g, String h) {
+    public void LogCSV(String Name, String a, String b, String c, String d, String g, String h) {
         //init CSV logging
         String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-        String fileName = csvName;
+        //String fileName = csvName;
+        String fileName = Name + ".csv";
         String filePath = baseDir + File.separator + fileName;
         File f = new File(filePath);
         CSVWriter writer = null;
@@ -287,28 +417,32 @@ public class stabilize_v2 implements Runnable {
             try {
                 mFileWriter = new FileWriter(filePath, true);
             } catch (IOException e) {
-                //e.printStackTrace();
+                e.printStackTrace();
             }
             writer = new CSVWriter(mFileWriter);
         } else {
             try {
                 writer = new CSVWriter(new FileWriter(filePath));
             } catch (IOException e) {
-                //e.printStackTrace();
+                e.printStackTrace();
             }
         }
 
         try {
             String line = String.format("%s,%s,%s,%s,%s,%s\n", a, b, c, d, g, h);
             mFileWriter.write(line);
-        } catch (Exception e) {
-            //e.printStackTrace();
+        } catch (Exception ex) {
         }
+        /*
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        */
 
         try {
             writer.close();
-        } catch (Exception e) {
-            //e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -418,12 +552,40 @@ public class stabilize_v2 implements Runnable {
     }
 
     public class display {
-        public void displaystatus(final String s) {
+        public void displaystatus1(final String s) {
             DemoDrawUI.runOnUI(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        DemoDrawUI.mlog_acce.setText(s);
+                        //DemoDrawUI.mlog_acce.setText(s);
+                    } catch (Exception ex) {
+
+                    }
+
+                }
+            });
+        }
+
+        public void displaystatus2(final String s) {
+            DemoDrawUI.runOnUI(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        DemoDrawUI.mlog_gyro.setText(s);
+                    } catch (Exception ex) {
+
+                    }
+
+                }
+            });
+        }
+
+        public void diaplayperformance(final String s) {
+            DemoDrawUI.runOnUI(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        DemoDrawUI.mperformance.setText(s);
                     } catch (Exception ex) {
 
                     }
@@ -433,4 +595,58 @@ public class stabilize_v2 implements Runnable {
         }
     }
 
+
+    public class tcpipdata {
+        InetAddress serverAddr;
+        Socket socket;
+
+        public tcpipdata() {
+            try {
+                Log.d("TCP", "C: Connecting...");
+//                mdisplay.displaystatus1("TCP Connecting");
+                serverAddr = InetAddress.getByName("192.168.0.115");
+                socket = new Socket(serverAddr, 4444);
+                Log.d("TCP", "C: Connected.");
+                //mdisplay.displaystatus1("TCP Connected");
+            } catch (Exception e) {
+                Log.e("TCP", "C: Error", e);
+            }
+        }
+
+        public void tcpipdatasend(float f, float f2) {
+            try {
+                /*
+                Log.d("TCP", "C: Sending: '" + f + "'");
+                PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+                //DataOutputStream DOS = new DataOutputStream(socket.getOutputStream());
+                //DOS.writeFloat(f);
+                out.println(String.valueOf(f));
+                */
+
+                PrintWriter out2 = new PrintWriter(socket.getOutputStream(), true);
+                String line = null;
+                line = String.valueOf(f);
+                Log.d("TCP", "Sending:" + line);
+                out2.write(line + "," + String.valueOf(f2) + "\n");
+                out2.flush();
+
+
+                Log.d("TCP", "C: Sent. " + out2.toString());
+                Log.d("TCP", "C: Done.");
+
+            } catch (Exception e) {
+                Log.e("TCP", "S: Error", e);
+            }
+        }
+
+        public void tcpipdatadisconnect() {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+    }
 }

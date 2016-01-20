@@ -10,13 +10,20 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.project.nicki.displaystabilizer.R;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
+import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 import com.project.nicki.displaystabilizer.dataprocessor.proCamera;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
@@ -38,6 +45,17 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
     public static Handler UIHandler;
     public static SeekBar mseekBar_cX;
     public static SeekBar mseekBar_cY;
+    public static Spinner integralspinner;
+    //set para
+    public static EditText mMovingAvg;
+    public static EditText mLP;
+    public static EditText mHPa;
+    public static EditText mHPv;
+    public static EditText mHPp;
+    public static EditText mStaticOffset;
+    public static EditText mMultiplier;
+    public static Button mApplyPara;
+    public static TextView mperformance;
 
     static {
         UIHandler = new Handler(Looper.getMainLooper());
@@ -47,6 +65,7 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
     public Mat nxtMat;
     public MatOfKeyPoint preKeypoints, nxtKeypoints;
     DemoDraw DD;
+    private ArrayAdapter<String> integralList;
     private CameraBridgeViewBase mOpenCvCameraView;
     private boolean mIsJavaCamera = true;
     private MenuItem mItemSwitchCamera = null;
@@ -69,7 +88,6 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
             }
         }
     };
-
     public static void runOnUI(Runnable runnable) {
         UIHandler.post(runnable);
     }
@@ -103,11 +121,13 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
             }
         };
 
-
         //from getFrontcam
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_demo_draw_ui);
 
+
+        //TEXTVIEW
+        mperformance = (TextView) findViewById(R.id.performance);
         mlog_draw = (TextView) findViewById(R.id.log_draw);
         mlog_cam = (TextView) findViewById(R.id.log_cam);
         mlog_acce = (TextView) findViewById(R.id.log_acce);
@@ -146,6 +166,22 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
 
             }
         });
+
+        integralspinner = (Spinner) findViewById(R.id.integralspinner);
+        String[] integralmethods = {"NoShake", "RK4", "Euler"};
+        integralList = new ArrayAdapter<String>(DemoDrawUI.this, R.layout.support_simple_spinner_dropdown_item, integralmethods);
+        integralspinner.setAdapter(integralList);
+        integralspinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                proAcceGyroCali.selectedMethod = position;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                proAcceGyroCali.selectedMethod = 0;
+            }
+        });
         //mOpenCvCameraView.setMaxFrameSize(800, 600);
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.demo_draw_camera_surface_view);
@@ -155,6 +191,32 @@ public class DemoDrawUI extends AppCompatActivity implements CameraBridgeViewBas
         mHandlerThread.start();
         //////////////////
 
+        //set paras
+        mMovingAvg = (EditText) findViewById(R.id.movingavg);
+        mLP = (EditText) findViewById(R.id.LP);
+        mHPa = (EditText) findViewById(R.id.HPa);
+        mHPv = (EditText) findViewById(R.id.HPv);
+        mHPp = (EditText) findViewById(R.id.HPp);
+        mMultiplier = (EditText) findViewById(R.id.multiplier);
+        mStaticOffset = (EditText) findViewById(R.id.staticoffset);
+        mApplyPara = (Button) findViewById(R.id.applyset);
+        mApplyPara.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Thread thread = new Thread() {
+                    @Override
+                    public void run() {
+                        Message message;
+                        String obj = "OK";
+                        message = proAcceGyroCali.applypara.obtainMessage(1, obj);
+                        proAcceGyroCali.applypara.sendMessage(message);
+
+                    }
+                };
+                thread.start();
+                thread = null;
+            }
+        });
 
     }
 

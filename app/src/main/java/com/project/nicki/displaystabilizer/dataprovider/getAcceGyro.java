@@ -43,10 +43,6 @@ public class getAcceGyro implements Runnable {
 
     @Override
     public void run() {
-
-
-
-
         final proAcceGyroCali mproAcceGyroCali = new proAcceGyroCali(mContext);
         //mproAcceGyroCali.TEST();
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
