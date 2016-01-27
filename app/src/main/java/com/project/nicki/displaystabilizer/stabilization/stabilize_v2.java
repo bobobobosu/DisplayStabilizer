@@ -125,6 +125,7 @@ public class stabilize_v2 implements Runnable {
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
 
+
                 Bundle bundlegot = msg.getData();
                 Pos = bundlegot.getFloatArray("Pos");
                 tmpaccesensordata = bundle2sensordata(bundlegot);
