@@ -104,7 +104,7 @@ public class DemoDraw extends View {
                 (int) stabilize_v2.bbox.getYmin() + " " +
                 (int) stabilize_v2.bbox.getXmax() + " " +
                 (int) stabilize_v2.bbox.getYmax());
-        canvas.drawRect(rectangle, paint);
+        //canvas.drawRect(rectangle, paint);
     }
 
 
@@ -173,7 +173,7 @@ public class DemoDraw extends View {
                 for (int i = 0; i < event.getHistorySize(); i++) {
                     float historicalX = event.getHistoricalX(i);
                     float historicalY = event.getHistoricalY(i);
-                    path.lineTo(historicalX, historicalY);
+                    //path.lineTo(historicalX, historicalY);
                 }
                 path.lineTo(eventX, eventY);
                 break;

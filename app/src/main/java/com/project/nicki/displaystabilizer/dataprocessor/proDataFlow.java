@@ -25,12 +25,6 @@ public class proDataFlow implements Runnable {
         @Override
         public void run() {
 
-            try {
-                Log.d(TAG, "data " + "Time=" + proCamera.data[0] + " deltaX=" + proCamera.data[1] + " deltaY=" + proCamera.data[2]);
-            } catch (Exception ex) {
-            }
-
-
         }
     };
     private Context mContext;

@@ -39,7 +39,6 @@
         <activity android:name=".UI.sensor_info" />
         <activity android:name=".UI.DemoStabilizeOn" />
         <activity android:name=".dataprovider.getFrontcam" />
-        <activity android:name=".dataprovider.getBackcam" />
         <activity android:name=".contentprovider.DemoDraw" />
         <activity android:name=".UI.DemoDrawUI" />
         <activity android:name=".UI.data_visualize"></activity>

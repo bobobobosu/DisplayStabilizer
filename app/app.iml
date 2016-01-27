@@ -67,9 +67,7 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/assets" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/blame" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/classes" />
-      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/debug" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/dependency-cache" />
-      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/dex" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/appcompat-v7/23.1.0/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/exploded-aar/com.android.support/support-v4/23.1.0/jars" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/incremental" />
@@ -79,7 +77,6 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/res" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/rs" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/symbols" />
-      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/tmp" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/transforms" />
       <excludeFolder url="file://$MODULE_DIR$/build/outputs" />
       <excludeFolder url="file://$MODULE_DIR$/build/tmp" />
@@ -91,16 +88,15 @@
     <orderEntry type="library" exported="" name="MPAndroidChart-v2.1.6" level="project" />
     <orderEntry type="library" exported="" name="ddogleg-0.8" level="project" />
     <orderEntry type="library" exported="" name="equation-0.28" level="project" />
-    <orderEntry type="library" exported="" name="core-0.28" level="project" />
     <orderEntry type="library" exported="" name="dense64-0.28" level="project" />
+    <orderEntry type="library" exported="" name="core-0.28" level="project" />
     <orderEntry type="library" exported="" name="support-v4-23.1.0" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-23.1.0" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-23.1.0" level="project" />
     <orderEntry type="module" module-name="EJML-core-0.28" exported="" />
-    <orderEntry type="module" module-name="dsp-collection" exported="" />
     <orderEntry type="module" module-name="JKalman" exported="" />
+    <orderEntry type="module" module-name="dsp-collection" exported="" />
     <orderEntry type="module" module-name="opencsv-2.1-1.0.0" exported="" />
-    <orderEntry type="module" module-name="openCVLibrary300" exported="" />
     <orderEntry type="module" module-name="EJML-dense64-0.28" exported="" />
   </component>
 </module>

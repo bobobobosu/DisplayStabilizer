@@ -38,15 +38,8 @@ public class init extends AppCompatActivity {
         heightpix = size.y;
         pix2m = widthm / widthpix;
 
-        //new Thread(new getAccelerometer(getBaseContext())).start();
-        //new Thread(new getGyroscope(getBaseContext())).start();
 
-        //new Thread(new proAccelerometer(getBaseContext())).start();
-        //new Thread(new onlyAcceXY(getBaseContext())).start();
-        //new Thread(new getFrontcam(getBaseContext())).start();
-        //new Thread(new proCamera(getBaseContext())).start();
-
-        //TEST();
+        //proAcceGyroCali.TEST();
         /////////////////////////////////////////////
 
         //clean csvs
@@ -61,6 +54,8 @@ public class init extends AppCompatActivity {
         */
         //new Thread(new proDataFlow(getBaseContext())).start();
         //new Thread(new stabilize_v1(getBaseContext())).start();
+
+
         new Thread(new stabilize_v2(getBaseContext())).start();
         new Thread(new getAcceGyro(getBaseContext())).start();
         Intent goto_DemoDrawUI = new Intent();
@@ -74,38 +69,6 @@ public class init extends AppCompatActivity {
         double xdpc = metrics.xdpi / 2.54;
         double ydpc = metrics.ydpi / 2.54;
 
-        /*
-        Intent goto_DemoDrawUI = new Intent();
-        overridePendingTransition(0, 0);
-        goto_DemoDrawUI.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        goto_DemoDrawUI.setClass(init.this, data_visualize.class);
-        startActivity(goto_DemoDrawUI);
-*/
-
-
-
-
-
-        /*
-        Intent goto_DemoStabilizeOn = new Intent();
-        goto_DemoStabilizeOn.setClass(init.this, DemoStabilizeOn.class);
-        startActivity(goto_DemoStabilizeOn);
-        */
-        /*
-        Intent goto_getFrontcam = new Intent();
-        goto_getFrontcam.setClass(init.this, getFrontcam.class);
-        startActivity(goto_getFrontcam);
-        */
-        /*
-        Intent goto_getBackcam = new Intent();
-        goto_getBackcam.setClass(init.this, getBackcam.class);
-        startActivity(goto_getBackcam);
-        */
-        /*
-        Intent goto_sensor_info = new Intent();
-        goto_sensor_info.setClass(init.this, sensor_info.class);
-        startActivity(goto_sensor_info);
-        */
 
 
     }
