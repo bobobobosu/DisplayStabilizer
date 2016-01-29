@@ -47,6 +47,7 @@ import jkalman.JKalman;
 public class proAcceGyroCali extends getAcceGyro {
     public static boolean getcaliLogSTATUS = false;
     public static int selectedMethod;
+    //handle setText update
     public static boolean pendingUpdate = false;
     public static Handler applypara = new Handler(Looper.getMainLooper()) {
         @Override
@@ -62,11 +63,6 @@ public class proAcceGyroCali extends getAcceGyro {
     public static int nowparam = 1;
     public static float nowmultip = 1;
     //noshake
-    private final int SENEOR_TYPE = Sensor.TYPE_LINEAR_ACCELERATION;
-    private final int ACCELEROMOTER_FPS = SensorManager.SENSOR_DELAY_FASTEST;
-    private final int BUFFER_SECOND = 4;
-    private final int FPS = 60;
-    private final int BUFFER_DATA_SIZE = BUFFER_SECOND * FPS;
     public int HistoryLength = 100;
     public ArrayList<sensordata> AcceCircular = new ArrayList<>();
     //for staticdetetc()
@@ -249,103 +245,6 @@ public class proAcceGyroCali extends getAcceGyro {
         return output;
     }
 
-    public void updateParas() {
-        NSK_avg1 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
-        NSK_avg2 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
-        NSK_avg3 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
-        RK4_avg1 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
-        RK4_avg2 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
-        RK4_avg3 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
-        RK4_LP_a_X = new calLowPass(Float.valueOf(DemoDrawUI.mLP.getText().toString()));
-        RK4_LP_a_Y = new calLowPass(Float.valueOf(DemoDrawUI.mLP.getText().toString()));
-        RK4_HP_a_X = new highPass(Float.valueOf(DemoDrawUI.mHPa.getText().toString()));
-        RK4_HP_v_X = new highPass(Float.valueOf(DemoDrawUI.mHPv.getText().toString()));
-        RK4_HP_p_X = new highPass(Float.valueOf(DemoDrawUI.mHPp.getText().toString()));
-        RK4_HP_a_Y = new highPass(Float.valueOf(DemoDrawUI.mHPa.getText().toString()));
-        RK4_HP_v_Y = new highPass(Float.valueOf(DemoDrawUI.mHPv.getText().toString()));
-        RK4_HP_p_Y = new highPass(Float.valueOf(DemoDrawUI.mHPp.getText().toString()));
-        RK4_staticOFFSET = Float.valueOf(DemoDrawUI.mStaticOffset.getText().toString());
-        Eular_avg1 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
-        Eular_avg2 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
-        Eular_avg3 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
-        Eular_LP_a_X = new calLowPass(Float.valueOf(DemoDrawUI.mLP.getText().toString()));
-        Eular_LP_a_Y = new calLowPass(Float.valueOf(DemoDrawUI.mLP.getText().toString()));
-        Eular_HP_a_X = new highPass(Float.valueOf(DemoDrawUI.mHPa.getText().toString()));
-        Eular_HP_v_X = new highPass(Float.valueOf(DemoDrawUI.mHPv.getText().toString()));
-        Eular_HP_p_X = new highPass(Float.valueOf(DemoDrawUI.mHPp.getText().toString()));
-        Eular_HP_a_Y = new highPass(Float.valueOf(DemoDrawUI.mHPa.getText().toString()));
-        Eular_HP_v_Y = new highPass(Float.valueOf(DemoDrawUI.mHPv.getText().toString()));
-        Eular_HP_p_Y = new highPass(Float.valueOf(DemoDrawUI.mHPp.getText().toString()));
-        Eular_staticOFFSET = Float.valueOf(DemoDrawUI.mStaticOffset.getText().toString());
-        stabilize_v2.setcX(Float.valueOf(DemoDrawUI.mMultiplier.getText().toString()));
-        stabilize_v2.setcY(Float.valueOf(DemoDrawUI.mMultiplier.getText().toString()));
-
-
-    }
-
-    public void updateParasauto(float lowpass, float highpass) {
-        NSK_LP_a_X = new calLowPass(lowpass);
-        //NSK_LP_a_Y = new calLowPass(0.9f);
-        NSK_HP_a_X = new highPass(highpass);
-        NSK_HP_v_X = new highPass(highpass);
-        NSK_HP_p_X = new highPass(highpass);
-        NSK_HP_a_Y = new highPass(highpass);
-        NSK_HP_v_Y = new highPass(highpass);
-        NSK_HP_p_Y = new highPass(highpass);
-        RK4_LP_a_X = new calLowPass(lowpass);
-        RK4_LP_a_Y = new calLowPass(lowpass);
-        RK4_HP_a_X = new highPass(highpass);
-        RK4_HP_v_X = new highPass(highpass);
-        RK4_HP_p_X = new highPass(highpass);
-        RK4_HP_a_Y = new highPass(highpass);
-        RK4_HP_v_Y = new highPass(highpass);
-        RK4_HP_p_Y = new highPass(highpass);
-        Eular_LP_a_X = new calLowPass(lowpass);
-        Eular_LP_a_Y = new calLowPass(lowpass);
-        Eular_HP_a_X = new highPass(highpass);
-        Eular_HP_v_X = new highPass(highpass);
-        Eular_HP_p_X = new highPass(highpass);
-        Eular_HP_a_Y = new highPass(highpass);
-        Eular_HP_v_Y = new highPass(highpass);
-        Eular_HP_p_Y = new highPass(highpass);
-        mcalEular = new calEular();
-        mrk4_X = new RK4();
-        mrk4_Y = new RK4();
-        RK4_initX = new Position(0, 0);
-        RK4_initY = new Position(0, 0);
-        /*
-        stabilize_v2.setcX(coeff);
-        stabilize_v2.setcY(coeff);
-        NoShakekal_a = new KalmanFilter();
-        NoShakeinit = true;
-        prevdx = 0;
-        prevdy = 0;
-        NSK_avg1 = new Rolling(50);
-        NSK_avg2 = new Rolling(50);
-        NSK_avg3 = new Rolling(50);
-        mBufferX = new CircularBuffer(50, (float) sampleduration);
-        mBufferY = new CircularBuffer(50, (float) sampleduration);
-        mrk4_X = new RK4();
-        mrk4_Y = new RK4();
-        RK4_initX = new Position(0, 0);
-        RK4_initY = new Position(0, 0);
-        RK4kal_a = new KalmanFilter();
-        RK4kal_v = new KalmanFilter();
-        RK4kal_p = new KalmanFilter();
-        RK4_initX.a = 0;
-        RK4_initX.v = 0;
-        previnitX = 0;
-        previnitY = 0;
-        RK4_last_timestamp = 0;
-        Eular_avg1 = new Rolling(50);
-        Eular_avg2 = new Rolling(50);
-        Eular_avg3 = new Rolling(50);
-        Eularkal_a = new KalmanFilter();
-        Eularkal_v = new KalmanFilter();
-        Eularkal_p = new KalmanFilter();
-        mcalEular = new calEular();
-        */
-    }
 
     public void Controller(SensorEvent mSensorEvent) {
         float[][] paramauto = new float[1331][3];
@@ -435,14 +334,6 @@ public class proAcceGyroCali extends getAcceGyro {
                 avg2.add(mSensorEvent.values[1]);
                 avg3.add(mSensorEvent.values[2]);
                 //mtcpipdata.tcpipdatasend(mSensorEvent.values[0]);
-
-
-                /*
-                sensordata thissensordata = new sensordata(System.currentTimeMillis(), new float[]{
-                        (float) avg1.getAverage(),
-                        (float) avg2.getAverage(),
-                        (float) avg3.getAverage()});
-*/
 
                 sensordata thissensordata = new sensordata(mSensorEvent.timestamp, mSensorEvent.values);
                 /*
@@ -2080,5 +1971,106 @@ public class proAcceGyroCali extends getAcceGyro {
             prevtime = currtime;
             return delta / 1000;
         }
+    }
+
+    //manual param updating
+    public void updateParas() {
+        NSK_avg1 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
+        NSK_avg2 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
+        NSK_avg3 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
+        RK4_avg1 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
+        RK4_avg2 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
+        RK4_avg3 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
+        RK4_LP_a_X = new calLowPass(Float.valueOf(DemoDrawUI.mLP.getText().toString()));
+        RK4_LP_a_Y = new calLowPass(Float.valueOf(DemoDrawUI.mLP.getText().toString()));
+        RK4_HP_a_X = new highPass(Float.valueOf(DemoDrawUI.mHPa.getText().toString()));
+        RK4_HP_v_X = new highPass(Float.valueOf(DemoDrawUI.mHPv.getText().toString()));
+        RK4_HP_p_X = new highPass(Float.valueOf(DemoDrawUI.mHPp.getText().toString()));
+        RK4_HP_a_Y = new highPass(Float.valueOf(DemoDrawUI.mHPa.getText().toString()));
+        RK4_HP_v_Y = new highPass(Float.valueOf(DemoDrawUI.mHPv.getText().toString()));
+        RK4_HP_p_Y = new highPass(Float.valueOf(DemoDrawUI.mHPp.getText().toString()));
+        RK4_staticOFFSET = Float.valueOf(DemoDrawUI.mStaticOffset.getText().toString());
+        Eular_avg1 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
+        Eular_avg2 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
+        Eular_avg3 = new Rolling(Integer.parseInt(DemoDrawUI.mMovingAvg.getText().toString()));
+        Eular_LP_a_X = new calLowPass(Float.valueOf(DemoDrawUI.mLP.getText().toString()));
+        Eular_LP_a_Y = new calLowPass(Float.valueOf(DemoDrawUI.mLP.getText().toString()));
+        Eular_HP_a_X = new highPass(Float.valueOf(DemoDrawUI.mHPa.getText().toString()));
+        Eular_HP_v_X = new highPass(Float.valueOf(DemoDrawUI.mHPv.getText().toString()));
+        Eular_HP_p_X = new highPass(Float.valueOf(DemoDrawUI.mHPp.getText().toString()));
+        Eular_HP_a_Y = new highPass(Float.valueOf(DemoDrawUI.mHPa.getText().toString()));
+        Eular_HP_v_Y = new highPass(Float.valueOf(DemoDrawUI.mHPv.getText().toString()));
+        Eular_HP_p_Y = new highPass(Float.valueOf(DemoDrawUI.mHPp.getText().toString()));
+        Eular_staticOFFSET = Float.valueOf(DemoDrawUI.mStaticOffset.getText().toString());
+        stabilize_v2.setcX(Float.valueOf(DemoDrawUI.mMultiplier.getText().toString()));
+        stabilize_v2.setcY(Float.valueOf(DemoDrawUI.mMultiplier.getText().toString()));
+    }
+
+    //auto param updating
+    public void updateParasauto(float lowpass, float highpass) {
+        NSK_LP_a_X = new calLowPass(lowpass);
+        //NSK_LP_a_Y = new calLowPass(0.9f);
+        NSK_HP_a_X = new highPass(highpass);
+        NSK_HP_v_X = new highPass(highpass);
+        NSK_HP_p_X = new highPass(highpass);
+        NSK_HP_a_Y = new highPass(highpass);
+        NSK_HP_v_Y = new highPass(highpass);
+        NSK_HP_p_Y = new highPass(highpass);
+        RK4_LP_a_X = new calLowPass(lowpass);
+        RK4_LP_a_Y = new calLowPass(lowpass);
+        RK4_HP_a_X = new highPass(highpass);
+        RK4_HP_v_X = new highPass(highpass);
+        RK4_HP_p_X = new highPass(highpass);
+        RK4_HP_a_Y = new highPass(highpass);
+        RK4_HP_v_Y = new highPass(highpass);
+        RK4_HP_p_Y = new highPass(highpass);
+        Eular_LP_a_X = new calLowPass(lowpass);
+        Eular_LP_a_Y = new calLowPass(lowpass);
+        Eular_HP_a_X = new highPass(highpass);
+        Eular_HP_v_X = new highPass(highpass);
+        Eular_HP_p_X = new highPass(highpass);
+        Eular_HP_a_Y = new highPass(highpass);
+        Eular_HP_v_Y = new highPass(highpass);
+        Eular_HP_p_Y = new highPass(highpass);
+        mcalEular = new calEular();
+        mrk4_X = new RK4();
+        mrk4_Y = new RK4();
+        RK4_initX = new Position(0, 0);
+        RK4_initY = new Position(0, 0);
+        /*
+        stabilize_v2.setcX(coeff);
+        stabilize_v2.setcY(coeff);
+        NoShakekal_a = new KalmanFilter();
+        NoShakeinit = true;
+        prevdx = 0;
+        prevdy = 0;
+        NSK_avg1 = new Rolling(50);
+        NSK_avg2 = new Rolling(50);
+        NSK_avg3 = new Rolling(50);
+        mBufferX = new CircularBuffer(50, (float) sampleduration);
+        mBufferY = new CircularBuffer(50, (float) sampleduration);
+        mrk4_X = new RK4();
+        mrk4_Y = new RK4();
+        RK4_initX = new Position(0, 0);
+        RK4_initY = new Position(0, 0);
+        RK4kal_a = new KalmanFilter();
+        RK4kal_v = new KalmanFilter();
+        RK4kal_p = new KalmanFilter();
+        RK4_initX.a = 0;
+        RK4_initX.v = 0;
+        previnitX = 0;
+        previnitY = 0;
+        RK4_last_timestamp = 0;
+        Eular_avg1 = new Rolling(50);
+        Eular_avg2 = new Rolling(50);
+        Eular_avg3 = new Rolling(50);
+        Eularkal_a = new KalmanFilter();
+        Eularkal_v = new KalmanFilter();
+        Eularkal_p = new KalmanFilter();
+        mcalEular = new calEular();
+        */
+    }
+    public class Experiment{
+        int count = 0;
     }
 }

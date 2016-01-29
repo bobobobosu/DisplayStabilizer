@@ -10,14 +10,9 @@ import android.os.HandlerThread;
 import android.util.Log;
 
 import com.project.nicki.displaystabilizer.dataprocessor.CircularBuffer;
-import com.project.nicki.displaystabilizer.dataprocessor.proAccelerometer;
 
 import android.os.Bundle;
 import android.os.Message;
-
-import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
-
-import java.util.Date;
 
 /**
  * Created by nicki on 10/27/2015.

@@ -1,16 +1,12 @@
 package com.project.nicki.displaystabilizer.dataprovider;
 
 import android.content.Context;
-import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Log;
-
-import com.project.nicki.displaystabilizer.dataprocessor.proGyroscope;
 
 /**
  * Created by nicki on 10/26/2015.

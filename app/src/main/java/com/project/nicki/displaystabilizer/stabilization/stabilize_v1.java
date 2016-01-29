@@ -2,27 +2,16 @@ package com.project.nicki.displaystabilizer.stabilization;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
-import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 
-import com.project.nicki.displaystabilizer.dataprocessor.proDataFlow;
-import com.project.nicki.displaystabilizer.dataprovider.getAccelerometer;
-import com.project.nicki.displaystabilizer.dataprocessor.utils.LevenbergMarquardt;
-import org.ejml.data.*;
-import org.ejml.data.DenseMatrix64F;
-
-import static org.ejml.ops.CommonOps.*;
-import static org.ejml.ops.SpecializedOps.diffNormF;
 /**
  * Created by nicki on 11/15/2015.
  */
