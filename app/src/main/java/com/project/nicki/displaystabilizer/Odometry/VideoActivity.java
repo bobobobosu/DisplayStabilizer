@@ -165,7 +165,6 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
             thread = null;
         }
     }
-
     /**
      * Sets up the camera if it is not already setup.
      */
@@ -197,7 +196,6 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 
         // Start the video feed by passing it to mPreview
         mPreview.setCamera(mCamera);
-
 
         //Odometry set
         monoparas = new MonoPlaneParameters();
