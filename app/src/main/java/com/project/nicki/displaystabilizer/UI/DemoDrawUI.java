@@ -151,9 +151,10 @@ public class DemoDrawUI extends AppCompatActivity {
         });
 */
         integralspinner = (Spinner) findViewById(R.id.integralspinner);
-        String[] integralmethods = {"NoShake", "RK4", "Euler"};
+        final String[] integralmethods = {"NoShake", "RK4", "Euler"};
         integralList = new ArrayAdapter<String>(DemoDrawUI.this, R.layout.support_simple_spinner_dropdown_item, integralmethods);
         integralspinner.setAdapter(integralList);
+
         integralspinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -162,7 +163,13 @@ public class DemoDrawUI extends AppCompatActivity {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                proAcceGyroCali.selectedMethod = 0;
+                proAcceGyroCali.selectedMethod = 1;
+            }
+        });
+        integralspinner.post(new Runnable() {
+            @Override
+            public void run() {
+                integralspinner.setSelection(1);
             }
         });
         //fakepos
@@ -206,6 +213,17 @@ public class DemoDrawUI extends AppCompatActivity {
         mMultiplier = (EditText) findViewById(R.id.multiplier);
         mStaticOffset = (EditText) findViewById(R.id.staticoffset);
         mApplyPara = (Button) findViewById(R.id.applyset);
+        mMovingAvg.setText(String.valueOf(50));
+        mLP.setText(String.valueOf(0.9));
+        mHPa.setText(String.valueOf(0.9));
+        mHPv.setText(String.valueOf(0.9));
+        mHPp.setText(String.valueOf(0.9));
+        mStaticOffset.setText(String.valueOf(0.0017));
+        mMultiplier.setText(String.valueOf(0.055));
+        Message message;
+        String obj = "OK";
+        message = proAcceGyroCali.applypara.obtainMessage(1, obj);
+        proAcceGyroCali.applypara.sendMessage(message);
         mApplyPara.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

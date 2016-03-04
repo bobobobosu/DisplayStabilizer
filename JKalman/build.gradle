@@ -1,4 +1,2 @@
 configurations.create("default")
 artifacts.add("default", file('JKalman.jar'))
-dependencies {
-}

@@ -3,13 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/DisplayStabilizer.iml" filepath="$PROJECT_DIR$/DisplayStabilizer.iml" />
-      <module fileurl="file://$PROJECT_DIR$/EJML-core-0.28/EJML-core-0.28.iml" filepath="$PROJECT_DIR$/EJML-core-0.28/EJML-core-0.28.iml" />
-      <module fileurl="file://$PROJECT_DIR$/EJML-dense64-0.28/EJML-dense64-0.28.iml" filepath="$PROJECT_DIR$/EJML-dense64-0.28/EJML-dense64-0.28.iml" />
       <module fileurl="file://$PROJECT_DIR$/JKalman/JKalman.iml" filepath="$PROJECT_DIR$/JKalman/JKalman.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/butterknife-7.0.1/butterknife-7.0.1.iml" filepath="$PROJECT_DIR$/butterknife-7.0.1/butterknife-7.0.1.iml" />
       <module fileurl="file://$PROJECT_DIR$/dsp-collection/dsp-collection.iml" filepath="$PROJECT_DIR$/dsp-collection/dsp-collection.iml" />
-      <module fileurl="file://$PROJECT_DIR$/openCVLibrary300/openCVLibrary300.iml" filepath="$PROJECT_DIR$/openCVLibrary300/openCVLibrary300.iml" />
       <module fileurl="file://$PROJECT_DIR$/opencsv-2.1-1.0.0/opencsv-2.1-1.0.0.iml" filepath="$PROJECT_DIR$/opencsv-2.1-1.0.0/opencsv-2.1-1.0.0.iml" />
     </modules>
   </component>

@@ -7,7 +7,6 @@ package com.project.nicki.displaystabilizer.dataprocessor;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -45,6 +44,7 @@ import jkalman.JKalman;
 
 
 public class proAcceGyroCali extends getAcceGyro {
+    private updateUI mupdateUI = new updateUI();
     public static boolean getcaliLogSTATUS = false;
     public static int selectedMethod;
     //handle setText update
@@ -57,8 +57,7 @@ public class proAcceGyroCali extends getAcceGyro {
             pendingUpdate = true;
         }
     };
-    /////////////////////////////////////
-    public static float multiplier = 0;
+    /////////////////////////////////////;
     public static sensordata tmpgyrodata;
     public static int nowparam = 1;
     public static float nowmultip = 1;
@@ -87,7 +86,7 @@ public class proAcceGyroCali extends getAcceGyro {
     public float lowpass = 0;
     public float highpass = 0;
     public float coeff = 0;
-    public int modauto = 0;
+    public int modauto = -1;
     long static_start_time;
     float prevdx = 0;
     float prevdy = 0;
@@ -185,6 +184,7 @@ public class proAcceGyroCali extends getAcceGyro {
     private boolean precaliLogSTATUS = caliLogSTATUS;
     private display mdisplay = new display();
 
+    public boolean drawStarted = false;
     public proAcceGyroCali(Context context) {
         super(context);
         mContext = context;
@@ -247,63 +247,27 @@ public class proAcceGyroCali extends getAcceGyro {
 
 
     public void Controller(SensorEvent mSensorEvent) {
-        float[][] paramauto = new float[1331][3];
-        if (System.currentTimeMillis() - prevautotime > 5000) {
-            int num = 0;
-
-            for (int i = 1; i < 3; i++) {
-                for (float j = 0; j <= 1.1; j += 0.1) {
-                    for (float k = 0; k <= 1.1; k += 0.1) {
-                        num++;
-                        paramauto[num - 1][0] = i;
-                        paramauto[num - 1][1] = j;
-                        paramauto[num - 1][2] = k;
-                        //modauto = (int) i;
-                        Log.d(TAG, "All " + num + " " + i + " " + j + " " + k);
-                    }
-                }
-            }
-
-            /*
-            for (int i = 0; i < 3; i++) {
-                for (float k = 0.050f; k <= 0.060; k += 0.001) {
-                    num++;
-                    paramauto[num - 1][0] = i;
-                    paramauto[num - 1][1] = k;
-                    paramauto[num - 1][2] = k;
-                    Log.d(TAG, "All " + num + " " + i + " "  + k);
-                }
-            }
-            */
-            /*
-            for (float i = 0; i < 5.5; i += 0.1) {
-                num++;
-                paramauto[num - 1][0] = i;
-            }
-            */
-            modauto = (int) paramauto[nowparam][0];
-            Log.d(TAG, "now param " + String.valueOf(paramauto[nowparam][0]) + " " + String.valueOf(paramauto[nowparam][1]) + " " + paramauto[nowparam][2]);
-            mdisplay.displaystatus1(String.valueOf(paramauto[nowparam][0]) + " " + String.valueOf(paramauto[nowparam][1]) + " " + String.valueOf(paramauto[nowparam][2]));
-            //mdisplay.displaystatus1(String.valueOf(paramauto[num - 1][1]));
-            //updateParasauto(paramauto[nowparam][1], paramauto[nowparam][2]);
-            nowmultip = paramauto[nowparam][1];
-            //stabilize_v2.setcX(paramauto[nowparam][1]);
-            //stabilize_v2.setcY(paramauto[nowparam][1]);
-            nowparam++;
-            prevautotime = System.currentTimeMillis();
-        }
         Log.d(TAG, "parameters: " + String.valueOf(pendingUpdate));
+
+        //manual control
+        didCalibraiotn = true;
+
+
         if (pendingUpdate == true) {
             Log.d(TAG, "Parameters");
             updateParas();
+            mupdateUI.updateUInow();
             Toast.makeText(mContext, "Parameters Updated " + stabilize_v2.getcX(),
                     Toast.LENGTH_LONG).show();
             pendingUpdate = false;
         }
-        //mdisplay.displaystatus1("AppliedPara");
         if (mSensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
-            //stabilize_v2.setcX(1);
-            //stabilize_v2.setcY(1);
+            if (DemoDraw.drawing < 2) {
+                drawStarted = true;
+            }
+            if (drawStarted == true) {
+                LogCSV("RAW", String.valueOf(mSensorEvent.values[0]), String.valueOf(mSensorEvent.values[1]), String.valueOf(mSensorEvent.values[2]), String.valueOf(mSensorEvent.timestamp), "", "");
+            }
             //////////////////////////////init///////////////////////
             if (controllerinit == false) {
                 //test
@@ -336,7 +300,7 @@ public class proAcceGyroCali extends getAcceGyro {
                 //mtcpipdata.tcpipdatasend(mSensorEvent.values[0]);
 
                 sensordata thissensordata = new sensordata(mSensorEvent.timestamp, mSensorEvent.values);
-                /*
+
                 sampleduration = msamplerate.getTimeDelta(thissensordata);
                 //Allan
                 if (cirbuff.size() < 50) {
@@ -345,12 +309,12 @@ public class proAcceGyroCali extends getAcceGyro {
                     cirbuff.add(thissensordata);
                     cirbuff.remove(0);
                     sensordata Allan = mcalAllan.getAvgAllan(cirbuff);
-                    LogCSV("Allan", String.valueOf(Allan.getData()[0]), String.valueOf(Allan.getData()[1]), String.valueOf(Allan.getData()[2]), String.valueOf(thissensordata.getTime()), "", " ");
+                    //LogCSV("Allan", String.valueOf(Allan.getData()[0]), String.valueOf(Allan.getData()[1]), String.valueOf(Allan.getData()[2]), String.valueOf(thissensordata.getTime()), "", " ");
                     Log.d(TAG, "Allan: " + Allan.getData()[0]);
                 }
-                */
-/*
-                //vm
+
+                //Static Detector
+                //(1)Load into buffer
                 if (AcceCircular.size() < 10) {
 
                     AcceCircular.add(thissensordata);
@@ -375,51 +339,25 @@ public class proAcceGyroCali extends getAcceGyro {
                 //(3)put values into tmpbuffer when static, add to LM buffer if size>100
                 precaliLogSTATUS = caliLogSTATUS;
                 double tmpmagnitude = getVarianceMagnitude(AcceXvar, AcceYvar, AcceZvar);
-
-                if (tmpmagnitude > paramauto[nowparam][0]) {
+                if (tmpmagnitude > 0.0017) {
                     caliLogSTATUS = false;
                     static_start_time = thissensordata.getTime();
-                    LogCSV(
-                            "Magni",
-                            String.valueOf(nowparam),
-                            String.valueOf(tmpmagnitude), String.valueOf(1),
-                            String.valueOf(thissensordata.getData()[0]),
-                            String.valueOf(thissensordata.getData()[1]),
-                            String.valueOf(thissensordata.getData()[2]));
-                    Log.d(TAG, "MOving");
                 } else {
                     if (thissensordata.getTime() - static_start_time > 50) {
-                        LogCSV(
-                                "Magni",
-                                String.valueOf(nowparam),
-                                String.valueOf(tmpmagnitude), String.valueOf(2),
-                                String.valueOf(thissensordata.getData()[0]),
-                                String.valueOf(thissensordata.getData()[1]),
-                                String.valueOf(thissensordata.getData()[2]));
-                    } else {
-                        LogCSV(
-                                "Magni",
-                                String.valueOf(nowparam),
-                                String.valueOf(tmpmagnitude), String.valueOf(1),
-                                String.valueOf(thissensordata.getData()[0]),
-                                String.valueOf(thissensordata.getData()[1]),
-                                String.valueOf(thissensordata.getData()[2]));
-                        Log.d(TAG, "MOving");
+                        caliLogSTATUS = true;
                     }
                 }
-*/
 
-                //LogCSV(String.valueOf(thissensordata.getData()[0]),String.valueOf(thissensordata.getData()[1]),String.valueOf(thissensordata.getData()[2]),"","","");
-
-                //NoShake(thissensordata);
-
+                //rotate
                 if (tmpgyrodata != null) {
-                    //thissensordata = rotateInput(thissensordata);
-                    Log.d(TAG, "stop");
+                    thissensordata = rotateInput(thissensordata);
+                    ///Log.d(TAG, "stop");
                     //thissensordata.setData(new float[]{(float) result[0][0], (float) result[0][1]});
                     //mrotateVector.rotate(new sensordata(mSensorEvent.timestamp, new float[]{mSensorEvent.values[0], mSensorEvent.values[1]}));
                 }
 
+
+                //Choose and run
                 if (selectedMethod == 0 || modauto == 0) {
                     mdisplay.displaystatus2("Method: " + "NoShake");
                     //thissensordata = mrotateVector.rotate(thissensordata);
@@ -433,6 +371,7 @@ public class proAcceGyroCali extends getAcceGyro {
                     //thissensordata = mrotateVector.rotate(thissensordata);
                     Eular(thissensordata);
                 }
+                Log.d(TAG, "current method " + selectedMethod);
             }
         }
         if (mSensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
@@ -453,7 +392,7 @@ public class proAcceGyroCali extends getAcceGyro {
                 mdisplay.displaystatus1("Calibrating...");
             } else {
                 sensordata thissensordata = new sensordata(mSensorEvent.timestamp, mSensorEvent.values);
-                Calibration(thissensordata);
+                //Calibration(thissensordata);
             }
         }
     }
@@ -608,6 +547,21 @@ public class proAcceGyroCali extends getAcceGyro {
             }
 
         }
+
+
+        //manual control
+        RK4_LP_a_X = new calLowPass(0.9f);
+        RK4_LP_a_Y = new calLowPass(0.9f);
+        RK4_HP_a_X = new highPass(0.9f);
+        RK4_HP_v_X = new highPass(0.9f);
+        RK4_HP_p_X = new highPass(0.9f);
+        RK4_HP_a_Y = new highPass(0.9f);
+        RK4_HP_v_Y = new highPass(0.9f);
+        RK4_HP_p_Y = new highPass(0.9f);
+        RK4_staticOFFSET = 0.0017f;
+
+
+
         float NS2S = 1.0f / 1000000000.0f;
         float dt = (sensordataIN.getTime() - RK4_last_timestamp) * NS2S;
         RK4_last_timestamp = sensordataIN.getTime();
@@ -628,8 +582,8 @@ public class proAcceGyroCali extends getAcceGyro {
 
         //0 if static
         if (detectStatic(sensordataIN)) {
-            RK4_initY.v = 0;
-            RK4_initX.v = 0;
+            //RK4_initY.v = 0;
+            //RK4_initX.v = 0;
         }
 
         //KF
@@ -679,6 +633,7 @@ public class proAcceGyroCali extends getAcceGyro {
         Bundle bundle = new Bundle();
         bundle.putFloatArray("Acce", sensordataOUT_d.getData());
         bundle.putFloatArray("Pos", new float[]{(float) RK4_initX.pos, (float) RK4_initY.pos});
+        //("RK4_pos",String.valueOf(RK4_initX.pos),String.valueOf(RK4_initY.pos),"","","","");
         Log.d(TAG, "thisone p " + RK4_initX.pos);
         bundle.putLong("Time", sensordataOUT_p.getTime());
         msg.setData(bundle);
@@ -791,8 +746,9 @@ public class proAcceGyroCali extends getAcceGyro {
 
         Log.d(TAG, "forlogging " + String.valueOf(mcalEular.position[0]) + " " + String.valueOf(mcalEular.position[1]));
         if (DemoDraw.drawing < 2) {
-            //LogCSV("Eular.csv", String.valueOf(Eular_sensordataOUT.getTime()), String.valueOf(mcalEular.position[0]), String.valueOf(mcalEular.position[1]), String.valueOf(mcalEular.velocity[0]), String.valueOf(mcalEular.velocity[0]), String.valueOf(mcalEular.velocity[1]));
+            //LogCSV("Eular", String.valueOf(Eular_sensordataOUT.getTime()), String.valueOf(mcalEular.position[0]), String.valueOf(mcalEular.position[1]), String.valueOf(mcalEular.velocity[0]), String.valueOf(mcalEular.velocity[0]), String.valueOf(mcalEular.velocity[1]));
         }
+
         //mtcpipdata.tcpipdatasend(mcalEular.position[0]);
         sensordata sensordataOUT = new sensordata(sensordataIN.getTime(), new float[]{mcalEular.position[0] - prevEular[0], mcalEular.position[1] - prevEular[1]});
         Message msg = new Message();
@@ -983,7 +939,8 @@ public class proAcceGyroCali extends getAcceGyro {
 
         //(3)put values into tmpbuffer when static, add to LM buffer if size>100
         precaliLogSTATUS = caliLogSTATUS;
-        getcaliLogSTATUS = getVarianceMagnitude(lAcceXvar, lAcceYvar, lAcceZvar) < 1.95;
+        getcaliLogSTATUS = getVarianceMagnitude(lAcceXvar, lAcceYvar, lAcceZvar) < Float.valueOf(DemoDrawUI.mStaticOffset.getText().toString());
+        Log.d(TAG, "getcaliLogSTATUS " + getcaliLogSTATUS);
         return getcaliLogSTATUS;
     }
 
@@ -1488,6 +1445,11 @@ public class proAcceGyroCali extends getAcceGyro {
 
         public sensordata() {
             this(0, new float[]{0, 0, 0});
+        }
+
+        public sensordata(sensordata msensordata) {
+            setData(msensordata.getData());
+            setTime(msensordata.getTime());
         }
 
         public sensordata(long time, float[] data) {
@@ -2006,6 +1968,47 @@ public class proAcceGyroCali extends getAcceGyro {
         stabilize_v2.setcY(Float.valueOf(DemoDrawUI.mMultiplier.getText().toString()));
     }
 
+    public class updateUI {
+        public void updateUInow() {
+            DemoDrawUI.runOnUI(new Runnable() {
+                @Override
+                public void run() {
+                    DemoDrawUI.mMovingAvg.setText(DemoDrawUI.mMovingAvg.getText().toString());
+                    DemoDrawUI.mMovingAvg.setText(DemoDrawUI.mMovingAvg.getText().toString());
+                    DemoDrawUI.mMovingAvg.setText(DemoDrawUI.mMovingAvg.getText().toString());
+                    DemoDrawUI.mMovingAvg.setText(DemoDrawUI.mMovingAvg.getText().toString());
+                    DemoDrawUI.mMovingAvg.setText(DemoDrawUI.mMovingAvg.getText().toString());
+                    DemoDrawUI.mMovingAvg.setText(DemoDrawUI.mMovingAvg.getText().toString());
+                    DemoDrawUI.mLP.setText(DemoDrawUI.mLP.getText().toString());
+                    DemoDrawUI.mLP.setText(DemoDrawUI.mLP.getText().toString());
+                    DemoDrawUI.mHPa.setText(DemoDrawUI.mHPa.getText().toString());
+                    DemoDrawUI.mHPv.setText(DemoDrawUI.mHPv.getText().toString());
+                    DemoDrawUI.mHPp.setText(DemoDrawUI.mHPp.getText().toString());
+                    DemoDrawUI.mHPa.setText(DemoDrawUI.mHPa.getText().toString());
+                    DemoDrawUI.mHPv.setText(DemoDrawUI.mHPv.getText().toString());
+                    DemoDrawUI.mHPp.setText(DemoDrawUI.mHPp.getText().toString());
+                    DemoDrawUI.mStaticOffset.setText(DemoDrawUI.mStaticOffset.getText().toString());
+                    DemoDrawUI.mMovingAvg.setText(DemoDrawUI.mMovingAvg.getText().toString());
+                    DemoDrawUI.mMovingAvg.setText(DemoDrawUI.mMovingAvg.getText().toString());
+                    DemoDrawUI.mMovingAvg.setText(DemoDrawUI.mMovingAvg.getText().toString());
+                    DemoDrawUI.mLP.setText(DemoDrawUI.mLP.getText().toString());
+                    DemoDrawUI.mLP.setText(DemoDrawUI.mLP.getText().toString());
+                    DemoDrawUI.mHPa.setText(DemoDrawUI.mHPa.getText().toString());
+                    DemoDrawUI.mHPv.setText(DemoDrawUI.mHPv.getText().toString());
+                    DemoDrawUI.mHPp.setText(DemoDrawUI.mHPp.getText().toString());
+                    DemoDrawUI.mHPa.setText(DemoDrawUI.mHPa.getText().toString());
+                    DemoDrawUI.mHPv.setText(DemoDrawUI.mHPv.getText().toString());
+                    DemoDrawUI.mHPp.setText(DemoDrawUI.mHPp.getText().toString());
+                    DemoDrawUI.mStaticOffset.setText(DemoDrawUI.mStaticOffset.getText().toString());
+                    DemoDrawUI.mMultiplier.setText(DemoDrawUI.mMultiplier.getText().toString());
+                    DemoDrawUI.mMultiplier.setText(DemoDrawUI.mMultiplier.getText().toString());
+                }
+            });
+        }
+
+
+    }
+
     //auto param updating
     public void updateParasauto(float lowpass, float highpass) {
         NSK_LP_a_X = new calLowPass(lowpass);
@@ -2070,7 +2073,40 @@ public class proAcceGyroCali extends getAcceGyro {
         mcalEular = new calEular();
         */
     }
-    public class Experiment{
-        int count = 0;
+
+    public class Experiment {
+        int num = 0;
+        float[][] paramauto = new float[10000][3];
+
+        public void setAutoParams() {
+            if (System.currentTimeMillis() - prevautotime > 5000) {
+                int num = 0;
+
+                for (int i = 1; i < 3; i++) {
+                    for (float j = 0; j <= 1.1; j += 0.1) {
+                        for (float k = 0; k <= 1.1; k += 0.1) {
+                            num++;
+                            paramauto[num - 1][0] = i;
+                            paramauto[num - 1][1] = j;
+                            paramauto[num - 1][2] = k;
+                            //modauto = (int) i;
+                            Log.d(TAG, "All " + num + " " + i + " " + j + " " + k);
+                        }
+                    }
+                }
+
+
+                modauto = (int) paramauto[nowparam][0];
+                Log.d(TAG, "now param " + String.valueOf(paramauto[nowparam][0]) + " " + String.valueOf(paramauto[nowparam][1]) + " " + paramauto[nowparam][2]);
+                mdisplay.displaystatus1(String.valueOf(paramauto[nowparam][0]) + " " + String.valueOf(paramauto[nowparam][1]) + " " + String.valueOf(paramauto[nowparam][2]));
+                //mdisplay.displaystatus1(String.valueOf(paramauto[num - 1][1]));
+                //updateParasauto(paramauto[nowparam][1], paramauto[nowparam][2]);
+                nowmultip = paramauto[nowparam][1];
+                //stabilize_v2.setcX(paramauto[nowparam][1]);
+                //stabilize_v2.setcY(paramauto[nowparam][1]);
+                nowparam++;
+                prevautotime = System.currentTimeMillis();
+            }
+        }
     }
 }

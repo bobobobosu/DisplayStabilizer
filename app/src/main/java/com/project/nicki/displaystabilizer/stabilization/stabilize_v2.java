@@ -10,7 +10,6 @@ import android.widget.Toast;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
-import com.project.nicki.displaystabilizer.dataprocessor.CircularBuffer;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 
 import java.io.File;
@@ -39,8 +38,8 @@ public class stabilize_v2 implements Runnable {
     public static boolean updatefakepos = false;
     public static int oneorminusone = 1;
     //constants
-    private static float cX = 1;
-    private static float cY = 1;
+    private static float cX;
+    private static float cY;
     //mods
     public boolean CalibrationMode = true;
     public ArrayList<sensordata> stroke2pos;
@@ -224,35 +223,26 @@ public class stabilize_v2 implements Runnable {
                 }
 
 
+                //manual control
+                cX = -0.02f;
+                cY = -0.02f;
 
-/*
-                if (posbuffer.size() > 1) {
-                    posdeltabuffer.add(getlatestdelta(posbuffer));
-                    if (posdeltabuffer.size() > 1) {
-                        if (posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * posdeltabuffer.get(posdeltabuffer.size() - 2).getData()[0] < 0) {
-                            Log.d(TAG, "reversed: " + posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0]);
-                        }
-                    }
-                }
-*/
+
                 //buffer Draw
                 strokebuffer.add(bundle2sensordata(bundlegot));
-
-                //mtcpip.tcpipdatasend((float) strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0], (float) strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1]);
-
-                //LogCSV(String.valueOf(bundle2sensordata(bundlegot).getData()[0]* com.project.nicki.displaystabilizer.init.pix2m),String.valueOf(bundle2sensordata(bundlegot).getData()[1]* com.project.nicki.displaystabilizer.init.pix2m),"","","","");
+                LogCSV("draw",
+                        String.valueOf(bundle2sensordata(bundlegot).getTime()),
+                        String.valueOf(bundle2sensordata(bundlegot).getData()[0]),
+                        String.valueOf(bundle2sensordata(bundlegot).getData()[1]),
+                        "", "", "");
                 if (strokebuffer.size() > 1) {
-                    strokedeltabuffer.add(rotateInput(getlatestdelta(strokebuffer)));
+                    //strokedeltabuffer.add(rotateInput(getlatestdelta(strokebuffer)));
+                    strokedeltabuffer.add(getlatestdelta(strokebuffer));
                 }
 
                 //exit if set to draw2pos
                 Log.d(TAG, "fakepos: " + posdrawing);
                 if (posdrawing == true && stroke2pos != null && fakeposposition < stroke2pos.size() - 1) {
-                    //override pos
-                    // if (posdeltabuffer.size() > 1) {
-                    //    posdeltabuffer.remove(posdeltabuffer.size() - 1);
-                    //}
-                    //Log.d(TAG,"compar: "+posdeltabuffer.get(0).getData()[0] + " " + stroke2pos.get(0).getData()[0] );
                     posdeltabuffer.add(new sensordata(stroke2pos.get(fakeposposition).getTime(), new float[]{
                             stroke2pos.get(fakeposposition).getData()[0] * (float) com.project.nicki.displaystabilizer.init.pix2m * 100 * oneorminusone,
                             stroke2pos.get(fakeposposition).getData()[1] * (float) com.project.nicki.displaystabilizer.init.pix2m * 100 * oneorminusone}));
@@ -281,7 +271,8 @@ public class stabilize_v2 implements Runnable {
                     stastrokedelta.setData(new float[]{
                             strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * cX / (float) com.project.nicki.displaystabilizer.init.pix2m,
                             strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY / (float) com.project.nicki.displaystabilizer.init.pix2m});
-
+                    stastrokedeltabuffer.add(stastrokedelta);
+/*
                     LogCSV(
                             "performance",
                             String.valueOf(proAcceGyroCali.nowmultip),
@@ -291,16 +282,7 @@ public class stabilize_v2 implements Runnable {
                             String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY / (float) com.project.nicki.displaystabilizer.init.pix2m),
                             String.valueOf(Math.pow(Math.pow(stastrokedelta.getData()[0], 2) + Math.pow(stastrokedelta.getData()[1], 2), 0.5))
                     );
-
-                    /*
-                    LogCSV("performance",
-                            String.valueOf(-strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0] ),
-                            String.valueOf(-strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1]),
-                            String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0]),
-                            String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1]), "", "");
-                            */
-
-                    stastrokedeltabuffer.add(stastrokedelta);
+                    */
                     if (prevStroke != null) {
                         //sumof stastrokedeltabuffer
                         prevStroke[0] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0];
@@ -314,6 +296,7 @@ public class stabilize_v2 implements Runnable {
                             Point todrawPoint = new Point();
                             todrawPoint.x = msensordata.getData()[0] + tofinger[0];
                             todrawPoint.y = msensordata.getData()[1] + tofinger[1];
+                            //LogCSV("tmpaccesensordata.csv", String.valueOf(prevStroke[0]), String.valueOf(prevStroke[1]), "", "", "", "");
                             toDraw.add(todrawPoint);
                         }
                         bbox.set(toDraw);
@@ -331,93 +314,6 @@ public class stabilize_v2 implements Runnable {
                 msg3.what = 1;
                 DemoDraw.mhandler.sendMessage(msg3);
 
-                if (stastrokedeltabuffer.size() > 0) {
-                    double tmp = 0;
-                    for (int i = 0; i < stastrokedeltabuffer.size(); i++) {
-                        tmp += Math.pow(Math.pow(stastrokedeltabuffer.get(i).getData()[0], 2) + Math.pow(stastrokedeltabuffer.get(i).getData()[1], 2), 0.5);
-                    }
-                    tmp /= stastrokedeltabuffer.size();
-                    //LogCSV("performance", String.valueOf(tmp), "", "", "", "", "");
-
-                    //setcX(cX+1);
-                    //setcY(cY+1);
-                    //CircularBuffer.CONST_K += 0.05;
-                    mdisplay.diaplayperformance(String.valueOf(CircularBuffer.CONST_K));
-                }
-
-                if (strokedeltabuffer.size() > 0 && posdeltabuffer.size() > 0 && Pos != null) {
-                    //if (strokedeltabuffer.size() > 0 && posdeltabuffer.size() > 0 ) {
-                    final ArrayList<sensordata> tmp = getSumArray(strokedeltabuffer);
-                    ArrayList<sensordata> tmp2 = getSumArray(posdeltabuffer);
-                    /*
-                    proAcceGyroCali.multiplier =
-                            (float) (Math.pow(Math.pow(tmp.get(tmp.size() - 1).getData()[0] * com.project.nicki.displaystabilizer.init.pix2m, 2) + Math.pow(tmp.get(tmp.size() - 1).getData()[1] * com.project.nicki.displaystabilizer.init.pix2m, 2), 0.5) /
-                                    Math.pow(Math.pow(tmp2.get(tmp2.size() - 1).getData()[0], 2) + Math.pow(tmp2.get(tmp2.size() - 1).getData()[1], 2), 0.5));
-                    Log.d(TAG, "multiplier: " + String.valueOf(proAcceGyroCali.multiplier));
-*/
-/*
-                    LogCSV("strokeposlog",
-                            String.valueOf(tmp.get(tmp.size() - 1).getTime()),
-                            String.valueOf(tmp.get(tmp.size() - 1).getData()[0] * -1 * com.project.nicki.displaystabilizer.init.pix2m),
-                            String.valueOf(tmp.get(tmp.size() - 1).getData()[1] * -1 * com.project.nicki.displaystabilizer.init.pix2m),
-                            String.valueOf(tmp.get(tmp.size() - 1).getTime()),
-                            String.valueOf(Pos[0]),
-                            String.valueOf(Pos[1]));
-                            */
-
-/*
-                    LogCSV(
-                            "2_2",
-                            String.valueOf(tmp.get(tmp.size() - 1).getTime()),
-                            String.valueOf(tmp.get(tmp.size() - 1).getData()[0] * -1 * com.project.nicki.displaystabilizer.init.pix2m),
-                            String.valueOf(tmp.get(tmp.size() - 1).getData()[1] * -1 * com.project.nicki.displaystabilizer.init.pix2m),
-                            String.valueOf(tmp2.get(tmp2.size() - 1).getTime()),
-                            String.valueOf(tmp2.get(tmp2.size() - 1).getData()[0]),
-                            String.valueOf(tmp2.get(tmp2.size() - 1).getData()[1]));
-*/
-
-                    Log.d(TAG, "thisone " + Pos[0]);
-/*
-                    LogCSV(
-                            "2_2_all",
-                            String.valueOf(proAcceGyroCali.nowparam),
-                            String.valueOf(strokebuffer.get(strokebuffer.size()-1).getTime()),
-                            String.valueOf(strokebuffer.get(strokebuffer.size()-1).getData()[0] * -1 * com.project.nicki.displaystabilizer.init.pix2m),
-                            String.valueOf(strokebuffer.get(strokebuffer.size()-1).getData()[1] * -1 * com.project.nicki.displaystabilizer.init.pix2m),
-                            String.valueOf(Pos[0]),
-                            String.valueOf(Pos[1]));
-**/
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            // mtcpip.tcpipdatasend((float)(tmp.get(tmp.size() - 1).getData()[0] * -1 * com.project.nicki.displaystabilizer.init.pix2m),(float)(tmp.get(tmp.size() - 1).getData()[1] * -1 * com.project.nicki.displaystabilizer.init.pix2m));
-                        }
-                    }).start();
-
-                    /*
-
-
-                }
-
-                    //compare(strokedeltabuffer,posdeltabuffer);
-/*
-                if (
-                        tmpaccesensordata != null &&
-                                posbuffer.size() > 0 &&
-                                posdeltabuffer.size() > 0 &&
-                                strokebuffer.size() > 0 &&
-                                strokedeltabuffer.size() > 0 &&
-                                stastrokebuffer.size() > 0 &&
-                                stastrokedeltabuffer.size() > 0) {
-
-                    LogCSV(
-                            String.valueOf(tmpaccesensordata.getTime()),
-                            String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getTime()),
-                            String.valueOf(strokebuffer.get(strokebuffer.size() - 1).getTime()),
-                            String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime()),
-                            String.valueOf(stastrokebuffer.get(stastrokebuffer.size() - 1).getTime()),
-                            String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime()));*/
-                }
 
             }
 
@@ -452,15 +348,6 @@ public class stabilize_v2 implements Runnable {
             if (data2.get(j) == null) {
                 data2.add(new sensordata(0, new float[]{0, 0}));
             }
-            /*
-            LogCSV("compare",
-                    String.valueOf(data1.get(j).getTime()),
-                    String.valueOf(data1.get(j).getData()[0]),
-                    String.valueOf(data1.get(j).getData()[1]),
-                    String.valueOf(data2.get(j).getTime()),
-                    String.valueOf(data2.get(j).getData()[0]),
-                    String.valueOf(data2.get(j).getData()[1]));
-                    */
         }
     }
 
@@ -623,6 +510,11 @@ public class stabilize_v2 implements Runnable {
 
         public sensordata() {
             this(0, new float[]{0, 0, 0});
+        }
+
+        public sensordata(sensordata msensordata) {
+            setData(msensordata.getData());
+            setTime(msensordata.getTime());
         }
 
         public sensordata(long time, float[] data) {

@@ -9,10 +9,8 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 
-import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
+import com.project.nicki.displaystabilizer.Odometry.VideoActivity;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
-import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
-import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
 import org.ejml.data.DenseMatrix64F;
 
@@ -56,6 +54,7 @@ public class init extends AppCompatActivity {
         //new Thread(new stabilize_v1(getBaseContext())).start();
 
 
+/*
         new Thread(new stabilize_v2(getBaseContext())).start();
         new Thread(new getAcceGyro(getBaseContext())).start();
         Intent goto_DemoDrawUI = new Intent();
@@ -63,6 +62,13 @@ public class init extends AppCompatActivity {
         goto_DemoDrawUI.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_DemoDrawUI.setClass(init.this, DemoDrawUI.class);
         startActivity(goto_DemoDrawUI);
+*/
+
+        Intent goto_OdometryMainActivity = new Intent();
+        overridePendingTransition(0, 0);
+        goto_OdometryMainActivity.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        goto_OdometryMainActivity.setClass(init.this, VideoActivity.class);
+        startActivity(goto_OdometryMainActivity);
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -122,6 +128,10 @@ public class init extends AppCompatActivity {
             this(0, new float[]{0, 0, 0});
         }
 
+        public sensordata(sensordata msensordata) {
+            setData(msensordata.getData());
+            setTime(msensordata.getTime());
+        }
         public sensordata(long time, float[] data) {
             this.Time = time;
             this.Data[0] = data[0];

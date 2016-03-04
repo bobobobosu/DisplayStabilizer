@@ -2,15 +2,46 @@ package com.project.nicki.displaystabilizer.dataprocessor.utils;
 
 import android.util.Log;
 
-
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 
-import org.ejml.data.*;
+import org.ejml.data.DenseMatrix64F;
+
+import java.util.ArrayList;
+
+import static org.ejml.ops.CommonOps.add;
+import static org.ejml.ops.CommonOps.multTransB;
+import static org.ejml.ops.CommonOps.scale;
+import static org.ejml.ops.CommonOps.solve;
+import static org.ejml.ops.CommonOps.subtract;
+import static org.ejml.ops.CommonOps.subtractEquals;
+import static org.ejml.ops.SpecializedOps.diffNormF;
+
 /**
  * Created by nickisverygood on 12/29/2015.
+ * <p>
+ * <p>
+ * This is a straight forward implementation of the Levenberg-Marquardt (LM) algorithm. LM is used to minimize
+ * non-linear cost functions:<br>
+ * <br>
+ * S(P) = Sum{ i=1:m , [y<sub>i</sub> - f(x<sub>i</sub>,P)]<sup>2</sup>}<br>
+ * <br>
+ * where P is the set of parameters being optimized.
+ * </p>
+ * <p/>
+ * <p>
+ * In each iteration the parameters are updated using the following equations:<br>
+ * <br>
+ * P<sub>i+1</sub> = (H + &lambda; I)<sup>-1</sup> d <br>
+ * d =  (1/N) Sum{ i=1..N , (f(x<sub>i</sub>;P<sub>i</sub>) - y<sub>i</sub>) * jacobian(:,i) } <br>
+ * H =  (1/N) Sum{ i=1..N , jacobian(:,i) * jacobian(:,i)<sup>T</sup> }
+ * </p>
+ * <p>
+ * Whenever possible the allocation of new memory is avoided.  This is accomplished by reshaping matrices.
+ * A matrix that is reshaped won't grow unless the new shape requires more memory than it has available.
+ * </p>
+ *
+ * @author Peter Abeles
  */
-
-
 /**
  * <p>
  * This is a straight forward implementation of the Levenberg-Marquardt (LM) algorithm. LM is used to minimize
@@ -35,12 +66,6 @@ import org.ejml.data.*;
  *
  * @author Peter Abeles
  */
-import org.ejml.data.DenseMatrix64F;
-
-import java.util.ArrayList;
-
-import static org.ejml.ops.CommonOps.*;
-import static org.ejml.ops.SpecializedOps.diffNormF;
 
 /**
  * <p>
@@ -129,6 +154,11 @@ public class LevenbergMarquardt {
         private float[] Data;
         public sensordata(){
             this(0,null);
+        }
+
+        public sensordata(sensordata msensordata) {
+            setData(msensordata.getData());
+            setTime(msensordata.getTime());
         }
         public sensordata(long time,float[] data){
             this.Time = time;
@@ -386,6 +416,6 @@ public class LevenbergMarquardt {
          * @param x     the input points.
          * @param y     the resulting output.
          */
-        public void compute(DenseMatrix64F param, DenseMatrix64F x, DenseMatrix64F y, ArrayList<proAcceGyroCali.sensordata> data);
+        void compute(DenseMatrix64F param, DenseMatrix64F x, DenseMatrix64F y, ArrayList<proAcceGyroCali.sensordata> data);
     }
 }

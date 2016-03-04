@@ -9,7 +9,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
-
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
@@ -36,14 +35,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".UI.sensor_info" />
         <activity android:name=".UI.DemoStabilizeOn" />
         <activity android:name=".dataprovider.getFrontcam" />
         <activity android:name=".contentprovider.DemoDraw" />
         <activity android:name=".UI.DemoDrawUI" />
-        <activity android:name=".UI.data_visualize"></activity>
-
+        <activity android:name=".Odometry.MJPEGFFMPEGTest" />
+        <activity android:name=".Odometry.VideoActivity" />
     </application>
-
 
 </manifest>

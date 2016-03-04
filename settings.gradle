@@ -1,2 +1,1 @@
-include ':app', ':dsp-collection', ':JKalman', ':butterknife-7.0.1', ':opencsv-2.1-1.0.0', ':EJML-core-0.28', ':EJML-dense64-0.28'
-include ':openCVLibrary300'
+include ':app', ':dsp-collection', ':butterknife-7.0.1', ':opencsv-2.1-1.0.0', ':JKalman'

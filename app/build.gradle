@@ -9,7 +9,9 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -19,9 +21,10 @@ android {
     productFlavors {
     }
 }
-
+configurations {
+    all*.exclude group: "xmlpull", module: "xmlpull"
+}
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.1.0'
     compile project(':JKalman')
@@ -29,10 +32,16 @@ dependencies {
     compile 'com.jakewharton:butterknife:7.0.1'
     compile 'com.github.PhilJay:MPAndroidChart:v2.1.6'
     compile project(':opencsv-2.1-1.0.0')
-    compile project(':EJML-core-0.28')
-    compile project(':EJML-dense64-0.28')
-    compile 'org.ddogleg:ddogleg:0.8'
+    //compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'org.ejml:all:0.29'
+    compile 'org.boofcv:all:0.21'
+    compile 'org.boofcv:android:0.21'
+    compile 'org.jsoup:jsoup:1.8.3'
+    compile 'org.slf4j:slf4j-android:1.7.18'
 }
 repositories {
     maven { url "https://jitpack.io" }
 }
+
+
+
