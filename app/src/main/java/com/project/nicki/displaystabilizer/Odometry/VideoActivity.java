@@ -70,6 +70,11 @@ import georegression.struct.se.Se3_F64;
  * @author Peter Abeles
  */
 public class VideoActivity extends Activity implements Camera.PreviewCallback {
+    // Object used for synchronizing gray images
+    private final Object lockGray = new Object();
+    // Object used for synchronizing output image
+    private final Object lockOutput = new Object();
+    String TAG = "VideoActivity";
     //odometry init
     MonoPlaneParameters monoparas;
     DenseMatrix64F DM;
@@ -78,34 +83,46 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
     ConfigGeneralDetector configDetector;
     PointTracker<ImageUInt8> tracker;
     MonocularPlaneVisualOdometry<ImageUInt8> visualOdometry;
-
+    //myadd
+    ImageUInt8 toprocess = new ImageUInt8();
     // camera and display objects
     private Camera mCamera;
     private Visualization mDraw;
     private CameraPreview mPreview;
-
     // computes the image gradient
     private ImageGradient<ImageUInt8, ImageSInt16> gradient = FactoryDerivative.three(ImageUInt8.class, ImageSInt16.class);
-
     // Two images are needed to store the converted preview image to prevent a thread conflict from occurring
     private ImageUInt8 gray1, gray2;
     private ImageSInt16 derivX, derivY;
-
-    //myadd
-    ImageUInt8 toprocess = new ImageUInt8();
-
     // Android image data used for displaying the results
     private Bitmap output;
     // temporary storage that's needed when converting from BoofCV to Android image data types
     private byte[] storage;
-
     // Thread where image data is processed
     private ThreadProcess thread;
 
-    // Object used for synchronizing gray images
-    private final Object lockGray = new Object();
-    // Object used for synchronizing output image
-    private final Object lockOutput = new Object();
+    /**
+     * Goes through the size list and selects the one which is the closest specified size
+     */
+    public static int closest(List<Camera.Size> sizes, int width, int height) {
+        int best = -1;
+        int bestScore = Integer.MAX_VALUE;
+
+        for (int i = 0; i < sizes.size(); i++) {
+            Camera.Size s = sizes.get(i);
+
+            int dx = s.width - width;
+            int dy = s.height - height;
+
+            int score = dx * dx + dy * dy;
+            if (score < bestScore) {
+                best = i;
+                bestScore = score;
+            }
+        }
+
+        return best;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -235,30 +252,6 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
     }
 
     /**
-     * Goes through the size list and selects the one which is the closest specified size
-     */
-    public static int closest(List<Camera.Size> sizes, int width, int height) {
-        int best = -1;
-        int bestScore = Integer.MAX_VALUE;
-
-        for (int i = 0; i < sizes.size(); i++) {
-            Camera.Size s = sizes.get(i);
-
-            int dx = s.width - width;
-            int dy = s.height - height;
-
-            int score = dx * dx + dy * dy;
-            if (score < bestScore) {
-                best = i;
-                bestScore = score;
-            }
-        }
-
-        return best;
-    }
-
-
-    /**
      * Called each time a new image arrives in the data stream.
      */
     @Override
@@ -274,6 +267,49 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
         // To work around this issue most of the processing has been pushed onto a thread and the call below
         // tells the thread to wake up and process another image
         thread.interrupt();
+    }
+
+    public void LogCSV(String Name, String a, String b, String c, String d, String g, String h) {
+        FileWriter mFileWriter = null;
+        //init CSV logging
+        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
+        //String fileName = csvName;
+        String fileName = Name + ".csv";
+        String filePath = baseDir + File.separator + fileName;
+        File f = new File(filePath);
+        CSVWriter writer = null;
+        // File exist
+        if (f.exists() && !f.isDirectory()) {
+            try {
+                mFileWriter = new FileWriter(filePath, true);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            writer = new CSVWriter(mFileWriter);
+        } else {
+            try {
+                writer = new CSVWriter(new FileWriter(filePath));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        try {
+            String line = String.format("%s,%s,%s,%s,%s,%s\n", a, b, c, d, g, h);
+            mFileWriter.write(line);
+        } catch (Exception ex) {
+        }
+        /*
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        */
+
+        try {
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -332,7 +368,6 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
         }
     }
 
-
     /**
      * External thread used to do more time consuming image processing
      */
@@ -385,49 +420,6 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
                 mDraw.postInvalidate();
             }
             running = false;
-        }
-    }
-
-    public void LogCSV(String Name, String a, String b, String c, String d, String g, String h) {
-        FileWriter mFileWriter = null;
-        //init CSV logging
-        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-        //String fileName = csvName;
-        String fileName = Name + ".csv";
-        String filePath = baseDir + File.separator + fileName;
-        File f = new File(filePath);
-        CSVWriter writer = null;
-        // File exist
-        if (f.exists() && !f.isDirectory()) {
-            try {
-                mFileWriter = new FileWriter(filePath, true);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            writer = new CSVWriter(mFileWriter);
-        } else {
-            try {
-                writer = new CSVWriter(new FileWriter(filePath));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            String line = String.format("%s,%s,%s,%s,%s,%s\n", a, b, c, d, g, h);
-            mFileWriter.write(line);
-        } catch (Exception ex) {
-        }
-        /*
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        */
-
-        try {
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }
