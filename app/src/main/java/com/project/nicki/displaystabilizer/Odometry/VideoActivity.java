@@ -327,7 +327,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
                 Vector3D_F64 V3d = leftToWorld.getT();
                 System.out.printf("Location %8.2f %8.2f %8.2f      inliers %s\n", V3d.x, V3d.y, V3d.z, inlierPercent(visualOdometry));
                 Log.d("camerameasure", "Location " + String.valueOf(V3d.x) + " " + String.valueOf(V3d.y) + " " + String.valueOf(V3d.z) + "inliers " + String.valueOf(inlierPercent(visualOdometry)));
-                LogCSV("camera", String.valueOf(V3d.x), String.valueOf(V3d.y), String.valueOf(V3d.z), "", "", "");
+                LogCSV("camera", String.valueOf(V3d.x), String.valueOf(V3d.y), String.valueOf(V3d.z),String.valueOf(System.currentTimeMillis()), "", "");
             }
         }
     }
