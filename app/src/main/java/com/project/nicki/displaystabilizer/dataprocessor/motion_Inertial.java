@@ -75,11 +75,12 @@ public class motion_Inertial {
                         rotMatrixArray[i][j] = (double) rotMatrix.get(k).get(j);
                     }
                 }
+        
                 float[][] result = toFloatArray(MatMultiply.multiplyByMatrix(rotMatrixArray, new double[][]{
-                        {(double) msensordataACCEList_phone.get(i).getData()[0], (double) msensordataACCEList_phone.get(i).getData()[0], (double) msensordataACCEList_phone.get(i).getData()[0], 1}
+                        {(double) msensordataACCEList_phone.get(i).getData()[0]} ,{(double) msensordataACCEList_phone.get(i).getData()[0]}, {(double) msensordataACCEList_phone.get(i).getData()[0], 1}
                 }));
                 float[] data = new float[]{result[0][0],result[1][0],result[2][0]};
-                msensordata_worldList.add(new SensorCollect.sensordata(msensordataACCEList_phone.get(i).getTime(),data, SensorCollect.sensordata.TYPE.ACCE_world));
+                msensordata_worldList.add(new SensorCollect.sensordata(msensordataACCEList_phone.get(i).getTime(), data, SensorCollect.sensordata.TYPE.ACCE_world));
             }
         }
         return msensordata_worldList;
