@@ -1,5 +1,7 @@
 package com.project.nicki.displaystabilizer.dataprocessor;
 
+import android.util.Log;
+
 import com.project.nicki.displaystabilizer.dataprocessor.utils.MatMultiply;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Vect2Mat.Matrix3D;
 
@@ -46,6 +48,8 @@ public class motion_Inertial {
             ORIENstorage_online.add(msensordata);
         }
         if(ACCEstorage_online.size()>10&&ORIENstorage_online.size()>10){
+            logLength("update_ACCEstorage_online",ACCEstorage_online);
+            logLength("update_ORIENstorage_online",ORIENstorage_online);
             mcalEular_online.calcList(convertcorrPHN2WLD(ACCEstorage_online,ORIENstorage_online));
             locationList_online.add(new SensorCollect.sensordata(msensordata.getTime(), mcalEular_online.position, SensorCollect.sensordata.TYPE.LOCA));
         }
@@ -55,6 +59,8 @@ public class motion_Inertial {
 
     //UTILS
     public List<SensorCollect.sensordata> convertcorrPHN2WLD(List<SensorCollect.sensordata> msensordataACCEList_phone, List<SensorCollect.sensordata> msensordataORIENList) {
+        logLength("convertcorrPHN2WLD_msensordataACCEList_phone",msensordataACCEList_phone);
+        logLength("convertcorrPHN2WLD_msensordataORIENList",msensordataORIENList);
         List<SensorCollect.sensordata> msensordata_worldList = new ArrayList<>();
         alignListbyTime(msensordataACCEList_phone, msensordataORIENList);
         for (int i = 0; i < msensordataACCEList_phone.size(); i++) {
@@ -80,6 +86,7 @@ public class motion_Inertial {
     }
 
     public SensorCollect.sensordata getElementByTime_interpolate(long Time, List<SensorCollect.sensordata> msensordataList) {
+        logLength("getElementByTime_interpolate",msensordataList);
         SensorCollect.sensordata toreturn_sensordata = new SensorCollect.sensordata();
         if (Time < msensordataList.get(0).getTime()) {
             toreturn_sensordata = msensordataList.get(0);
@@ -144,6 +151,10 @@ public class motion_Inertial {
             }
         }
         return ok;
+    }
+
+    public void logLength(String comment,List<SensorCollect.sensordata> List){
+        Log.d("DEBUG : List : ",comment+" "+String.valueOf(List.size()));
     }
 
 }
