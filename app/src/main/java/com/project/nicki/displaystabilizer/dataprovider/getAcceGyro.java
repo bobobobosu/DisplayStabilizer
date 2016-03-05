@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
@@ -75,6 +76,7 @@ public class getAcceGyro implements Runnable {
                     switch(event.sensor.getType()){
                         case Sensor.TYPE_LINEAR_ACCELERATION:
                             SensorCollect.sensordata a = new SensorCollect.sensordata(System.currentTimeMillis(),event.values,SensorCollect.sensordata.TYPE.ACCE);
+                            Log.d(TAG,"");
                             init.initSensorCollection.append(a);
                         case Sensor.TYPE_GYROSCOPE:
                             init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(),event.values,SensorCollect.sensordata.TYPE.GYRO));
