@@ -45,7 +45,7 @@ public class motion_Inertial {
         if (msensordata.getType() == SensorCollect.sensordata.TYPE.ORIEN) {
             ORIENstorage_online.add(msensordata);
         }
-        if(ACCEstorage_online.size()>0&&ORIENstorage_online.size()>0){
+        if(ACCEstorage_online.size()>10&&ORIENstorage_online.size()>10){
             mcalEular_online.calcList(convertcorrPHN2WLD(ACCEstorage_online,ORIENstorage_online));
             locationList_online.add(new SensorCollect.sensordata(msensordata.getTime(), mcalEular_online.position, SensorCollect.sensordata.TYPE.LOCA));
         }
@@ -134,6 +134,16 @@ public class motion_Inertial {
             }
         }
         return ret;
+    }
+
+    public boolean checkList(List<SensorCollect.sensordata>... ListofList){
+        boolean ok= true;
+        for(List<SensorCollect.sensordata> List:ListofList){
+            if (List.size() <1){
+                ok=false;
+            }
+        }
+        return ok;
     }
 
 }
