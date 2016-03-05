@@ -74,7 +74,8 @@ public class getAcceGyro implements Runnable {
                     mproAcceGyroCali.Controller(event);
                     switch(event.sensor.getType()){
                         case Sensor.TYPE_LINEAR_ACCELERATION:
-                            init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(),event.values,SensorCollect.sensordata.TYPE.ACCE));
+                            SensorCollect.sensordata a = new SensorCollect.sensordata(System.currentTimeMillis(),event.values,SensorCollect.sensordata.TYPE.ACCE);
+                            init.initSensorCollection.append(a);
                         case Sensor.TYPE_GYROSCOPE:
                             init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(),event.values,SensorCollect.sensordata.TYPE.GYRO));
                     }
