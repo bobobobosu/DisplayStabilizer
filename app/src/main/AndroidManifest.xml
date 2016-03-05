@@ -39,7 +39,6 @@
         <activity android:name=".dataprovider.getFrontcam" />
         <activity android:name=".contentprovider.DemoDraw" />
         <activity android:name=".UI.DemoDrawUI" />
-        <activity android:name=".Odometry.MJPEGFFMPEGTest" />
         <activity android:name=".Odometry.VideoActivity" />
     </application>
 

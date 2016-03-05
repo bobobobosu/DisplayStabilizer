@@ -165,6 +165,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
             thread = null;
         }
     }
+
     /**
      * Sets up the camera if it is not already setup.
      */
@@ -196,6 +197,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 
         // Start the video feed by passing it to mPreview
         mPreview.setCamera(mCamera);
+
 
         //Odometry set
         monoparas = new MonoPlaneParameters();
@@ -347,21 +349,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
                 // draw the image
                 canvas.drawBitmap(output, 0, 0, null);
 
-                //my
-                // Process the video sequence and output the location plus number of inliers
 
-                ImageUInt8 image = gray1;
-
-                if (!visualOdometry.process(image)) {
-                    System.out.println("Fault!");
-                    visualOdometry.reset();
-                }
-
-                Se3_F64 leftToWorld = visualOdometry.getCameraToWorld();
-                Vector3D_F64 V3d = leftToWorld.getT();
-                System.out.printf("Location %8.2f %8.2f %8.2f      inliers %s\n", V3d.x, V3d.y, V3d.z, inlierPercent(visualOdometry));
-                Log.d("camerameasure", "Location " + String.valueOf(V3d.x) + " " + String.valueOf(V3d.y) + " " + String.valueOf(V3d.z) + "inliers " + String.valueOf(inlierPercent(visualOdometry)));
-                LogCSV("camera", String.valueOf(V3d.x), String.valueOf(V3d.y), String.valueOf(V3d.z),String.valueOf(System.currentTimeMillis()), "", "");
             }
         }
     }
@@ -408,13 +396,30 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
                 }
 
                 // process the image and compute its gradient
-                gradient.process(gray2, derivX, derivY);
+                //gradient.process(gray2, derivX, derivY);
 
                 // render the output in a synthetic color image
                 synchronized (lockOutput) {
                     //VisualizeImageData.colorizeGradient(derivX,derivY,-1,output,storage);
                     VisualizeImageData.binaryToBitmap(gray1, true, output, storage);
                 }
+
+                
+                //my
+                // Process the video sequence and output the location plus number of inliers
+
+                ImageUInt8 image = gray1;
+
+                if (!visualOdometry.process(image)) {
+                    System.out.println("Fault!");
+                    visualOdometry.reset();
+                }
+
+                Se3_F64 leftToWorld = visualOdometry.getCameraToWorld();
+                Vector3D_F64 V3d = leftToWorld.getT();
+                System.out.printf("Location %8.2f %8.2f %8.2f      inliers %s\n", V3d.x, V3d.y, V3d.z, inlierPercent(visualOdometry));
+                Log.d("camerameasure", "Location " + String.valueOf(V3d.x) + " " + String.valueOf(V3d.y) + " " + String.valueOf(V3d.z) + "inliers " + String.valueOf(inlierPercent(visualOdometry)));
+                LogCSV("camera", String.valueOf(V3d.x), String.valueOf(V3d.y), String.valueOf(V3d.z),String.valueOf(System.currentTimeMillis()), "", "");
                 mDraw.postInvalidate();
             }
             running = false;
