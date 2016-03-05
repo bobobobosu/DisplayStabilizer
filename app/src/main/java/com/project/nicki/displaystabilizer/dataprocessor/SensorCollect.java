@@ -9,6 +9,7 @@ import java.util.List;
  * Created by nickisverygood on 3/5/2016.
  */
 public class SensorCollect {
+    private static final String TAG = "SensorCollect";
     List<sensordata> ACCEstorage = new ArrayList<>();
     List<sensordata> GYROstorage = new ArrayList<>();
     List<sensordata> CAMEstorage = new ArrayList<>();
@@ -23,6 +24,7 @@ public class SensorCollect {
         if(msensordata.type == sensordata.TYPE.CAME){
             CAMEstorage.add(msensordata);
         }
+        Log.d(TAG,"amount: "+String.valueOf(ACCEstorage.size()));
     }
 
     public static class sensordata {
