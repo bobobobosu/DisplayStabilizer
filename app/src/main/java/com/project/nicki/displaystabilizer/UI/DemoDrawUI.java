@@ -14,7 +14,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -269,7 +268,7 @@ public class DemoDrawUI extends AppCompatActivity implements Camera.PreviewCallb
 
 
         /////////////Camera//////////////
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        //requestWindowFeature(Window.FEATURE_NO_TITLE);
         //setContentView(R.layout.video);
 
         // Used to visualize the results
