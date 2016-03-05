@@ -58,7 +58,7 @@ public class motion_Inertial {
         List<SensorCollect.sensordata> msensordata_worldList = new ArrayList<>();
         alignListbyTime(msensordataACCEList_phone, msensordataORIENList);
         for (int i = 0; i < msensordataACCEList_phone.size(); i++) {
-            if (i <= msensordataORIENList.size()) {
+            if (i < msensordataORIENList.size()) {
                 Matrix3D rotMatrix = new Matrix3D();
                 rotMatrix.rotateX((double) (Math.toDegrees(msensordataORIENList.get(i).getData()[0] - initOrientation[0])));
                 rotMatrix.rotateY((double) (Math.toDegrees(msensordataORIENList.get(i).getData()[0] - initOrientation[0])));
@@ -84,7 +84,7 @@ public class motion_Inertial {
         if (Time < msensordataList.get(0).getTime()) {
             toreturn_sensordata = msensordataList.get(0);
         } else if (Time > msensordataList.get(0).getTime()) {
-            toreturn_sensordata = msensordataList.get(msensordataList.size());
+            toreturn_sensordata = msensordataList.get(msensordataList.size()-1);
         } else {
             //generate diff list
             List<Long> TimeDiff = new ArrayList<>();
