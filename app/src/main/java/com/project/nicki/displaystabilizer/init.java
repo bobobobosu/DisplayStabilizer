@@ -22,7 +22,7 @@ import jama.Matrix;
 public class init extends AppCompatActivity {
 
     //Static Classes
-    public static SensorCollect initSensorCollection;
+    public static SensorCollect initSensorCollection = new SensorCollect();
 
 
     public static double xdpc;
@@ -33,6 +33,10 @@ public class init extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        SensorCollect.sensordata a = new SensorCollect.sensordata(System.currentTimeMillis(),new float[]{0,0,0},SensorCollect.sensordata.TYPE.ACCE);
+        Log.d(TAG, "");
+
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         widthm = dm.widthPixels * 0.0254 / dm.xdpi;
