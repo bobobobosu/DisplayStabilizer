@@ -14,7 +14,8 @@ public class SensorCollect {
     List<sensordata> ORIENstorage = new ArrayList<>();
     List<sensordata> CAMEstorage = new ArrayList<>();
     float[] initLocation = new float[]{0,0,0};
-    float[] currOrientation = new float[]{0,0,0};
+    float[] initOrientation = new float[]{0,0,0};
+    motion_Inertial motion_online  = new motion_Inertial(initLocation,initOrientation);
 
     public void append(sensordata msensordata){
         Log.d(TAG,"count: "+String.valueOf(ACCEstorage.size())+" "+String.valueOf(ORIENstorage.size())+" "+String.valueOf(CAMEstorage.size()));
@@ -28,6 +29,7 @@ public class SensorCollect {
         if(msensordata.type == sensordata.TYPE.CAME){
             CAMEstorage.add(msensordata);
         }
+        motion_online.update(msensordata);
         Log.d(TAG,"amount: "+String.valueOf(ACCEstorage.size()));
     }
 
@@ -37,8 +39,18 @@ public class SensorCollect {
         if (ORIENstorage.size() == 0){
             reset();
         }else {
-            currOrientation = ORIENstorage.get(0).getData();
+            initOrientation = ORIENstorage.get(0).getData();
         }
+    }
+
+    /////location inertia
+    //get full
+    public List<sensordata> getInertialLocationList_offline(){
+        return new motion_Inertial(initLocation,initOrientation).getLocationList_full(ACCEstorage,ORIENstorage);
+    }
+    //get realtime online
+    public List<sensordata> getInertialLocationList_online(){
+        return motion_online.getLocationList_online();
     }
 
     public static class sensordata {
@@ -94,14 +106,13 @@ public class SensorCollect {
             ACCE,
             ORIEN,
             CAME,
-            UNDE;
+            UNDE,
+            LOCA,
+            ACCE_world;
             private TYPE() {
             }
         }
     }
-
-    //data get
- 
 
 
 
