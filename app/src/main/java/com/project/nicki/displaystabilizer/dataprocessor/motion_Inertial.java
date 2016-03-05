@@ -45,8 +45,11 @@ public class motion_Inertial {
         if (msensordata.getType() == SensorCollect.sensordata.TYPE.ORIEN) {
             ORIENstorage_online.add(msensordata);
         }
-        mcalEular_online.calcList(convertcorrPHN2WLD(ACCEstorage_online,ORIENstorage_online));
-        locationList_online.add(new SensorCollect.sensordata(msensordata.getTime(), mcalEular_online.position, SensorCollect.sensordata.TYPE.LOCA));
+        if(ACCEstorage_online.size()>0&&ORIENstorage_online.size()>0){
+            mcalEular_online.calcList(convertcorrPHN2WLD(ACCEstorage_online,ORIENstorage_online));
+            locationList_online.add(new SensorCollect.sensordata(msensordata.getTime(), mcalEular_online.position, SensorCollect.sensordata.TYPE.LOCA));
+        }
+
     }
 
 
