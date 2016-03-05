@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Display;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
+import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
@@ -19,6 +20,11 @@ import org.ejml.data.DenseMatrix64F;
 import jama.Matrix;
 
 public class init extends AppCompatActivity {
+
+    //Static Classes
+    public static SensorCollect initSensorCollection;
+
+
     public static double xdpc;
     public static double ydpc;
     public static double widthm, heightcm, widthpix, heightpix, pix2m;

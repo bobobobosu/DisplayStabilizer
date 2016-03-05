@@ -9,7 +9,9 @@ import android.os.Handler;
 import android.os.HandlerThread;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
+import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
+import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
 import java.io.File;
@@ -17,7 +19,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import au.com.bytecode.opencsv.CSVWriter;
-
 /**
  * Created by nickisverygood on 12/17/2015.
  */
@@ -71,6 +72,8 @@ public class getAcceGyro implements Runnable {
                 });
                 if (System.currentTimeMillis() - initTime > 1) {
                     mproAcceGyroCali.Controller(event);
+                    init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(),event.values,SensorCollect.sensordata.TYPE.ACCE));
+
                     //mproAcceGyroCali.RK4(event);
                     //mproAcceGyroCali.Calibration(event);
                 }
