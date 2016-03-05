@@ -11,20 +11,27 @@ import java.util.List;
 public class SensorCollect {
     private static final String TAG = "SensorCollect";
     List<sensordata> ACCEstorage = new ArrayList<>();
-    List<sensordata> GYROstorage = new ArrayList<>();
+    List<sensordata> ORIENstorage = new ArrayList<>();
     List<sensordata> CAMEstorage = new ArrayList<>();
+    float[] currLocation = new float[]{0,0,0};
 
     public void append(sensordata msensordata){
         if(msensordata.type == sensordata.TYPE.ACCE){
             ACCEstorage.add(msensordata);
         }
-        if(msensordata.type == sensordata.TYPE.GYRO){
-            GYROstorage.add(msensordata);
+        if(msensordata.type == sensordata.TYPE.ORIEN){
+            ORIENstorage.add(msensordata);
+            Log.d(TAG,"orien: "+String.valueOf(msensordata.getData()[0]));
         }
         if(msensordata.type == sensordata.TYPE.CAME){
             CAMEstorage.add(msensordata);
         }
         Log.d(TAG,"amount: "+String.valueOf(ACCEstorage.size()));
+    }
+
+    //location control
+    public void LOCATION_reset(){
+        currLocation = new float[]{0,0,0};
     }
 
     public static class sensordata {
@@ -49,7 +56,6 @@ public class SensorCollect {
             for (int i = 0; i < data.length; i++) {
                 this.Data[i] = data[i];
             }
-            Log.d(TAG,"sensordata append: "+String.valueOf(time)+" "+String.valueOf(data[0])+" "+String.valueOf(data[1])+" "+String.valueOf(data[2]));
         }
 
         public long getTime() {
@@ -79,13 +85,17 @@ public class SensorCollect {
         }
         public enum TYPE {
             ACCE,
-            GYRO,
+            ORIEN,
             CAME,
             UNDE;
             private TYPE() {
             }
         }
     }
+
+    //data get
+ 
+
 
 
 }

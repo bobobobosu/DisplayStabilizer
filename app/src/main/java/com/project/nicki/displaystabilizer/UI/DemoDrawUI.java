@@ -29,7 +29,9 @@ import android.widget.TextView;
 import com.project.nicki.displaystabilizer.Odometry.CameraPreview;
 import com.project.nicki.displaystabilizer.R;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
+import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
+import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
 import org.ejml.data.DenseMatrix64F;
@@ -60,7 +62,6 @@ import boofcv.struct.image.ImageType;
 import boofcv.struct.image.ImageUInt8;
 import georegression.struct.point.Vector3D_F64;
 import georegression.struct.se.Se3_F64;
-
 
 public class DemoDrawUI extends AppCompatActivity implements Camera.PreviewCallback{
     private static final String TAG = "getFrontcam";
@@ -565,7 +566,8 @@ public class DemoDrawUI extends AppCompatActivity implements Camera.PreviewCallb
                 Vector3D_F64 V3d = leftToWorld.getT();
                 System.out.printf("Location %8.2f %8.2f %8.2f      inliers %s\n", V3d.x, V3d.y, V3d.z, inlierPercent(visualOdometry));
                 Log.d("camerameasure", "Location " + String.valueOf(V3d.x) + " " + String.valueOf(V3d.y) + " " + String.valueOf(V3d.z) + "inliers " + String.valueOf(inlierPercent(visualOdometry)));
-                LogCSV("camera", String.valueOf(V3d.x), String.valueOf(V3d.y), String.valueOf(V3d.z),String.valueOf(System.currentTimeMillis()), "", "");
+                LogCSV("camera", String.valueOf(V3d.x), String.valueOf(V3d.y), String.valueOf(V3d.z), String.valueOf(System.currentTimeMillis()), "", "");
+                init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), new float[]{(float) V3d.x, (float)V3d.y,(float)V3d.z}, SensorCollect.sensordata.TYPE.CAME));
                 mDraw.postInvalidate();
             }
             running = false;

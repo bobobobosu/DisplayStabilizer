@@ -48,7 +48,6 @@ public class getAcceGyro implements Runnable {
         //mproAcceGyroCali.TEST();
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
         mLSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        mGSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         mMSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         mRSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mHandlerThread = new HandlerThread("getAcceGyro");
@@ -56,6 +55,8 @@ public class getAcceGyro implements Runnable {
 
         Handler mHandler = new Handler(mHandlerThread.getLooper());
         mSensorEventListener = new SensorEventListener() {
+            float[] mGravity;
+            float[] mGeomagnetic;
             long initTime = System.currentTimeMillis();
             @Override
             public void onSensorChanged(SensorEvent event) {
@@ -75,21 +76,32 @@ public class getAcceGyro implements Runnable {
                     switch(event.sensor.getType()){
                         case Sensor.TYPE_LINEAR_ACCELERATION:
                             init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(),event.values,SensorCollect.sensordata.TYPE.ACCE));
-                        case Sensor.TYPE_GYROSCOPE:
-                            init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(),event.values,SensorCollect.sensordata.TYPE.GYRO));
                     }
+                }
 
-
-                    //mproAcceGyroCali.RK4(event);
-                    //mproAcceGyroCali.Calibration(event);
+                if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+                    mGravity = event.values;
+                if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+                    mGeomagnetic = event.values;
+                if (mGravity != null && mGeomagnetic != null) {
+                    float R[] = new float[9];
+                    float I[] = new float[9];
+                    boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+                    if (success) {
+                        float orientation[] = new float[3];
+                        SensorManager.getOrientation(R, orientation);
+                        init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(),orientation, SensorCollect.sensordata.TYPE.ORIEN));
+                    }
                 }
             }
 
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+
             }
         };
+
         mSensorManager.registerListener(mSensorEventListener, mGSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
         mSensorManager.registerListener(mSensorEventListener, mLSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
         mSensorManager.registerListener(mSensorEventListener, mMSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
