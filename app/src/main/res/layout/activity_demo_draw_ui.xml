@@ -167,6 +167,10 @@
                     android:inputType="text"
                     android:text="0.0017" />
 
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"></FrameLayout>
+
             </TableRow>
 
             <TableRow
@@ -249,8 +253,8 @@
 
     <FrameLayout
         android:id="@+id/camera_preview"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="126dp"
+        android:layout_height="115dp"
         android:layout_weight="1" />
 
 </FrameLayout>
