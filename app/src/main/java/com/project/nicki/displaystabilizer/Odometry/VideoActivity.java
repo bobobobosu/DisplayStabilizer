@@ -404,7 +404,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
                     VisualizeImageData.binaryToBitmap(gray1, true, output, storage);
                 }
 
-                
+
                 //my
                 // Process the video sequence and output the location plus number of inliers
 

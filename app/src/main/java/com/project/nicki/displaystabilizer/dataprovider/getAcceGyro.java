@@ -122,5 +122,8 @@ public class getAcceGyro implements Runnable {
         } catch (IOException e) {
             //e.printStackTrace();
         }
+
+
+
     }
 }
