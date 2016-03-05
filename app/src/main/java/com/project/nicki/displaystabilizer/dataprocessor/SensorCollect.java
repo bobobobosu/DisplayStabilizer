@@ -13,9 +13,11 @@ public class SensorCollect {
     List<sensordata> ACCEstorage = new ArrayList<>();
     List<sensordata> ORIENstorage = new ArrayList<>();
     List<sensordata> CAMEstorage = new ArrayList<>();
-    float[] currLocation = new float[]{0,0,0};
+    float[] initLocation = new float[]{0,0,0};
+    float[] currOrientation = new float[]{0,0,0};
 
     public void append(sensordata msensordata){
+        Log.d(TAG,"count: "+String.valueOf(ACCEstorage.size())+" "+String.valueOf(ORIENstorage.size())+" "+String.valueOf(CAMEstorage.size()));
         if(msensordata.type == sensordata.TYPE.ACCE){
             ACCEstorage.add(msensordata);
         }
@@ -29,9 +31,14 @@ public class SensorCollect {
         Log.d(TAG,"amount: "+String.valueOf(ACCEstorage.size()));
     }
 
-    //location control
-    public void LOCATION_reset(){
-        currLocation = new float[]{0,0,0};
+    //reset when start drawing
+    public void reset(){
+        initLocation = new float[]{0,0,0};
+        if (ORIENstorage.size() == 0){
+            reset();
+        }else {
+            currOrientation = ORIENstorage.get(0).getData();
+        }
     }
 
     public static class sensordata {
