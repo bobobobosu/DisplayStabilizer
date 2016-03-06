@@ -509,8 +509,6 @@ public class proAcceGyroCali extends getAcceGyro {
             msg.setData(bundle);
             stabilize_v2.getSensor.sendMessage(msg);
         }
-
-
     }
 
     public void RK4(sensordata sensordataIN) {

@@ -2,12 +2,15 @@ package com.project.nicki.displaystabilizer.dataprocessor;
 
 import android.util.Log;
 
+import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.MatMultiply;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Vect2Mat.Matrix3D;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.StringTokenizer;
+import java.util.logging.StreamHandler;
 
 /**
  * Created by nickisverygood on 3/6/2016.
@@ -20,16 +23,14 @@ public class motion_Inertial {
     List<SensorCollect.sensordata> ORIENstorage_online = new ArrayList<>();
     List<SensorCollect.sensordata> locationList_online = new ArrayList<>();
     calEular mcalEular_online = new calEular();
+    calRk4 mcalRk4_online = new calRk4();
+    calSpring mcalSpring_online = new calSpring();
 
     public motion_Inertial(float[] initLocation, float[] initOrientation) {
         this.initLocation = initLocation;
         this.initOrientation = initOrientation;
     }
 
-    public List<SensorCollect.sensordata> createLocationListfromLists(List<SensorCollect.sensordata> ACCEList, List<SensorCollect.sensordata> ORIENList) {
-        List<SensorCollect.sensordata> locationList = new ArrayList<>();
-        return locationList;
-    }
 
     public List<SensorCollect.sensordata> getLocationList_full(List<SensorCollect.sensordata> ACCEstorage, List<SensorCollect.sensordata> ORIENstorage) {
         List<SensorCollect.sensordata> locationList_full = createLocationListfromLists(ACCEstorage, ORIENstorage);
@@ -42,15 +43,21 @@ public class motion_Inertial {
 
     public void update(SensorCollect.sensordata msensordata) {
         if (msensordata.getType() == SensorCollect.sensordata.TYPE.ACCE) {
+            if (ACCEstorage_online.size() > 1) {
+                ACCEstorage_online.remove(0);
+            }
             ACCEstorage_online.add(msensordata);
         }
         if (msensordata.getType() == SensorCollect.sensordata.TYPE.ORIEN) {
+            if (ACCEstorage_online.size() > 1) {
+                ACCEstorage_online.remove(0);
+            }
             ORIENstorage_online.add(msensordata);
         }
-        if (ACCEstorage_online.size() > 10 && ORIENstorage_online.size() > 10) {
-            logLength("update_ACCEstorage_online", ACCEstorage_online);
-            logLength("update_ORIENstorage_online", ORIENstorage_online);
+        if (ACCEstorage_online.size() > 1 && ORIENstorage_online.size() > 1) {
             mcalEular_online.calcList(convertcorrPHN2WLD(ACCEstorage_online, ORIENstorage_online));
+            mcalRk4_online.calcList(convertcorrPHN2WLD(ACCEstorage_online, ORIENstorage_online));
+            mcalSpring_online.calcList(convertcorrPHN2WLD(ACCEstorage_online, ORIENstorage_online));
             locationList_online.add(new SensorCollect.sensordata(msensordata.getTime(), mcalEular_online.position, SensorCollect.sensordata.TYPE.LOCA));
         }
 
@@ -58,9 +65,14 @@ public class motion_Inertial {
 
 
     //UTILS
+    public List<SensorCollect.sensordata> createLocationListfromLists(List<SensorCollect.sensordata> ACCEList, List<SensorCollect.sensordata> ORIENList) {
+        List<SensorCollect.sensordata> locationList = new ArrayList<>();
+        calEular mcalEular_offline = new calEular();
+        mcalEular_offline.calcList(convertcorrPHN2WLD(ACCEList, ORIENList));
+        return mcalEular_offline.locationList;
+    }
+
     public List<SensorCollect.sensordata> convertcorrPHN2WLD(List<SensorCollect.sensordata> msensordataACCEList_phone, List<SensorCollect.sensordata> msensordataORIENList) {
-        logLength("convertcorrPHN2WLD_msensordataACCEList_phone", msensordataACCEList_phone);
-        logLength("convertcorrPHN2WLD_msensordataORIENList", msensordataORIENList);
         List<SensorCollect.sensordata> msensordata_worldList = new ArrayList<>();
         alignListbyTime(msensordataACCEList_phone, msensordataORIENList);
         for (int i = 0; i < msensordataACCEList_phone.size(); i++) {
@@ -72,7 +84,7 @@ public class motion_Inertial {
                 double[][] rotMatrixArray = new double[4][4];
                 for (int k = 0; k < 4; k++) {
                     for (int j = 0; j < 4; j++) {
-                        rotMatrixArray[i][j] = (double) rotMatrix.get(k).get(j);
+                        rotMatrixArray[k][j] = (double) rotMatrix.get(k).get(j);
                     }
                 }
 
@@ -90,7 +102,6 @@ public class motion_Inertial {
     }
 
     public SensorCollect.sensordata getElementByTime_interpolate(long Time, List<SensorCollect.sensordata> msensordataList) {
-        logLength("getElementByTime_interpolate", msensordataList);
         SensorCollect.sensordata toreturn_sensordata = new SensorCollect.sensordata();
         if (Time < msensordataList.get(0).getTime()) {
             toreturn_sensordata = msensordataList.get(0);
@@ -160,5 +171,6 @@ public class motion_Inertial {
     public void logLength(String comment, List<SensorCollect.sensordata> List) {
         Log.d("DEBUG : List : ", comment + " " + String.valueOf(List.size()));
     }
+
 
 }

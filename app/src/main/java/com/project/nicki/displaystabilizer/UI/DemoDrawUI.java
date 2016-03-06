@@ -268,6 +268,7 @@ public class DemoDrawUI extends AppCompatActivity implements Camera.PreviewCallb
         });
 
 
+        /*
         /////////////Camera//////////////
         //requestWindowFeature(Window.FEATURE_NO_TITLE);
         //setContentView(R.layout.video);
@@ -281,7 +282,7 @@ public class DemoDrawUI extends AppCompatActivity implements Camera.PreviewCallb
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
 
         preview.addView(mPreview);
-        preview.addView(mDraw);
+        preview.addView(mDraw); */
     }
 
     @Override
@@ -305,7 +306,7 @@ public class DemoDrawUI extends AppCompatActivity implements Camera.PreviewCallb
     public void onResume() {
         super.onResume();
         /////////////////////Camera////////////////////
-        setUpAndConfigureCamera();
+        //setUpAndConfigureCamera();
     }
 
     public void onDestroy() {
