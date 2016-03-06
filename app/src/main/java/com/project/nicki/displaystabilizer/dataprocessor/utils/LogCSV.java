@@ -20,6 +20,7 @@ public class LogCSV {
         String fileName = input + ".csv";
         String filePath = baseDir + File.separator + fileName;
         File f = new File(filePath);
+        /*
         if(f.exists()){
             try{
                 boolean deleted = f.delete();
@@ -27,7 +28,7 @@ public class LogCSV {
                 Log.d("LogCSV","Deletion Failed");
             }
 
-        }
+        }*/
         CSVWriter writer = null;
         // File exist
         FileWriter mFileWriter = null;

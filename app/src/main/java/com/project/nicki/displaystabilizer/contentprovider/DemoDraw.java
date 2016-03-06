@@ -15,7 +15,10 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
+import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
+import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,7 +90,15 @@ public class DemoDraw extends View {
         List<stabilize_v2.Point> listp = new ArrayList<stabilize_v2.Point>();
 
         //drawCanvas(canvas,listp);
-        drawCanvas(canvas, stabilize_v2.toDraw);
+
+
+        if (drawing < 2) {
+            drawCanvas(canvas, stabilize_v3.stabilize.getStabilized("Online"));
+        }else if(drawing==2){
+            drawCanvas(canvas, stabilize_v3.stabilize.getStabilized("Offline"));
+        }
+
+        //drawCanvas(canvas, stabilize_v2.toDraw);
 
 
         canvas.drawPath(path, paint);
@@ -114,6 +125,10 @@ public class DemoDraw extends View {
         float eventY = event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                //new
+                stabilize_v3.stabilize.createSession();
+                stabilize_v3.stabilize.mstabilizeSession.setTouchList(new SensorCollect.sensordata(event.getDownTime(), new float[]{event.getX(), event.getY(), 0}, SensorCollect.sensordata.TYPE.TOUCH));
+
                 clear = true;
                 path.reset();
                 path2.reset();
@@ -143,6 +158,9 @@ public class DemoDraw extends View {
                 path.moveTo(eventX, eventY);
                 return true;
             case MotionEvent.ACTION_MOVE:
+                //new
+                stabilize_v3.stabilize.mstabilizeSession.setTouchList(new SensorCollect.sensordata(event.getDownTime(), new float[]{event.getX(), event.getY(), 0}, SensorCollect.sensordata.TYPE.TOUCH));
+
                 clear = false;
                 Log.d(TAG, "AAAA Drawing");
                 Message msgDRAWING = new Message();
@@ -178,6 +196,7 @@ public class DemoDraw extends View {
                 path.lineTo(eventX, eventY);
                 break;
             case MotionEvent.ACTION_UP:
+
                 clear = false;
                 Log.d(TAG, "AAAA up");
                 Message msgSTOP = new Message();
@@ -209,24 +228,24 @@ public class DemoDraw extends View {
 
 
     //todraw
-    private void drawCanvas(Canvas canvas, List<stabilize_v2.Point> pts) {
+    private void drawCanvas(Canvas canvas, List<stabilize_v3.Point> pts) {
         if (pts.size() > 1) {
             path3 = new Path();
             final int SMOOTH_VAL = 6;
             for (int i = pts.size() - 2; i < pts.size(); i++) {
                 if (i >= 0) {
-                    stabilize_v2.Point point = pts.get(i);
+                    stabilize_v3.Point point = pts.get(i);
                     if (i == 0) {
-                        stabilize_v2.Point next = pts.get(i + 1);
+                        stabilize_v3.Point next = pts.get(i + 1);
                         point.dx = ((next.x - point.x) / SMOOTH_VAL);
                         point.dy = ((next.y - point.y) / SMOOTH_VAL);
                     } else if (i == pts.size() - 1) {
-                        stabilize_v2.Point prev = pts.get(i - 1);
+                        stabilize_v3.Point prev = pts.get(i - 1);
                         point.dx = ((point.x - prev.x) / SMOOTH_VAL);
                         point.dy = ((point.y - prev.y) / SMOOTH_VAL);
                     } else {
-                        stabilize_v2.Point next = pts.get(i + 1);
-                        stabilize_v2.Point prev = pts.get(i - 1);
+                        stabilize_v3.Point next = pts.get(i + 1);
+                        stabilize_v3.Point prev = pts.get(i - 1);
                         point.dx = ((next.x - prev.x) / SMOOTH_VAL);
                         point.dy = ((next.y - prev.y) / SMOOTH_VAL);
                     }
@@ -234,25 +253,25 @@ public class DemoDraw extends View {
             }
             boolean first = true;
             for (int i = 0; i < pts.size(); i++) {
-                stabilize_v2.Point point = pts.get(i);
+                stabilize_v3.Point point = pts.get(i);
                 if (first) {
                     first = false;
                     path3.moveTo(point.x, point.y);
                 } else {
-                    stabilize_v2.Point prev = pts.get(i - 1);
+                    stabilize_v3.Point prev = pts.get(i - 1);
                     path3.cubicTo(prev.x + prev.dx, prev.y + prev.dy, point.x - point.dx, point.y - point.dy, point.x, point.y);
                 }
             }
             canvas.drawPath(path3, paint3);
         } else {
             if (pts.size() == 1) {
-                stabilize_v2.Point point = pts.get(0);
+                stabilize_v3.Point point = pts.get(0);
                 canvas.drawCircle(point.x, point.y, 2, paint3);
             }
         }
     }
 
-    private void drawBitmap(Bitmap bmp, List<stabilize_v2.Point> pts) {
+    private void drawBitmap(Bitmap bmp, List<stabilize_v3.Point> pts) {
         Canvas c = new Canvas(bmp);
         drawCanvas(c, pts);
     }

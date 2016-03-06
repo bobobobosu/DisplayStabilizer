@@ -2,6 +2,7 @@
 package com.project.nicki.displaystabilizer.dataprocessor;
 
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Filters.filterSensorData;
+import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +12,9 @@ import java.util.List;
  */
 public class calEular {
     //init filters
-    filterSensorData filtercalEular_ACCE = new filterSensorData.Builder().moveingavg_sample(30).highpass_alpha(0.5f).lowpass_alpha(0.6f).kalmanfilter_boo(true).build();
+    filterSensorData filtercalEular_ACCE = new filterSensorData.Builder().lowpass_alpha(0.7f).moveingavg_sample(100).kalmanfilter_boo(true).build();
     filterSensorData filtercalEular_VELO = new filterSensorData.Builder().build();
-    filterSensorData filtercalEular_POSI = new filterSensorData.Builder().build();
+    filterSensorData filtercalEular_POSI = new filterSensorData.Builder().moveingavg_sample(100).highpass_alpha(0.7f).build();
 
 
     static final float NS2S = 1.0f / 1000000000.0f;
@@ -35,6 +36,8 @@ public class calEular {
         velocity = filtercalEular_VELO.filter(velocity);
         position = filtercalEular_POSI.filter(position);
 
+
+
         if (last_values != null) {
             float dt = (msensordata_world.getTime() - last_timestamp) * NS2S;
 
@@ -52,7 +55,6 @@ public class calEular {
         System.arraycopy(msensordata_world.getData(), 0, last_values, 0, 3);
         last_timestamp = msensordata_world.getTime();
         locationList.add(new SensorCollect.sensordata(msensordata_world.getTime(),position, SensorCollect.sensordata.TYPE.LOCA));
-        //LogCSV(String.valueOf(msensordata.getData()[0]),String .valueOf(msensordata.getData()[1]),String.valueOf(velocity[0]),String.valueOf(velocity[1]),String.valueOf(position[0]),String.valueOf(position[1]));
     }
 
 }

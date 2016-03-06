@@ -2,6 +2,8 @@ package com.project.nicki.displaystabilizer.dataprocessor.utils.Filters;
 
 import android.util.Log;
 
+import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,23 +18,26 @@ public class filterCollection {
     //HighPassFilter Variables
     public float[] LowFreq;
     public float[] HighPassFilter(float[] data, float alpha) {
-        if (output == null) {
+        if (LowFreq == null) {
             LowFreq = new float[data.length];
+            System.arraycopy( data, 0, LowFreq, 0, data.length );
             return data;
         }
+
         for (int i = 0; i < data.length; i++) {
             LowFreq[i] = alpha * LowFreq[i] + (1 - alpha) * data[i];
             data[i] = data[i] - LowFreq[i];
         }
+
         return data;
     }
 
     //LowPassFilter Variables
     float[] output;
-
     public float[] LowPassFilter(float[] data, float alpha) {
         if (output == null) {
             output = new float[data.length];
+            System.arraycopy( data, 0, output, 0, data.length );
             return data;
         }
         for (int i = 0; i < data.length; i++) {

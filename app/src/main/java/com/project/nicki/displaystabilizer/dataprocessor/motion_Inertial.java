@@ -2,15 +2,12 @@ package com.project.nicki.displaystabilizer.dataprocessor;
 
 import android.util.Log;
 
-import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.MatMultiply;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Vect2Mat.Matrix3D;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.StringTokenizer;
-import java.util.logging.StreamHandler;
 
 /**
  * Created by nickisverygood on 3/6/2016.
@@ -26,6 +23,7 @@ public class motion_Inertial {
     calRk4 mcalRk4_online = new calRk4();
     calSpring mcalSpring_online = new calSpring();
 
+    public motion_Inertial(){}
     public motion_Inertial(float[] initLocation, float[] initOrientation) {
         this.initLocation = initLocation;
         this.initOrientation = initOrientation;
@@ -48,7 +46,7 @@ public class motion_Inertial {
             }
             ACCEstorage_online.add(msensordata);
         }
-        if (msensordata.getType() == SensorCollect.sensordata.TYPE.ORIEN) {
+        if (msensordata.getType() == SensorCollect.sensordata.TYPE.ORIEN_radian) {
             if (ACCEstorage_online.size() > 1) {
                 ACCEstorage_online.remove(0);
             }
@@ -161,8 +159,9 @@ public class motion_Inertial {
     public boolean checkList(List<SensorCollect.sensordata>... ListofList) {
         boolean ok = true;
         for (List<SensorCollect.sensordata> List : ListofList) {
-            if (List.size() < 1) {
+            if (List.size() < 5) {
                 ok = false;
+                return ok;
             }
         }
         return ok;

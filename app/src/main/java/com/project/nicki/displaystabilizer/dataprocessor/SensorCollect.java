@@ -14,13 +14,13 @@ public class SensorCollect {
     //todel
     long initTime = System.currentTimeMillis();
     boolean done = false;
-
     private static final String TAG = "SensorCollect";
     List<sensordata> ACCEstorage = new ArrayList<>();
     List<sensordata> ORIENstorage = new ArrayList<>();
+    List<sensordata> reORIENstorage_degree = new ArrayList<>();
     List<sensordata> CAMEstorage = new ArrayList<>();
-    float[] initLocation = new float[]{0, 0, 0};
-    float[] initOrientation = new float[]{0, 0, 0};
+    public float[] initLocation = new float[]{0, 0, 0};
+    public float[] initOrientation = new float[]{0, 0, 0};
     motion_Inertial motion_online = new motion_Inertial(initLocation, initOrientation);
 
     public void append(sensordata msensordata) {
@@ -28,40 +28,20 @@ public class SensorCollect {
         if (msensordata.type == sensordata.TYPE.ACCE) {
             ACCEstorage.add(msensordata);
         }
-        if (msensordata.type == sensordata.TYPE.ORIEN) {
+        if (msensordata.type == sensordata.TYPE.ORIEN_radian) {
             ORIENstorage.add(msensordata);
-            Log.d(TAG, "orien: " + String.valueOf(msensordata.getData()[0]));
+            reORIENstorage_degree.add(new sensordata(msensordata.getTime(),
+                    new float[]{
+                            msensordata.getData()[0]-initOrientation[0],
+                            msensordata.getData()[1]-initOrientation[1],
+                            msensordata.getData()[2]-initOrientation[2]
+            }, sensordata.TYPE.relORIEN_degree));
+            reset();
         }
         if (msensordata.type == sensordata.TYPE.CAME) {
             CAMEstorage.add(msensordata);
         }
         motion_online.update(msensordata);
-        Log.d(TAG, "amount: " + String.valueOf(ACCEstorage.size()));
-
-
-        try {
-            if (done == false) {
-                LogCSV.LogCSV("debug20",
-                        getInertialLocationList_online().get(getInertialLocationList_online().size() - 1).getData()[0],
-                        getInertialLocationList_online().get(getInertialLocationList_online().size() - 1).getData()[1],
-                        getInertialLocationList_online().get(getInertialLocationList_online().size() - 1).getData()[2]);
-            }
-
-        } catch (Exception ex) {
-
-        }
-
-        if (System.currentTimeMillis() - initTime > 5000 && done == false) {
-            done = true;
-            for (sensordata isensordata : getInertialLocationList_offline()) {
-                LogCSV.LogCSV("debug9",
-                        isensordata.getData()[0],
-                        isensordata.getData()[1],
-                        isensordata.getData()[2]);
-            }
-        }
-
-
     }
 
     //reset when start drawing
@@ -74,16 +54,22 @@ public class SensorCollect {
         }
     }
 
-    /////location inertia
+    /////location inertial
     //get full
     public List<sensordata> getInertialLocationList_offline() {
         return new motion_Inertial(initLocation, initOrientation).getLocationList_full(ACCEstorage, ORIENstorage);
     }
-
     //get realtime online
     public List<sensordata> getInertialLocationList_online() {
         return motion_online.getLocationList_online();
     }
+    /////Rotation inertial
+    //getfull
+    public List<sensordata> getInertialOrientationList_offline() {
+        return reORIENstorage_degree;
+    }
+
+
 
     public static class sensordata {
         private static final String TAG = "sensordata";
@@ -137,11 +123,13 @@ public class SensorCollect {
 
         public enum TYPE {
             ACCE,
-            ORIEN,
+            ACCE_world,
+            ORIEN_radian,
+            relORIEN_degree,
             CAME,
             UNDE,
             LOCA,
-            ACCE_world;
+            TOUCH;
 
             private TYPE() {
             }

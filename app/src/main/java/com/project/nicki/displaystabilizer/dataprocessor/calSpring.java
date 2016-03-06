@@ -45,7 +45,6 @@ public class calSpring {
         dpos = filtercalSpring_dPOS.filter(dpos);
         pos = filtercalSpring_POSI.filter(pos);
 
-        LogCSV.LogCSV("debug17",dpos[0],dpos[1],dpos[2],pos[0],pos[1],pos[2]);
 
         for(int i=0;i<mBuffer.length;i++){
             mBuffer[i].insert(sensordataIN.getData()[0]);

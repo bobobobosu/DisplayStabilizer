@@ -90,7 +90,7 @@ public class getAcceGyro implements Runnable {
                     if (success) {
                         float orientation[] = new float[3];
                         SensorManager.getOrientation(R, orientation);
-                        init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(),orientation, SensorCollect.sensordata.TYPE.ORIEN));
+                        init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(),orientation, SensorCollect.sensordata.TYPE.ORIEN_radian));
                     }
                 }
             }
