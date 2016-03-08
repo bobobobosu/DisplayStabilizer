@@ -568,7 +568,7 @@ public class DemoDrawUI extends AppCompatActivity implements Camera.PreviewCallb
                 System.out.printf("Location %8.2f %8.2f %8.2f      inliers %s\n", V3d.x, V3d.y, V3d.z, inlierPercent(visualOdometry));
                 Log.d("camerameasure", "Location " + String.valueOf(V3d.x) + " " + String.valueOf(V3d.y) + " " + String.valueOf(V3d.z) + "inliers " + String.valueOf(inlierPercent(visualOdometry)));
                 LogCSV("camera", String.valueOf(V3d.x), String.valueOf(V3d.y), String.valueOf(V3d.z), String.valueOf(System.currentTimeMillis()), "", "");
-                init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), new float[]{(float) V3d.x, (float)V3d.y,(float)V3d.z}, SensorCollect.sensordata.TYPE.CAME));
+                //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), new float[]{(float) V3d.x, (float)V3d.y,(float)V3d.z}, SensorCollect.sensordata.TYPE.CAME));
                 mDraw.postInvalidate();
             }
             running = false;

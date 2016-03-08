@@ -2,12 +2,24 @@ package com.project.nicki.displaystabilizer.dataprocessor;
 
 import android.util.Log;
 
+import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.MatMultiply;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Vect2Mat.Matrix3D;
+//import flanagan.interpolation.*;
 
+
+import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
+import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
+import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.apache.commons.math3.util.MultidimensionalCounter;
+
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+
 
 /**
  * Created by nickisverygood on 3/6/2016.
@@ -23,7 +35,9 @@ public class motion_Inertial {
     calRk4 mcalRk4_online = new calRk4();
     calSpring mcalSpring_online = new calSpring();
 
-    public motion_Inertial(){}
+    public motion_Inertial() {
+    }
+
     public motion_Inertial(float[] initLocation, float[] initOrientation) {
         this.initLocation = initLocation;
         this.initOrientation = initOrientation;
@@ -31,7 +45,14 @@ public class motion_Inertial {
 
 
     public List<SensorCollect.sensordata> getLocationList_full(List<SensorCollect.sensordata> ACCEstorage, List<SensorCollect.sensordata> ORIENstorage) {
+        Log.d("getLocationList_full","erfvwer");
         List<SensorCollect.sensordata> locationList_full = createLocationListfromLists(ACCEstorage, ORIENstorage);
+        for(int i=0;i<locationList_full.size();i++){
+            new LogCSV("locationList_full7","",new BigDecimal(locationList_full.get(i).getTime()).toPlainString(),
+                    locationList_full.get(i).getData()[0],
+                    locationList_full.get(i).getData()[1],
+                    locationList_full.get(i).getData()[2]);
+        }
         return locationList_full;
     }
 
@@ -45,6 +66,7 @@ public class motion_Inertial {
                 ACCEstorage_online.remove(0);
             }
             ACCEstorage_online.add(msensordata);
+
         }
         if (msensordata.getType() == SensorCollect.sensordata.TYPE.ORIEN_radian) {
             if (ACCEstorage_online.size() > 1) {
@@ -53,32 +75,32 @@ public class motion_Inertial {
             ORIENstorage_online.add(msensordata);
         }
         if (ACCEstorage_online.size() > 1 && ORIENstorage_online.size() > 1) {
-            mcalEular_online.calcList(convertcorrPHN2WLD(ACCEstorage_online, ORIENstorage_online));
-            mcalRk4_online.calcList(convertcorrPHN2WLD(ACCEstorage_online, ORIENstorage_online));
-            mcalSpring_online.calcList(convertcorrPHN2WLD(ACCEstorage_online, ORIENstorage_online));
-            locationList_online.add(new SensorCollect.sensordata(msensordata.getTime(), mcalEular_online.position, SensorCollect.sensordata.TYPE.LOCA));
-        }
+            //mcalEular_online.calcList(convertcorrPHN2WLD(ACCEstorage_online, ORIENstorage_online));
+            //mcalRk4_online.calcList(convertcorrPHN2WLD(ACCEstorage_online, ORIENstorage_online));
+            //mcalSpring_online.calcList(convertcorrPHN2WLD(ACCEstorage_online, ORIENstorage_online));
+            locationList_online.add(mcalRk4_online.calc(convertcorrPHN2WLD(ACCEstorage_online, ORIENstorage_online).get(0)));
 
+        }
     }
 
 
     //UTILS
     public List<SensorCollect.sensordata> createLocationListfromLists(List<SensorCollect.sensordata> ACCEList, List<SensorCollect.sensordata> ORIENList) {
-        List<SensorCollect.sensordata> locationList = new ArrayList<>();
         calEular mcalEular_offline = new calEular();
-        mcalEular_offline.calcList(convertcorrPHN2WLD(ACCEList, ORIENList));
-        return mcalEular_offline.locationList;
+        calRk4 mcalRk4_offline = new calRk4();
+        return mcalRk4_offline.calcList(convertcorrPHN2WLD(ACCEList, ORIENList));
     }
 
     public List<SensorCollect.sensordata> convertcorrPHN2WLD(List<SensorCollect.sensordata> msensordataACCEList_phone, List<SensorCollect.sensordata> msensordataORIENList) {
         List<SensorCollect.sensordata> msensordata_worldList = new ArrayList<>();
-        alignListbyTime(msensordataACCEList_phone, msensordataORIENList);
-        for (int i = 0; i < msensordataACCEList_phone.size(); i++) {
+        List<SensorCollect.sensordata> msensordataORIENList_algnd = new ArrayList<>(alignListbyTime(msensordataACCEList_phone, msensordataORIENList));
+        Log.d("convertcorrPHN2WLD",msensordataACCEList_phone.size()+" "+msensordataORIENList_algnd.size());
+        for (int i = 0; i < msensordataACCEList_phone.size() && i < msensordataACCEList_phone.size(); i++) {
             if (i < msensordataORIENList.size()) {
                 Matrix3D rotMatrix = new Matrix3D();
-                rotMatrix.rotateX((double) (Math.toDegrees(msensordataORIENList.get(i).getData()[0] - initOrientation[0])));
-                rotMatrix.rotateY((double) (Math.toDegrees(msensordataORIENList.get(i).getData()[0] - initOrientation[0])));
-                rotMatrix.rotateZ((double) (Math.toDegrees(msensordataORIENList.get(i).getData()[0] - initOrientation[0])));
+                rotMatrix.rotateX((double) (Math.toDegrees(msensordataORIENList_algnd.get(i).getData()[0] - initOrientation[0])));
+                rotMatrix.rotateY((double) (Math.toDegrees(msensordataORIENList_algnd.get(i).getData()[0] - initOrientation[0])));
+                rotMatrix.rotateZ((double) (Math.toDegrees(msensordataORIENList_algnd.get(i).getData()[0] - initOrientation[0])));
                 double[][] rotMatrixArray = new double[4][4];
                 for (int k = 0; k < 4; k++) {
                     for (int j = 0; j < 4; j++) {
@@ -94,11 +116,92 @@ public class motion_Inertial {
                 }));
                 float[] data = new float[]{result[0][0], result[1][0], result[2][0]};
                 msensordata_worldList.add(new SensorCollect.sensordata(msensordataACCEList_phone.get(i).getTime(), data, SensorCollect.sensordata.TYPE.ACCE_world));
+                new LogCSV("phn2world1","",
+                        new BigDecimal(msensordata_worldList.get(i).getTime()).toPlainString(),
+                        msensordata_worldList.get(i).getData()[0],
+                        msensordata_worldList.get(i).getData()[1],
+                        msensordata_worldList.get(i).getData()[2]);
             }
         }
         return msensordata_worldList;
     }
 
+    public SensorCollect.sensordata getbyTime(long Time, List<SensorCollect.sensordata> msensordataList) {
+        List<SensorCollect.sensordata> msensordataListCLN = new ArrayList(msensordataList);
+        List<SensorCollect.sensordata> thismsensordataList = new ArrayList<>();
+        for (int i=0;i<msensordataListCLN.size();i++) {
+            boolean dup = false;
+            for (int j=0;j<thismsensordataList.size();j++) {
+                if (thismsensordataList.get(j).getTime() == msensordataListCLN.get(i).getTime()) {
+                    dup = true;
+                }
+            }
+            if (!dup) {
+                thismsensordataList.add(msensordataListCLN.get(i));
+            }
+        }
+
+        //return if num==0 or 1
+        if (thismsensordataList.size() == 0) {
+            return new SensorCollect.sensordata(Time, new float[]{0, 0, 0}, SensorCollect.sensordata.TYPE.TOUCH);
+        } else if (thismsensordataList.size() == 1) {
+            return thismsensordataList.get(0);
+        }else if(Time< thismsensordataList.get(0).getTime()){
+            return thismsensordataList.get(0);
+        }else if (Time> thismsensordataList.get(thismsensordataList.size()-1).getTime()){
+            return thismsensordataList.get(thismsensordataList.size()-1);
+        }
+
+
+
+        //generate cost
+        List<Long> costList = new ArrayList<>();
+        for (int i = 0; i < thismsensordataList.size(); i++) {
+            costList.add(Math.abs(thismsensordataList.get(i).getTime() - Time));
+        }
+
+        //sort,convert array to list, long to double
+        sortbytime msortbytime = new sortbytime();
+        Collections.sort(thismsensordataList,msortbytime);
+
+
+        double[] TimeArray = new double[thismsensordataList.size()];
+        double[][] DataArray = new double[thismsensordataList.get(0).getData().length][thismsensordataList.size()];
+        double Time_smallest = new BigDecimal(thismsensordataList.get(0).getTime()).doubleValue();
+        double Timed = new BigDecimal(Time).doubleValue()-Time_smallest;
+        for (int i = 0; i < thismsensordataList.size(); i++) {
+            TimeArray[i] = new BigDecimal(thismsensordataList.get(i).getTime()).doubleValue()-Time_smallest;
+            for (int j = 0; j < thismsensordataList.get(0).getData().length; j++) {
+                DataArray[j][i] = new BigDecimal(thismsensordataList.get(i).getData()[j]).doubleValue();
+            }
+        }
+
+        //test
+        //interpolate
+        SensorCollect.sensordata msensordata_return = new SensorCollect.sensordata();
+        msensordata_return.setTime(Time);
+        float[] data = new float[thismsensordataList.get(0).getData().length];
+        for (int j = 0; j < thismsensordataList.get(0).getData().length; j++) {
+            if(thismsensordataList.size()>2){
+                PolynomialSplineFunction mPS = new SplineInterpolator().interpolate(TimeArray, DataArray[j]);
+                data[j] = new BigDecimal(mPS.value(Timed)).floatValue();
+            }else {
+                PolynomialSplineFunction mPS = new LinearInterpolator().interpolate(TimeArray, DataArray[j]);
+                data[j] = new BigDecimal(mPS.value(Timed)).floatValue();
+            }
+
+        }
+        msensordata_return.setData(data);
+
+        Log.d("value", String.valueOf(data[0]));
+        return msensordata_return;
+    }
+    class sortbytime implements Comparator<SensorCollect.sensordata> {
+        @Override
+        public int compare(SensorCollect.sensordata A, SensorCollect.sensordata B) {
+            return new BigDecimal(A.getTime()-B.getTime()).intValue();
+        }
+    }
     public SensorCollect.sensordata getElementByTime_interpolate(long Time, List<SensorCollect.sensordata> msensordataList) {
         SensorCollect.sensordata toreturn_sensordata = new SensorCollect.sensordata();
         if (Time < msensordataList.get(0).getTime()) {
@@ -109,21 +212,22 @@ public class motion_Inertial {
             //generate diff list
             List<Long> TimeDiff = new ArrayList<>();
             for (SensorCollect.sensordata msensordata : msensordataList) {
-                TimeDiff.add(Math.abs(Time - msensordata.getTime()));
+                TimeDiff.add((long) Math.abs(Time - msensordata.getTime()));
             }
             int minIndex = TimeDiff.indexOf(Collections.min(TimeDiff));
             //interpolate
             float[] interpolatedData = new float[msensordataList.get(0).getData().length];
             for (int i = 0; i < msensordataList.get(0).getData().length; i++) {
+                float A, At;
                 if (Time > msensordataList.get(minIndex).getTime()) {
                     interpolatedData[i] =
-                            (msensordataList.get(minIndex).getData()[0] * Math.abs(msensordataList.get(minIndex + 1).getTime() - Time) +
-                                    msensordataList.get(minIndex + 1).getData()[0] * Math.abs(msensordataList.get(minIndex).getTime() - Time)) /
+                            (msensordataList.get(minIndex).getData()[i] * Math.abs(msensordataList.get(minIndex + 1).getTime() - Time) +
+                                    msensordataList.get(minIndex + 1).getData()[i] * Math.abs(msensordataList.get(minIndex).getTime() - Time)) /
                                     Math.abs(msensordataList.get(minIndex + 1).getTime() - Math.abs(msensordataList.get(minIndex).getTime()));
                 } else if (Time < msensordataList.get(minIndex).getTime()) {
                     interpolatedData[i] =
-                            (msensordataList.get(minIndex).getData()[0] * Math.abs(msensordataList.get(minIndex - 1).getTime() - Time) +
-                                    msensordataList.get(minIndex - 1).getData()[0] * Math.abs(msensordataList.get(minIndex).getTime() - Time)) /
+                            (msensordataList.get(minIndex).getData()[i] * Math.abs(msensordataList.get(minIndex - 1).getTime() - Time) +
+                                    msensordataList.get(minIndex - 1).getData()[i] * Math.abs(msensordataList.get(minIndex).getTime() - Time)) /
                                     Math.abs(msensordataList.get(minIndex - 1).getTime() - Math.abs(msensordataList.get(minIndex).getTime()));
                 } else {
                     interpolatedData[i] = msensordataList.get(minIndex).getData()[i];
@@ -131,16 +235,19 @@ public class motion_Inertial {
             }
             //prepare return
             toreturn_sensordata = new SensorCollect.sensordata(Time, interpolatedData, msensordataList.get(0).getType());
+
         }
         return toreturn_sensordata;
+
     }
 
-    public void alignListbyTime(List<SensorCollect.sensordata> sensordataList, List<SensorCollect.sensordata> msensordataList_notaligned) {
+    public ArrayList<SensorCollect.sensordata> alignListbyTime(List<SensorCollect.sensordata> sensordataList, List<SensorCollect.sensordata> msensordataList_notaligned) {
         ArrayList<SensorCollect.sensordata> msensordataList_aligned = new ArrayList<>();
-        for (SensorCollect.sensordata isensordataList : sensordataList) {
-            msensordataList_aligned.add(getElementByTime_interpolate(isensordataList.getTime(), msensordataList_notaligned));
+        for (int i=0;i<sensordataList.size();i++) {
+            msensordataList_aligned.add(new SensorCollect.sensordata(getbyTime(sensordataList.get(i).getTime(), msensordataList_notaligned)));
         }
-        msensordataList_notaligned = msensordataList_aligned;
+
+        return msensordataList_aligned;
     }
 
     public float[][] toFloatArray(double[][] arr) {

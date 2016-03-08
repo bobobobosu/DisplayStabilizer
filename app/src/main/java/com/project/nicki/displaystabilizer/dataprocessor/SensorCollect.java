@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +28,12 @@ public class SensorCollect {
         Log.d(TAG, "count: " + String.valueOf(ACCEstorage.size()) + " " + String.valueOf(ORIENstorage.size()) + " " + String.valueOf(CAMEstorage.size()));
         if (msensordata.type == sensordata.TYPE.ACCE) {
             ACCEstorage.add(msensordata);
+
+            new LogCSV("1append2","",
+                    new BigDecimal(ACCEstorage.get(ACCEstorage.size()-1).getTime()).toPlainString(),
+                    ACCEstorage.get(ACCEstorage.size()-1).getData()[0],
+                    ACCEstorage.get(ACCEstorage.size()-1).getData()[1],
+                    ACCEstorage.get(ACCEstorage.size()-1).getData()[2]);
         }
         if (msensordata.type == sensordata.TYPE.ORIEN_radian) {
             ORIENstorage.add(msensordata);
@@ -42,6 +49,9 @@ public class SensorCollect {
             CAMEstorage.add(msensordata);
         }
         motion_online.update(msensordata);
+
+
+
     }
 
     //reset when start drawing
@@ -57,6 +67,14 @@ public class SensorCollect {
     /////location inertial
     //get full
     public List<sensordata> getInertialLocationList_offline() {
+        Log.d("getLocationList", String.valueOf(ACCEstorage.size()));
+        for(int i=0;i<ACCEstorage.size();i++){
+            new LogCSV("getInertialLocationList_offline","",new BigDecimal(ACCEstorage.get(i).getTime()).toPlainString(),
+                    ACCEstorage.get(i).getData()[0],ACCEstorage.get(i).getData()[1],ACCEstorage.get(i).getData()[2]
+                    );
+            Log.d("getLocationList", String.valueOf(i));
+        }
+
         return new motion_Inertial(initLocation, initOrientation).getLocationList_full(ACCEstorage, ORIENstorage);
     }
     //get realtime online

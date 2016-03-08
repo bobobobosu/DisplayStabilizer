@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
+import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 import com.project.nicki.displaystabilizer.init;
@@ -19,10 +20,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import au.com.bytecode.opencsv.CSVWriter;
+
 /**
  * Created by nickisverygood on 12/17/2015.
  */
 public class getAcceGyro implements Runnable {
+    public static Handler mgetValusHT_TOUCH_handler;
     String csvName = "getAcceGyro.csv";
     FileWriter mFileWriter;
     private Context mContext;
@@ -39,11 +42,22 @@ public class getAcceGyro implements Runnable {
     public getAcceGyro(Context context) {
         mContext = context;
     }
+
     public getAcceGyro() {
     }
 
     @Override
     public void run() {
+        final HandlerThread mgetValusHT_TOUCH = new HandlerThread("getValues_TOUCH");
+        mgetValusHT_TOUCH.start();
+        mgetValusHT_TOUCH_handler = new Handler(mgetValusHT_TOUCH.getLooper());
+        final HandlerThread mgetValusHT_ACCE = new HandlerThread("getValues_ACCE");
+        mgetValusHT_ACCE.start();
+        final Handler mgetValusHT_ACCE_handler = new Handler(mgetValusHT_ACCE.getLooper());
+        final HandlerThread mgetValusHT_ORIEN = new HandlerThread("getValues_ORIEN");
+        mgetValusHT_ORIEN.start();
+        final Handler mgetValusHT_ORIEN_handler = new Handler(mgetValusHT_ORIEN.getLooper());
+
         final proAcceGyroCali mproAcceGyroCali = new proAcceGyroCali(mContext);
         //mproAcceGyroCali.TEST();
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
@@ -58,8 +72,9 @@ public class getAcceGyro implements Runnable {
             float[] mGravity;
             float[] mGeomagnetic;
             long initTime = System.currentTimeMillis();
+
             @Override
-            public void onSensorChanged(SensorEvent event) {
+            public void onSensorChanged(final SensorEvent event) {
                 DemoDrawUI.runOnUI(new Runnable() {
                     @Override
                     public void run() {
@@ -71,12 +86,19 @@ public class getAcceGyro implements Runnable {
                         }
                     }
                 });
-                if (System.currentTimeMillis() - initTime > 1) {
-                    mproAcceGyroCali.Controller(event);
-                    switch(event.sensor.getType()){
-                        case Sensor.TYPE_LINEAR_ACCELERATION:
-                            init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(),event.values,SensorCollect.sensordata.TYPE.ACCE));
-                    }
+
+                mproAcceGyroCali.Controller(event);
+                switch (event.sensor.getType()) {
+                    case Sensor.TYPE_LINEAR_ACCELERATION:
+                        if(DemoDraw.drawing==0 || DemoDraw.drawing==1){
+                            mgetValusHT_ACCE_handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), event.values, SensorCollect.sensordata.TYPE.ACCE));
+                                }
+                            });
+                        }
+
                 }
 
                 if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
@@ -88,9 +110,16 @@ public class getAcceGyro implements Runnable {
                     float I[] = new float[9];
                     boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
                     if (success) {
-                        float orientation[] = new float[3];
+                        final float orientation[] = new float[3];
                         SensorManager.getOrientation(R, orientation);
-                        init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(),orientation, SensorCollect.sensordata.TYPE.ORIEN_radian));
+                        if(DemoDraw.drawing==0 || DemoDraw.drawing==1){
+                            mgetValusHT_ORIEN_handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), orientation, SensorCollect.sensordata.TYPE.ORIEN_radian));
+                                }
+                            });
+                        }
                     }
                 }
             }
@@ -143,7 +172,6 @@ public class getAcceGyro implements Runnable {
         } catch (IOException e) {
             //e.printStackTrace();
         }
-
 
 
     }

@@ -34,8 +34,8 @@ public class calSpring {
     calEular mcalEular = new calEular();
 
     public void calcList(List<SensorCollect.sensordata> mList) {
-        for (SensorCollect.sensordata isensordata : mList) {
-            calc(isensordata);
+        for (int i=0;i< mList.size();i++) {
+            calc(mList.get(i));
         }
     }
 

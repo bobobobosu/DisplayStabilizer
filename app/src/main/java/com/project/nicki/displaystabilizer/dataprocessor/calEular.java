@@ -1,9 +1,12 @@
 
 package com.project.nicki.displaystabilizer.dataprocessor;
 
+import android.util.Log;
+
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Filters.filterSensorData;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,9 +15,9 @@ import java.util.List;
  */
 public class calEular {
     //init filters
-    filterSensorData filtercalEular_ACCE = new filterSensorData.Builder().lowpass_alpha(0.7f).moveingavg_sample(100).kalmanfilter_boo(true).build();
+    filterSensorData filtercalEular_ACCE = new filterSensorData.Builder().moveingavg_sample(100).kalmanfilter_boo(true).build();
     filterSensorData filtercalEular_VELO = new filterSensorData.Builder().build();
-    filterSensorData filtercalEular_POSI = new filterSensorData.Builder().moveingavg_sample(100).highpass_alpha(0.7f).build();
+    filterSensorData filtercalEular_POSI = new filterSensorData.Builder().highpass_alpha(0.7f).moveingavg_sample(100).build();
 
 
     static final float NS2S = 1.0f / 1000000000.0f;
@@ -24,19 +27,24 @@ public class calEular {
     List<SensorCollect.sensordata> locationList = new ArrayList<>();
     long last_timestamp = 0;
 
-    public float[] calcList(List<SensorCollect.sensordata> msensordataList){
-        for (SensorCollect.sensordata msensordata:msensordataList){
-            calc(msensordata);
+    public List<SensorCollect.sensordata> calcList(List<SensorCollect.sensordata> msensordataList){
+        List<SensorCollect.sensordata> LocationList = new ArrayList<>();
+        for (int i =0;i<msensordataList.size();i++){
+            LocationList.add(calc(msensordataList.get(i)));
         }
-        return position;
+        return LocationList;
     }
-    public void calc(SensorCollect.sensordata msensordata_world) {
+    public SensorCollect.sensordata calc(SensorCollect.sensordata msensordata_world) {
         //Filter
         msensordata_world.setData(filtercalEular_ACCE.filter(msensordata_world.getData()));
         velocity = filtercalEular_VELO.filter(velocity);
         position = filtercalEular_POSI.filter(position);
-
-
+        Log.d("calEuler", String.valueOf(locationList.size()));
+        new LogCSV("calEular5","",new BigDecimal(last_timestamp).toPlainString(),
+                position[0],
+                position[1],
+                position[2]);
+        SensorCollect.sensordata toreturnfilteresList =new SensorCollect.sensordata(msensordata_world.getTime(),position, SensorCollect.sensordata.TYPE.LOCA);
 
         if (last_values != null) {
             float dt = (msensordata_world.getTime() - last_timestamp) * NS2S;
@@ -55,6 +63,7 @@ public class calEular {
         System.arraycopy(msensordata_world.getData(), 0, last_values, 0, 3);
         last_timestamp = msensordata_world.getTime();
         locationList.add(new SensorCollect.sensordata(msensordata_world.getTime(),position, SensorCollect.sensordata.TYPE.LOCA));
+        return toreturnfilteresList;
     }
 
 }

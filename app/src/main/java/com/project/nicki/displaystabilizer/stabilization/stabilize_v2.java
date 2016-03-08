@@ -31,8 +31,8 @@ public class stabilize_v2 implements Runnable {
     //public tcpipdata mtcpip = new tcpipdata();
     public static Handler getDraw;
     public static Handler getSensor;
-    //draw to DemoDraw
-    public static List<Point> toDraw = new ArrayList<Point>();
+    //draw to DemoDraw 
+    public static List<stabilize_v3.Point> toDraw = new ArrayList<>();
     public static BoundingBox bbox = new BoundingBox();
     public static boolean posdrawing = false;
     public static boolean updatefakepos = false;

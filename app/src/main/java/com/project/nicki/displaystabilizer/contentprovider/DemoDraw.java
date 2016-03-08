@@ -9,6 +9,7 @@ import android.graphics.Path;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -17,15 +18,19 @@ import android.view.View;
 
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
+import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadFactory;
+import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro.*;
 
 public class DemoDraw extends View {
+    public List<stabilize_v3.Point> incremental = new ArrayList<>();
     private static final String TAG = "DemoDraw";
-    public static int drawing = 0;
+    public static int drawing = 3;
     public static Paint paint2 = new Paint();
     public static Path path2 = new Path();
     public static Path path3 = new Path();
@@ -93,12 +98,15 @@ public class DemoDraw extends View {
 
 
         if (drawing < 2) {
-            drawCanvas(canvas, stabilize_v3.stabilize.getStabilized("Online"));
+
+            //drawCanvas(canvas, stabilize_v3.stabilize.getStabilized("Online"));
+
         }else if(drawing==2){
-            drawCanvas(canvas, stabilize_v3.stabilize.getStabilized("Offline"));
+
+            //drawCanvas(canvas, stabilize_v3.stabilize.getStabilized("Offline"));
         }
 
-        //drawCanvas(canvas, stabilize_v2.toDraw);
+        drawCanvas(canvas, stabilize_v2.toDraw);
 
 
         canvas.drawPath(path, paint);
@@ -120,14 +128,23 @@ public class DemoDraw extends View {
 
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
+    public boolean onTouchEvent(final MotionEvent event) {
         float eventX = event.getX();
         float eventY = event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 //new
-                stabilize_v3.stabilize.createSession();
-                stabilize_v3.stabilize.mstabilizeSession.setTouchList(new SensorCollect.sensordata(event.getDownTime(), new float[]{event.getX(), event.getY(), 0}, SensorCollect.sensordata.TYPE.TOUCH));
+
+                getAcceGyro.mgetValusHT_TOUCH_handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        //stabilize_v3.stabilize.createSession();
+                        //stabilize_v3.stabilize.mstabilizeSession.setTouchList(new SensorCollect.sensordata(event.getDownTime(), new float[]{event.getX(), event.getY(), 0}, SensorCollect.sensordata.TYPE.TOUCH));
+                    }
+                });
+
+
+
 
                 clear = true;
                 path.reset();
@@ -149,7 +166,7 @@ public class DemoDraw extends View {
 
                 if (eventX != 0 || eventY != 0) {
                     //proDataFlow.drawHandler.sendMessage(msgSTART);
-                    stabilize_v2.getDraw.sendMessage(msgSTART);
+                    //stabilize_v2.getDraw.sendMessage(msgSTART);
                 }
 
                 //stabilize_v1.getDraw.sendMessage(msgSTART);
@@ -159,7 +176,15 @@ public class DemoDraw extends View {
                 return true;
             case MotionEvent.ACTION_MOVE:
                 //new
-                stabilize_v3.stabilize.mstabilizeSession.setTouchList(new SensorCollect.sensordata(event.getDownTime(), new float[]{event.getX(), event.getY(), 0}, SensorCollect.sensordata.TYPE.TOUCH));
+                final float meventX = event.getX();
+                final float meventY = event.getY();
+                getAcceGyro.mgetValusHT_TOUCH_handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        //stabilize_v3.stabilize.mstabilizeSession.setTouchList(new SensorCollect.sensordata(System.currentTimeMillis(), new float[]{meventX, meventY, 0}, SensorCollect.sensordata.TYPE.TOUCH));
+                    }
+                });
+
 
                 clear = false;
                 Log.d(TAG, "AAAA Drawing");
@@ -179,7 +204,7 @@ public class DemoDraw extends View {
                 if (eventX != 0 || eventY != 0) {
                     //proDataFlow.drawHandler.sendMessage(msgDRAWING);
                     //stabilize_v1.mhandler.sendMessage(msgDRAWING);
-                    stabilize_v2.getDraw.sendMessage(msgDRAWING);
+                    //stabilize_v2.getDraw.sendMessage(msgDRAWING);
                     //stabilize_v1.getDraw.sendMessage(msgDRAWING);
                 }
                 rectX = (int) eventX;
@@ -196,7 +221,16 @@ public class DemoDraw extends View {
                 path.lineTo(eventX, eventY);
                 break;
             case MotionEvent.ACTION_UP:
+                getAcceGyro.mgetValusHT_TOUCH_handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        //Log.d("thread","tt");
+                        //stabilize_v3.stabilize.getStabilized("Offline");
 
+                    }
+                });
+
+                Log.d("c","uuu");
                 clear = false;
                 Log.d(TAG, "AAAA up");
                 Message msgSTOP = new Message();
@@ -217,7 +251,7 @@ public class DemoDraw extends View {
                 // nothing to do
                 break;
             default:
-                drawing = 2;
+                drawing = 3;
                 return false;
         }
 

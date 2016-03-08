@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.project.nicki.displaystabilizer">
+    package="com.project.nicki.displaystabilizer" >
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -27,8 +27,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity android:name=".init">
+        android:theme="@style/AppTheme" >
+        <activity android:name=".init" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

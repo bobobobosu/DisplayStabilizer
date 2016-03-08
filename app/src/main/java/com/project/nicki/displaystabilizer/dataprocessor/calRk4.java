@@ -5,6 +5,8 @@ import android.util.Log;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Filters.filterSensorData;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,9 +14,9 @@ import java.util.List;
  */
 public class calRk4 {
     //init filters
-    filterSensorData filtercalRk4_ACCE = new filterSensorData.Builder().build();
+    filterSensorData filtercalRk4_ACCE = new filterSensorData.Builder().moveingavg_sample(100).kalmanfilter_boo(true).build();
     filterSensorData filtercalRk4_VELO = new filterSensorData.Builder().build();
-    filterSensorData filtercalRk4_POSI = new filterSensorData.Builder().build();
+    filterSensorData filtercalRk4_POSI = new filterSensorData.Builder().highpass_alpha(0.7f).build();
 
     static final float NS2S = 1.0f / 1000000000.0f;
     long last_timestamp = 0;
@@ -28,26 +30,35 @@ public class calRk4 {
         }
     }
 
-    public float[] calcList(List<SensorCollect.sensordata> msensordataList) {
-        for (SensorCollect.sensordata msensordata : msensordataList) {
-            calc(msensordata);
+    public List<SensorCollect.sensordata> calcList(List<SensorCollect.sensordata> msensordataList) {
+        List<SensorCollect.sensordata> toreturnsensordataList = new ArrayList<>();
+        for (int i=0;i<msensordataList.size();i++) {
+            toreturnsensordataList.add(calc(msensordataList.get(i)));
         }
-        return new float[]{(float) prevPosition[0].pos, (float) prevPosition[1].pos, (float) prevPosition[2].pos};
+        return toreturnsensordataList;
     }
 
-    public float[] calc(SensorCollect.sensordata msensordata) {
+    public SensorCollect.sensordata calc(SensorCollect.sensordata msensordata) {
         //filter
         msensordata.setData(filtercalRk4_ACCE.filter(msensordata.getData()));
+        float[] toreurndata =new float[msensordata.getData().length];
         for (int i = 0; i < prevPosition.length; i++) {
-            prevPosition[i].pos = filtercalRk4_POSI.filter(new float[]{(float) prevPosition[0].pos,(float) prevPosition[1].pos,(float) prevPosition[2].pos})[i];
-            prevPosition[i].v = filtercalRk4_VELO.filter(new float[]{(float) prevPosition[0].v,(float) prevPosition[1].v,(float) prevPosition[2].v})[i];
+            prevPosition[i].pos = filtercalRk4_POSI.filter(new float[]{(float) prevPosition[0].pos, (float) prevPosition[1].pos, (float) prevPosition[2].pos})[i];
+            prevPosition[i].v = filtercalRk4_VELO.filter(new float[]{(float) prevPosition[0].v, (float) prevPosition[1].v, (float) prevPosition[2].v})[i];
+            toreurndata[i] = (float)prevPosition[i].pos;
         }
+        SensorCollect.sensordata toreturnsensordata = new SensorCollect.sensordata(msensordata.getTime(), toreurndata, SensorCollect.sensordata.TYPE.LOCA);
+        new LogCSV("RK43","",new BigDecimal(msensordata.getTime()).toPlainString(),
+                toreurndata[0],
+                toreurndata[1],
+                toreurndata[2]
+                );
 
 
         for (int i = 0; i < 3; i++) {
             integrate(prevPosition[i], msensordata.getTime(), 0.1, msensordata.getData()[i]);
         }
-        return new float[]{(float) prevPosition[0].pos, (float) prevPosition[1].pos, (float) prevPosition[2].pos};
+        return toreturnsensordata;
     }
 
     public double getDeltaPos() {
