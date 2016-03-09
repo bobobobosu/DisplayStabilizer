@@ -224,8 +224,8 @@ public class stabilize_v2_1 implements Runnable {
 
 
                 //manual control
-                cX = -5f;
-                cY = -5f;
+                cX = -10f;
+                cY = 10f;
 
 
                 //buffer Draw

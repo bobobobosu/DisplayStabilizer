@@ -2,8 +2,6 @@ package com.project.nicki.displaystabilizer.dataprocessor.utils.Filters;
 
 import android.util.Log;
 
-import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,8 +85,7 @@ public class filterCollection {
 
     //StaticFilter
     public float[] StaticFilter(float[] data, boolean static_sta) {
-        Log.d("filterstatic", String.valueOf(static_sta));
-        static_sta = getAcceGyro.isStatic;
+        Log.d("static?", String.valueOf(static_sta));
         if (static_sta == true) {
             for (int i = 0; i < data.length; i++) {
                 data[i] = 0;

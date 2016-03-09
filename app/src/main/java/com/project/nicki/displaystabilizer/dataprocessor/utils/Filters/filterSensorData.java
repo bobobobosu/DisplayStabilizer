@@ -24,6 +24,18 @@ public class filterSensorData {
         this.static_boo = static_boo;
     }
 
+    public void paramUpdate(
+            boolean kalmanfilter_boo,
+            int moveingavg_sample,
+            float highpass_alpha,
+            float lowpass_alpha,
+            boolean static_boo) {
+        this.kalmanfilter_boo = kalmanfilter_boo;
+        this.highpass_alpha = highpass_alpha;
+        this.lowpass_alpha = lowpass_alpha;
+        this.moveingavg_sample = moveingavg_sample;
+        this.static_boo = static_boo;
+    }
     public float[] filter(float[] data) {
         data = mfilterCollection.KalmanFilter(data, kalmanfilter_boo);
         data = mfilterCollection.MovingAvgFilter(data, moveingavg_sample);
