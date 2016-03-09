@@ -13,14 +13,12 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
-import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
+import com.project.nicki.displaystabilizer.contentprovider.DemoDraw2;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LevenbergMarquardt;
-import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
-import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
+import com.project.nicki.displaystabilizer.stabilization.stabilize_v2_1;
 
 import org.ejml.data.DenseMatrix64F;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -29,11 +27,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import au.com.bytecode.opencsv.CSVWriter;
 import jama.Matrix;
 import jkalman.JKalman;
 
-public class proAcceGyroCali2 extends getAcceGyro {
+public class proAcceGyroCali2 {
     public static boolean getcaliLogSTATUS = false;
     public static int selectedMethod;
     //handle setText update
@@ -144,6 +141,8 @@ public class proAcceGyroCali2 extends getAcceGyro {
     //time related
     double sampleduration = 0;
     samplerate msamplerate = new samplerate();
+    calRk4 mRk4 = new calRk4();
+    calRk4 mcalRk4 = new calRk4();
     private float[] prevEular;
     private calLowPass Eular_LP_a_X;
     private calLowPass Eular_LP_a_Y;
@@ -173,7 +172,6 @@ public class proAcceGyroCali2 extends getAcceGyro {
     private boolean precaliLogSTATUS = caliLogSTATUS;
 
     public proAcceGyroCali2(Context context) {
-        super(context);
         mContext = context;
     }
 
@@ -216,91 +214,16 @@ public class proAcceGyroCali2 extends getAcceGyro {
         return output;
     }
 
-
     public void Controller(SensorEvent mSensorEvent) {
-        Log.d(TAG, "parameters: " + String.valueOf(pendingUpdate));
-
-        //manual control
-        didCalibraiotn = true;
-
-
         if (mSensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
-            if (DemoDraw.drawing < 2) {
-                drawStarted = true;
-            }
-            //////////////////////////////init///////////////////////
-            if (controllerinit == false) {
-                //test
-                //stabilize_v2.setcX(0);
-                //stabilize_v2.setcY(0);
-
-                String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-                String fileName = csvName;
-                String filePath = baseDir + File.separator + fileName;
-                File f = new File(filePath);
-                CSVWriter writer = null;
-                // File exist
-                if (f.exists()) {
-                    f.delete();
-                }
-
-                controllerinit = true;
-                cirbuff = new ArrayList<sensordata>();
-                mrotateVector = new rotateVector();
-                avg1 = new Rolling(50);
-                avg2 = new Rolling(50);
-                avg3 = new Rolling(50);
-
-            } else {
-
-                avg1.add(mSensorEvent.values[0]);
-                avg2.add(mSensorEvent.values[1]);
-                avg3.add(mSensorEvent.values[2]);
-                //mtcpipdata.tcpipdatasend(mSensorEvent.values[0]);
-
-                sensordata thissensordata = new sensordata(mSensorEvent.timestamp, mSensorEvent.values);
-
-                sampleduration = msamplerate.getTimeDelta(thissensordata);
-                //Allan
-                if (cirbuff.size() < 50) {
-                    cirbuff.add(thissensordata);
-                } else {
-                    cirbuff.add(thissensordata);
-                    cirbuff.remove(0);
-
-                }
-
-                //Static Detector
-                //(1)Load into buffer
-                if (AcceCircular.size() < 10) {
-
-                    AcceCircular.add(thissensordata);
-                } else {
-                    AcceCircular.remove(0);
-                    AcceCircular.add(thissensordata);
-                }
-                //(2)put sample into buffer
-                for (int j = 0; j < AcceCircular.size(); j++) {
-                    Aintsam = 0;
-                    if (Aintsam < Asamplenum) {
-                        AcceXsam[Aintsam] = AcceCircular.get(AcceCircular.size() - j - 1).getData()[0];
-                        AcceYsam[Aintsam] = AcceCircular.get(AcceCircular.size() - j - 1).getData()[1];
-                        AcceZsam[Aintsam] = AcceCircular.get(AcceCircular.size() - j - 1).getData()[2];
-                        Aintsam++;
-                    }
-                }
-
-                //rotate
-                if (tmpgyrodata != null) {
-                    thissensordata = rotateInput(thissensordata);
-                    ///Log.d(TAG, "stop");
-                    //thissensordata.setData(new float[]{(float) result[0][0], (float) result[0][1]});
-                    //mrotateVector.rotate(new sensordata(mSensorEvent.timestamp, new float[]{mSensorEvent.values[0], mSensorEvent.values[1]}));
-                }
-
-
-                RK4(thissensordata);
-            }
+            SensorCollect.sensordata thissensordata = new SensorCollect.sensordata(System.currentTimeMillis(), mSensorEvent.values, SensorCollect.sensordata.TYPE.ACCE);
+            Message msg = new Message();
+            Bundle bundle = new Bundle();
+            bundle.putFloatArray("Pos", mcalRk4.calc(thissensordata).getData());
+            bundle.putLong("Time", thissensordata.getTime());
+            msg.setData(bundle);
+            msg.arg1 = 2;
+            stabilize_v2_1.getSensor.sendMessage(msg);
         }
     }
 
@@ -316,7 +239,7 @@ public class proAcceGyroCali2 extends getAcceGyro {
     }
 
     public void RK4(sensordata sensordataIN) {
-        if (RK4init == false || DemoDraw.drawing == 0) {
+        if (RK4init == false || DemoDraw2.drawing == 0) {
             mrk4_X = new RK4();
             mrk4_Y = new RK4();
             RK4_initX = new Position(0, 0);
@@ -344,7 +267,6 @@ public class proAcceGyroCali2 extends getAcceGyro {
             RK4_last_timestamp = 0;
 
         }
-
 
         //manual control
         RK4_LP_a_X = new calLowPass(0.9f);
@@ -400,7 +322,7 @@ public class proAcceGyroCali2 extends getAcceGyro {
 
         mrk4_X.integrate(RK4_initX, sensordataIN.getTime(), 0.01, sensordataIN.getData()[0]);
         mrk4_Y.integrate(RK4_initY, sensordataIN.getTime(), 0.01, sensordataIN.getData()[1]);
-        if (DemoDraw.drawing < 2) {
+        if (DemoDraw2.drawing < 2) {
             //LogCSV("RK4", String.valueOf(sensordataIN.getTime()), String.valueOf(RK4_initX.pos), String.valueOf(RK4_initY.pos), String.valueOf(RK4_initX.v), String.valueOf(RK4_initX.v), "");
         }
 
@@ -436,7 +358,7 @@ public class proAcceGyroCali2 extends getAcceGyro {
         msg.arg1 = 2;
 
         //proDataFlow.AcceHandler.sendMessage(msg);
-        stabilize_v2.getSensor.sendMessage(msg);
+        stabilize_v2_1.getSensor.sendMessage(msg);
     }
 
     public boolean detectStatic(sensordata msensordata) {

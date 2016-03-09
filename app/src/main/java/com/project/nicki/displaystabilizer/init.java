@@ -9,11 +9,11 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 
-import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
+import com.project.nicki.displaystabilizer.UI.DemoDrawUI2;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
-import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
+import com.project.nicki.displaystabilizer.stabilization.stabilize_v2_1;
 
 import org.ejml.data.DenseMatrix64F;
 
@@ -66,14 +66,13 @@ public class init extends AppCompatActivity {
         //new Thread(new stabilize_v1(getBaseContext())).start();
 
 
-
-        new Thread(new stabilize_v2(getBaseContext())).start();
+        new Thread(new stabilize_v2_1(getBaseContext())).start();
         new Thread(new getAcceGyro(getBaseContext())).start();
-        Intent goto_DemoDrawUI = new Intent();
+        Intent goto_DemoDrawUI2 = new Intent();
         overridePendingTransition(0, 0);
-        goto_DemoDrawUI.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        goto_DemoDrawUI.setClass(init.this, DemoDrawUI.class);
-        startActivity(goto_DemoDrawUI);
+        goto_DemoDrawUI2.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        goto_DemoDrawUI2.setClass(init.this, DemoDrawUI2.class);
+        startActivity(goto_DemoDrawUI2);
 
 /*
         Intent goto_OdometryMainActivity = new Intent();

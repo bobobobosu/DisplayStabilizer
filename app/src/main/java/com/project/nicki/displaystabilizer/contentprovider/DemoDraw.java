@@ -166,7 +166,7 @@ public class DemoDraw extends View {
 
                 if (eventX != 0 || eventY != 0) {
                     //proDataFlow.drawHandler.sendMessage(msgSTART);
-                    //stabilize_v2.getDraw.sendMessage(msgSTART);
+                    stabilize_v2.getDraw.sendMessage(msgSTART);
                 }
 
                 //stabilize_v1.getDraw.sendMessage(msgSTART);
@@ -204,7 +204,7 @@ public class DemoDraw extends View {
                 if (eventX != 0 || eventY != 0) {
                     //proDataFlow.drawHandler.sendMessage(msgDRAWING);
                     //stabilize_v1.mhandler.sendMessage(msgDRAWING);
-                    //stabilize_v2.getDraw.sendMessage(msgDRAWING);
+                    stabilize_v2.getDraw.sendMessage(msgDRAWING);
                     //stabilize_v1.getDraw.sendMessage(msgDRAWING);
                 }
                 rectX = (int) eventX;

@@ -9,7 +9,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
-import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
+import com.project.nicki.displaystabilizer.contentprovider.DemoDraw2;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 
@@ -29,7 +29,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 /**
  * Created by nickisverygood on 1/3/2016.
  */
-public class stabilize_v2 implements Runnable {
+public class stabilize_v2_1 implements Runnable {
     //public tcpipdata mtcpip = new tcpipdata();
     public static Handler getDraw;
     public static Handler getSensor;
@@ -71,7 +71,7 @@ public class stabilize_v2 implements Runnable {
     private String TAG = "stabilize_v2";
     private Context mContext;
 
-    public stabilize_v2(Context context) {
+    public stabilize_v2_1(Context context) {
         mContext = context;
     }
 
@@ -80,7 +80,7 @@ public class stabilize_v2 implements Runnable {
     }
 
     public static void setcY(float cY) {
-        stabilize_v2.cY = cY;
+        stabilize_v2_1.cY = cY;
     }
 
     public static float getcX() {
@@ -89,7 +89,7 @@ public class stabilize_v2 implements Runnable {
 
     //setConstants
     public static void setcX(float cX) {
-        stabilize_v2.cX = cX;
+        stabilize_v2_1.cX = cX;
     }
 
     public static double[][] multiplyByMatrix(double[][] m1, double[][] m2) {
@@ -125,7 +125,7 @@ public class stabilize_v2 implements Runnable {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
-
+                Log.d(TAG, "getmessagesensor");
 
                 Bundle bundlegot = msg.getData();
                 Pos = bundlegot.getFloatArray("Pos");
@@ -134,7 +134,7 @@ public class stabilize_v2 implements Runnable {
                 new LogCSV("odebug1", "", new BigDecimal(tmpaccesensordata.Time).toPlainString(),
                         tmpaccesensordata.getData()[0], tmpaccesensordata.getData()[1]);
                 prevdrawSTATUS = drawSTATUS;
-                drawSTATUS = DemoDraw.drawing < 2;
+                drawSTATUS = DemoDraw2.drawing < 2;
 
                 if (deltaingStatus == 0) {
                     tmp1accesensordata = tmpaccesensordata;
@@ -148,10 +148,6 @@ public class stabilize_v2 implements Runnable {
                 //init
                 if (prevdrawSTATUS == false && drawSTATUS == true || init == false) {
                     if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
-                        //cX = Math.abs(getSumArray(strokedeltabuffer).get(strokedeltabuffer.size()-1 +1).getData()[0])/Math.abs(getSumArray(posdeltabuffer).get(posdeltabuffer.size() - 1).getData()[0]);
-                        //cY = Math.abs(getSumArray(strokedeltabuffer).get(strokedeltabuffer.size()-1 +1).getData()[1])/Math.abs(getSumArray(posdeltabuffer).get(posdeltabuffer.size()-1).getData()[1]);
-                        //cX = -Math.abs(strokebuffer.get(strokebuffer.size() - 1).getData()[0] - strokebuffer.get(0).getData()[0]) / Math.abs(posbuffer.get(posbuffer.size() - 1).getData()[0] - posbuffer.get(0).getData()[0]);
-                        //cY = -Math.abs(strokebuffer.get(strokebuffer.size() - 1).getData()[1] - strokebuffer.get(0).getData()[1]) / Math.abs(posbuffer.get(posbuffer.size() - 1).getData()[1] - posbuffer.get(0).getData()[1]);
                         CalibrationMode = false;
                     }
                     strokebuffer = new ArrayList<sensordata>();
@@ -172,17 +168,17 @@ public class stabilize_v2 implements Runnable {
             }
         };
         getDraw = new Handler() {
-
             //noshake
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
+                Log.d(TAG, "getmessage");
                 if (tmpaccesensordata == null || Pos == null) {
                     return;
                 }
                 Bundle bundlegot = msg.getData();
                 prevdrawSTATUS = drawSTATUS;
-                drawSTATUS = DemoDraw.drawing < 2;
+                drawSTATUS = DemoDraw2.drawing < 2;
 
 
                 //init
@@ -203,7 +199,7 @@ public class stabilize_v2 implements Runnable {
                     //refresh view
                     Message msg3 = new Message();
                     msg3.what = 1;
-                    DemoDraw.mhandler.sendMessage(msg3);
+                    DemoDraw2.mhandler.sendMessage(msg3);
                     if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
                         //cX = Math.abs(getSumArray(strokedeltabuffer).get(strokedeltabuffer.size()-1 +1).getData()[0])/Math.abs(getSumArray(posdeltabuffer).get(posdeltabuffer.size() - 1).getData()[0]);
                         //cY = Math.abs(getSumArray(strokedeltabuffer).get(strokedeltabuffer.size()-1 +1).getData()[1])/Math.abs(getSumArray(posdeltabuffer).get(posdeltabuffer.size()-1).getData()[1]);
@@ -228,8 +224,8 @@ public class stabilize_v2 implements Runnable {
 
 
                 //manual control
-                cX = -50f;
-                cY = -50f;
+                cX = -5f;
+                cY = -5f;
 
 
                 //buffer Draw
@@ -317,7 +313,7 @@ public class stabilize_v2 implements Runnable {
                 //refresh view
                 Message msg3 = new Message();
                 msg3.what = 1;
-                DemoDraw.mhandler.sendMessage(msg3);
+                DemoDraw2.mhandler.sendMessage(msg3);
 
 
             }

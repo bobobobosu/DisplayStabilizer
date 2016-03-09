@@ -7,17 +7,24 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
-import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
+import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali2;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import au.com.bytecode.opencsv.CSVWriter;
 
@@ -26,6 +33,7 @@ import au.com.bytecode.opencsv.CSVWriter;
  */
 public class getAcceGyro implements Runnable {
     public static Handler mgetValusHT_TOUCH_handler;
+    public static boolean isStatic = true;
     String csvName = "getAcceGyro.csv";
     FileWriter mFileWriter;
     private Context mContext;
@@ -38,7 +46,6 @@ public class getAcceGyro implements Runnable {
     private HandlerThread mHandlerThread;
     private String TAG = "getAcceGyro";
 
-
     public getAcceGyro(Context context) {
         mContext = context;
     }
@@ -48,6 +55,7 @@ public class getAcceGyro implements Runnable {
 
     @Override
     public void run() {
+        final StaticSensor mstaticsensor = new StaticSensor();
         final HandlerThread mgetValusHT_TOUCH = new HandlerThread("getValues_TOUCH");
         mgetValusHT_TOUCH.start();
         mgetValusHT_TOUCH_handler = new Handler(mgetValusHT_TOUCH.getLooper());
@@ -58,7 +66,8 @@ public class getAcceGyro implements Runnable {
         mgetValusHT_ORIEN.start();
         final Handler mgetValusHT_ORIEN_handler = new Handler(mgetValusHT_ORIEN.getLooper());
 
-        final proAcceGyroCali mproAcceGyroCali = new proAcceGyroCali(mContext);
+        //final proAcceGyroCali mproAcceGyroCali = new proAcceGyroCali(mContext);
+        final proAcceGyroCali2 mproAcceGyroCali2 = new proAcceGyroCali2(mContext);
         //mproAcceGyroCali.TEST();
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
         mLSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
@@ -87,14 +96,16 @@ public class getAcceGyro implements Runnable {
                     }
                 });
 
-                mproAcceGyroCali.Controller(event);
+                //mproAcceGyroCali.Controller(event);
+                mproAcceGyroCali2.Controller(event);
                 switch (event.sensor.getType()) {
                     case Sensor.TYPE_LINEAR_ACCELERATION:
+                        isStatic = mstaticsensor.getStatic(event.values);
                         if(DemoDraw.drawing==0 || DemoDraw.drawing==1){
                             mgetValusHT_ACCE_handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), event.values, SensorCollect.sensordata.TYPE.ACCE));
+                                    init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), event.values, SensorCollect.sensordata.TYPE.ACCE));
                                 }
                             });
                         }
@@ -174,5 +185,109 @@ public class getAcceGyro implements Runnable {
         }
 
 
+    }
+
+    public class StaticSensor {
+        float threshold = 0.000000000001f;
+        int window = 100;
+        List<float[]> CircularBuffer = new ArrayList<>();
+        int staticNum = 0;
+        boolean Moving = true;
+
+        public boolean getStatic(float[] data) {
+            //load into buffer
+            if (CircularBuffer.size() < window) {
+                CircularBuffer.add(data);
+            } else {
+                CircularBuffer.add(data);
+                CircularBuffer.remove(0);
+            }
+            //calculate deviation
+            float mdataset[][] = List2Array(CircularBuffer);
+            float[] variance = new float[data.length];
+            for (int i = 0; i < data.length; i++) {
+                variance[i] = new Statistics(mdataset[i]).getVariance();
+            }
+            //calculate variance vector
+            float variancevector = getVarianceMagnitude(variance);
+            //compare with threshold, if static=>set to 0
+            if (variancevector < threshold) {
+                staticNum++;
+            } else {
+                staticNum = 0;
+            }
+            if (staticNum < 50) {
+                Log.d(TAG, "Movinggg");
+                getAcceGyro.isStatic = false;
+                isStatic = false;
+            } else {
+                getAcceGyro.isStatic = true;
+                isStatic = true;
+            }
+            return isStatic;
+        }
+
+        public float[][] List2Array(List<float[]> input) {
+            float[][] toreturn = new float[input.get(0).length][input.size()];
+            for (int i = 0; i < input.get(0).length; i++) {
+                for (int j = 0; j < input.size(); j++) {
+                    toreturn[i][j] = input.get(j)[i];
+                }
+            }
+            return toreturn;
+        }
+
+        public float getVarianceMagnitude(float[] data) {
+            MathContext mc = new MathContext(50, RoundingMode.HALF_DOWN);
+            BigDecimal[] tocal = new BigDecimal[data.length];
+            for (int i = 0; i < data.length; i++) {
+                tocal[i] = new BigDecimal(data[i]);
+            }
+            BigDecimal BVarianceMagnitude = new BigDecimal(0);
+            for (int i = 0; i < data.length; i++) {
+                BVarianceMagnitude = BVarianceMagnitude.add(tocal[i].pow(2), mc);
+            }
+            double dVarianceMagnitude = Math.pow(BVarianceMagnitude.doubleValue(), 0.5);
+            return (float) dVarianceMagnitude;
+        }
+
+        public class Statistics {
+            float[] data;
+            int size;
+
+            public Statistics(float[] data) {
+                this.data = data;
+                size = data.length;
+            }
+
+            float getMean() {
+                float sum = (float) 0.0;
+                for (float a : data)
+                    sum += a;
+                return sum / size;
+            }
+
+            float getVariance() {
+                float mean = getMean();
+                float temp = 0;
+                for (float a : data)
+                    temp += (mean - a) * (mean - a);
+                return temp / size;
+            }
+
+            float getStdDev() {
+                return (float) Math.sqrt(getVariance());
+            }
+
+            public float median() {
+                Arrays.sort(data);
+
+                if (data.length % 2 == 0) {
+                    return (float) ((data[(data.length / 2) - 1] + data[data.length / 2]) / 2.0);
+                } else {
+                    return data[data.length / 2];
+                }
+            }
+        }
     }
 }

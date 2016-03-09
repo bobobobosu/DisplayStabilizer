@@ -2,7 +2,7 @@ package com.project.nicki.displaystabilizer.dataprocessor.utils.Filters;
 
 import android.util.Log;
 
-import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
+import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,12 +15,21 @@ import jkalman.JKalman;
  */
 public class filterCollection {
 
-    //HighPassFilter Variables
+    //HighPassFilter
     public float[] LowFreq;
+    //LowPassFilter
+    float[] output;
+    //KalmanFilter
+    JKalman kalman = null;
+    Matrix s, c, m;
+    //MovingAvgFilter
+    private List<Float>[] rolling;
+
     public float[] HighPassFilter(float[] data, float alpha) {
+        Log.d("alpha", String.valueOf(alpha));
         if (LowFreq == null) {
             LowFreq = new float[data.length];
-            System.arraycopy( data, 0, LowFreq, 0, data.length );
+            System.arraycopy(data, 0, LowFreq, 0, data.length);
             return data;
         }
 
@@ -32,12 +41,10 @@ public class filterCollection {
         return data;
     }
 
-    //LowPassFilter Variables
-    float[] output;
     public float[] LowPassFilter(float[] data, float alpha) {
         if (output == null) {
             output = new float[data.length];
-            System.arraycopy( data, 0, output, 0, data.length );
+            System.arraycopy(data, 0, output, 0, data.length);
             return data;
         }
         for (int i = 0; i < data.length; i++) {
@@ -45,9 +52,6 @@ public class filterCollection {
         }
         return output;
     }
-
-    //LowPassFilter Variables
-    private List<Float>[] rolling;
 
     public float[] MovingAvgFilter(float[] data, int sample) {
         if (rolling == null) {
@@ -81,9 +85,21 @@ public class filterCollection {
         return sum;
     }
 
-    //KalmanFilter Variables
-    JKalman kalman = null;
-    Matrix s, c, m;
+    //StaticFilter
+    public float[] StaticFilter(float[] data, boolean static_sta) {
+        Log.d("filterstatic", String.valueOf(static_sta));
+        static_sta = getAcceGyro.isStatic;
+        if (static_sta == true) {
+            for (int i = 0; i < data.length; i++) {
+                data[i] = 0;
+            }
+            return data;
+        } else {
+            return data;
+        }
+
+    }
+
     public float[] KalmanFilter(float[] data, boolean activate) {
         if (activate == true) {
             if (kalman == null || m == null) {
