@@ -10,7 +10,6 @@ import android.widget.Toast;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw2;
-import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 
 import java.io.File;
@@ -62,14 +61,19 @@ public class stabilize_v2_1 implements Runnable {
     boolean prevdrawSTATUS = false;
     boolean init = false;
     sensordata tmpaccesensordata;
+    sensordata tmporiensensordata;
     display mdisplay = new display();
     float[] Pos = null;
+    float[] Orien = null;
     int deltaingStatus = 0;
     sensordata tmp1accesensordata;
     long prev = System.currentTimeMillis();
+    //init specific
+    float[] orieninit;
     private String csvName = "stabilize_v2.csv";
     private String TAG = "stabilize_v2";
     private Context mContext;
+
 
     public stabilize_v2_1(Context context) {
         mContext = context;
@@ -129,7 +133,10 @@ public class stabilize_v2_1 implements Runnable {
 
                 Bundle bundlegot = msg.getData();
                 Pos = bundlegot.getFloatArray("Pos");
-                tmpaccesensordata = bundle2sensordata(bundlegot);
+                //mpaccesensordata = bundle2sensordata(bundlegot);
+                tmpaccesensordata = new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Pos"));
+                tmporiensensordata = new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Orien"));
+
                 Log.d(TAG, "tmpaccesensordata: " + tmpaccesensordata.getData()[0] + " " + tmpaccesensordata.getData()[1]);
                 new LogCSV("odebug1", "", new BigDecimal(tmpaccesensordata.Time).toPlainString(),
                         tmpaccesensordata.getData()[0], tmpaccesensordata.getData()[1]);
@@ -147,6 +154,8 @@ public class stabilize_v2_1 implements Runnable {
                 }
                 //init
                 if (prevdrawSTATUS == false && drawSTATUS == true || init == false) {
+                    orieninit = tmporiensensordata.getData();
+
                     if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
                         CalibrationMode = false;
                     }
@@ -201,10 +210,6 @@ public class stabilize_v2_1 implements Runnable {
                     msg3.what = 1;
                     DemoDraw2.mhandler.sendMessage(msg3);
                     if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
-                        //cX = Math.abs(getSumArray(strokedeltabuffer).get(strokedeltabuffer.size()-1 +1).getData()[0])/Math.abs(getSumArray(posdeltabuffer).get(posdeltabuffer.size() - 1).getData()[0]);
-                        //cY = Math.abs(getSumArray(strokedeltabuffer).get(strokedeltabuffer.size()-1 +1).getData()[1])/Math.abs(getSumArray(posdeltabuffer).get(posdeltabuffer.size()-1).getData()[1]);
-                        //cX = -(Math.abs(strokebuffer.get(strokebuffer.size() - 1).getData()[0] - strokebuffer.get(0).getData()[0])) / (Math.abs(posbuffer.get(posbuffer.size() - 1).getData()[0] - posbuffer.get(0).getData()[0]));
-                        //cY = -(Math.abs(strokebuffer.get(strokebuffer.size() - 1).getData()[1] - strokebuffer.get(0).getData()[1])) / (Math.abs(posbuffer.get(posbuffer.size() - 1).getData()[1] - posbuffer.get(0).getData()[1]));
                         CalibrationMode = false;
                         Log.d(TAG, "multiplier: " + cX + " " + cY);
                     }
@@ -272,17 +277,7 @@ public class stabilize_v2_1 implements Runnable {
                             strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * cX / (float) com.project.nicki.displaystabilizer.init.pix2m,
                             strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY / (float) com.project.nicki.displaystabilizer.init.pix2m});
                     stastrokedeltabuffer.add(stastrokedelta);
-/*
-                    LogCSV(
-                            "performance",
-                            String.valueOf(proAcceGyroCali.nowmultip),
-                            String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0]),
-                            String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1]),
-                            String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * cX / (float) com.project.nicki.displaystabilizer.init.pix2m),
-                            String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY / (float) com.project.nicki.displaystabilizer.init.pix2m),
-                            String.valueOf(Math.pow(Math.pow(stastrokedelta.getData()[0], 2) + Math.pow(stastrokedelta.getData()[1], 2), 0.5))
-                    );
-                    */
+
                     if (prevStroke != null) {
                         //sumof stastrokedeltabuffer
                         prevStroke[0] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0];
@@ -297,6 +292,7 @@ public class stabilize_v2_1 implements Runnable {
                             todrawPoint.x = msensordata.getData()[0] + tofinger[0];
                             todrawPoint.y = msensordata.getData()[1] + tofinger[1];
                             Log.d(TAG, "todraw: " + todrawPoint.x + " " + todrawPoint.y);
+
                             //LogCSV("tmpaccesensordata.csv", String.valueOf(prevStroke[0]), String.valueOf(prevStroke[1]), "", "", "", "");
                             toDraw.add(todrawPoint);
                         }
@@ -325,8 +321,8 @@ public class stabilize_v2_1 implements Runnable {
         Looper.loop();
     }
 
-    public sensordata rotateInput(sensordata msensordata) {
-        double[][] rotationArray = {{Math.cos(proAcceGyroCali.tmpgyrodata.getData()[0]), -Math.sin(proAcceGyroCali.tmpgyrodata.getData()[0])}, {Math.sin(proAcceGyroCali.tmpgyrodata.getData()[0]), Math.cos(proAcceGyroCali.tmpgyrodata.getData()[0])}};
+    public sensordata rotateInput(sensordata msensordata, float deltaOrien_rad) {
+        double[][] rotationArray = {{Math.cos(Math.toDegrees(deltaOrien_rad)), -Math.sin(Math.toDegrees(deltaOrien_rad))}, {Math.sin(Math.toDegrees(deltaOrien_rad)), Math.cos(Math.toDegrees(deltaOrien_rad))}};
         double[][] input = new double[1][2];
         input[0][0] = msensordata.getData()[0];
         input[0][1] = msensordata.getData()[1];

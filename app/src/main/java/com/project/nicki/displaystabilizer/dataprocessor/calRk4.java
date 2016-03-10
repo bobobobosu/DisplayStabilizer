@@ -69,6 +69,7 @@ public class calRk4 {
             prevPosition[i].pos = filtercalRk4_POSI.filter(new float[]{(float) prevPosition[0].pos, (float) prevPosition[1].pos, (float) prevPosition[2].pos})[i];
             prevPosition[i].v = filtercalRk4_VELO.filter(new float[]{(float) prevPosition[0].v, (float) prevPosition[1].v, (float) prevPosition[2].v})[i];
             toreurndata[i] = (float)prevPosition[i].pos;
+
         }
         SensorCollect.sensordata toreturnsensordata = new SensorCollect.sensordata(msensordata.getTime(), toreurndata, SensorCollect.sensordata.TYPE.LOCA);
 

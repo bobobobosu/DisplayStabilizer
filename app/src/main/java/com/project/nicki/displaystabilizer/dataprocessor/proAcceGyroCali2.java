@@ -7,6 +7,7 @@ package com.project.nicki.displaystabilizer.dataprocessor;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -143,6 +144,10 @@ public class proAcceGyroCali2 {
     samplerate msamplerate = new samplerate();
     calRk4 mRk4 = new calRk4();
     calRk4 mcalRk4 = new calRk4();
+    float[] mGravity = new float[3];
+    float[] mGeomagnetic = new float[3];
+    SensorCollect.sensordata thissensordata = null;
+    float orientation[] = null;
     private float[] prevEular;
     private calLowPass Eular_LP_a_X;
     private calLowPass Eular_LP_a_Y;
@@ -216,15 +221,38 @@ public class proAcceGyroCali2 {
 
     public void Controller(SensorEvent mSensorEvent) {
         if (mSensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
-            SensorCollect.sensordata thissensordata = new SensorCollect.sensordata(System.currentTimeMillis(), mSensorEvent.values, SensorCollect.sensordata.TYPE.ACCE);
+            thissensordata = new SensorCollect.sensordata(System.currentTimeMillis(), mSensorEvent.values, SensorCollect.sensordata.TYPE.ACCE);
+        }
+
+        if (mSensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+            mGravity = mSensorEvent.values;
+        if (mSensorEvent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+            mGeomagnetic = mSensorEvent.values;
+        if (mGravity != null && mGeomagnetic != null) {
+            float R[] = new float[9];
+            float I[] = new float[9];
+            boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+            if (success) {
+                orientation = new float[3];
+                SensorManager.getOrientation(R, orientation);
+            }
+        }
+
+        if (thissensordata != null && orientation != null) {
             Message msg = new Message();
             Bundle bundle = new Bundle();
             bundle.putFloatArray("Pos", mcalRk4.calc(thissensordata).getData());
+            bundle.putFloatArray("Orien", orientation);
             bundle.putLong("Time", thissensordata.getTime());
             msg.setData(bundle);
-            msg.arg1 = 2;
             stabilize_v2_1.getSensor.sendMessage(msg);
+
+            thissensordata = null;
+            orientation = null;
         }
+
+
+
     }
 
 
