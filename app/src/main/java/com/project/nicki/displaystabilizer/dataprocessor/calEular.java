@@ -18,9 +18,9 @@ public class calEular {
     static final float NS2S = 1.0f / 1000000000.0f;
     ;
     //init filters
-    filterSensorData filtercalEular_ACCE = new filterSensorData(true, 100, 1, 1, getAcceGyro.isStatic);
-    filterSensorData filtercalEular_VELO = new filterSensorData(true, 1, 1, 1, getAcceGyro.isStatic);
-    filterSensorData filtercalEular_POSI = new filterSensorData(true, 100, 0.7f, 1, getAcceGyro.isStatic);
+    filterSensorData filtercalEular_ACCE = new filterSensorData(true, 100, 1, 1, getAcceGyro.isStatic, Float.MAX_VALUE);
+    filterSensorData filtercalEular_VELO = new filterSensorData(true, 1, 1, 1, getAcceGyro.isStatic, Float.MAX_VALUE);
+    filterSensorData filtercalEular_POSI = new filterSensorData(true, 100, 0.7f, 1, getAcceGyro.isStatic, Float.MAX_VALUE);
     float[] last_values;
     float[] velocity = new float[]{0, 0, 0};
     float[] position = new float[]{0, 0, 0};

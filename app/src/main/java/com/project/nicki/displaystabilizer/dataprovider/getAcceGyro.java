@@ -71,7 +71,7 @@ public class getAcceGyro implements Runnable {
         //mproAcceGyroCali.TEST();
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
         mLSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        mMSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        mMSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         mRSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mHandlerThread = new HandlerThread("getAcceGyro");
         mHandlerThread.start();

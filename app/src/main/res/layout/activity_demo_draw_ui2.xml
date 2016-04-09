@@ -78,7 +78,7 @@
                     android:layout_column="1"
                     android:ems="10"
                     android:inputType="text"
-                    android:text="0.1" />
+                    android:text="0.98" />
 
                 <CheckBox
                     android:id="@+id/inversefakepos2"
@@ -108,7 +108,7 @@
                     android:layout_column="1"
                     android:ems="10"
                     android:inputType="text"
-                    android:text="0.5" />
+                    android:text="0.7" />
 
                 <Button
                     android:id="@+id/updatefakepos2"
@@ -130,7 +130,7 @@
                     android:layout_column="1"
                     android:ems="10"
                     android:inputType="text"
-                    android:text="0.5" />
+                    android:text="0.7" />
             </TableRow>
 
             <TableRow
@@ -144,7 +144,7 @@
                     android:layout_column="1"
                     android:ems="10"
                     android:inputType="text"
-                    android:text="0.5" />
+                    android:text="0.7" />
             </TableRow>
 
             <TableRow

@@ -7,7 +7,6 @@ package com.project.nicki.displaystabilizer.dataprocessor;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -16,6 +15,7 @@ import android.util.Log;
 
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw2;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LevenbergMarquardt;
+import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2_1;
 
 import org.ejml.data.DenseMatrix64F;
@@ -222,10 +222,23 @@ public class proAcceGyroCali2 {
     public void Controller(SensorEvent mSensorEvent) {
         if (mSensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
             thissensordata = new SensorCollect.sensordata(System.currentTimeMillis(), mSensorEvent.values, SensorCollect.sensordata.TYPE.ACCE);
+            thissensordata.setData(new float[]{
+                    mSensorEvent.values[0],
+                    mSensorEvent.values[1] - 0.452898f,
+                    mSensorEvent.values[2]
+            });
         }
 
         if (mSensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
             mGravity = mSensorEvent.values;
+        if (mSensorEvent.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+            orientation = mSensorEvent.values.clone();
+            new LogCSV("ori2", "", "",
+                    orientation[0],
+                    orientation[1],
+                    orientation[2]);
+        }
+        /*
         if (mSensorEvent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
             mGeomagnetic = mSensorEvent.values;
         if (mGravity != null && mGeomagnetic != null) {
@@ -237,12 +250,16 @@ public class proAcceGyroCali2 {
                 SensorManager.getOrientation(R, orientation);
             }
         }
-
+*/
         if (thissensordata != null && orientation != null) {
+            new LogCSV("acce1", "", "",
+                    mSensorEvent.values[0],
+                    mSensorEvent.values[1],
+                    mSensorEvent.values[2]);
             Message msg = new Message();
             Bundle bundle = new Bundle();
             bundle.putFloatArray("Pos", mcalRk4.calc(thissensordata).getData());
-            bundle.putFloatArray("Orien", orientation);
+            bundle.putFloatArray("Orien", new float[]{orientation[0], orientation[1], orientation[2]});
             bundle.putLong("Time", thissensordata.getTime());
             msg.setData(bundle);
             stabilize_v2_1.getSensor.sendMessage(msg);

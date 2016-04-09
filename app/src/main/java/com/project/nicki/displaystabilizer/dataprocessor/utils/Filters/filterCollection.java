@@ -97,6 +97,17 @@ public class filterCollection {
 
     }
 
+    //StaticFilter
+    public float[] TooHighFilter(float[] data, float threshold) {
+        Log.d("thres", String.valueOf(threshold));
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] > threshold) {
+                data[i] = 0;
+            }
+        }
+        return data;
+    }
+
     public float[] KalmanFilter(float[] data, boolean activate) {
         if (activate == true) {
             if (kalman == null || m == null) {

@@ -10,18 +10,21 @@ public class filterSensorData {
     float highpass_alpha;
     float lowpass_alpha;
     boolean static_boo;
+    float toohighfilter_thres;
 
     public filterSensorData(
             boolean kalmanfilter_boo,
             int moveingavg_sample,
             float highpass_alpha,
             float lowpass_alpha,
-            boolean static_boo) {
+            boolean static_boo,
+            float toohighfilter_thres) {
         this.kalmanfilter_boo = kalmanfilter_boo;
         this.highpass_alpha = highpass_alpha;
         this.lowpass_alpha = lowpass_alpha;
         this.moveingavg_sample = moveingavg_sample;
         this.static_boo = static_boo;
+        this.toohighfilter_thres = toohighfilter_thres;
     }
 
     public void paramUpdate(
@@ -29,19 +32,23 @@ public class filterSensorData {
             int moveingavg_sample,
             float highpass_alpha,
             float lowpass_alpha,
-            boolean static_boo) {
+            boolean static_boo,
+            float toohighfilter_thres) {
         this.kalmanfilter_boo = kalmanfilter_boo;
         this.highpass_alpha = highpass_alpha;
         this.lowpass_alpha = lowpass_alpha;
         this.moveingavg_sample = moveingavg_sample;
         this.static_boo = static_boo;
+        this.toohighfilter_thres = toohighfilter_thres;
     }
     public float[] filter(float[] data) {
         data = mfilterCollection.KalmanFilter(data, kalmanfilter_boo);
         data = mfilterCollection.MovingAvgFilter(data, moveingavg_sample);
         data = mfilterCollection.HighPassFilter(data, highpass_alpha);
+        data = mfilterCollection.TooHighFilter(data, toohighfilter_thres);
         //data = mfilterCollection.LowPassFilter(data, lowpass_alpha);
         data = mfilterCollection.StaticFilter(data, static_boo);
+        //data = mfilterCollection.TooHighFilter(data,toohighfilter_thres);
         return data;
     }
     /*

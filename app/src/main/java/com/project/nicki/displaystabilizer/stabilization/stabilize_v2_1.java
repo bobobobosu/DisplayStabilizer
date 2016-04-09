@@ -9,6 +9,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
+import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw2;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 
@@ -56,6 +57,7 @@ public class stabilize_v2_1 implements Runnable {
     ArrayList<sensordata> stastrokedeltabuffer = new ArrayList<sensordata>();
     //tmps
     long prevTime = 0;
+    float[] tmp_prevStroke = null;
     float[] prevStroke = null;
     boolean drawSTATUS = false;
     boolean prevdrawSTATUS = false;
@@ -136,7 +138,14 @@ public class stabilize_v2_1 implements Runnable {
                 //mpaccesensordata = bundle2sensordata(bundlegot);
                 tmpaccesensordata = new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Pos"));
                 tmporiensensordata = new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Orien"));
-
+                if (DemoDraw2.orienreset == false) {
+                    orieninit = tmporiensensordata.getData();
+                    DemoDraw2.orienreset = true;
+                }
+                new LogCSV("yaw6", "", "",
+                        tmporiensensordata.getData()[0],
+                        tmporiensensordata.getData()[1],
+                        tmporiensensordata.getData()[2]);
                 Log.d(TAG, "tmpaccesensordata: " + tmpaccesensordata.getData()[0] + " " + tmpaccesensordata.getData()[1]);
                 new LogCSV("odebug1", "", new BigDecimal(tmpaccesensordata.Time).toPlainString(),
                         tmpaccesensordata.getData()[0], tmpaccesensordata.getData()[1]);
@@ -167,6 +176,7 @@ public class stabilize_v2_1 implements Runnable {
                     stastrokedeltabuffer = new ArrayList<sensordata>();
                     prevTime = 0;
                     prevStroke = null;
+                    tmp_prevStroke = null;
                     init = true;
                     toDraw = new ArrayList<stabilize_v3.Point>();
                     tmpaccesensordata = null;
@@ -181,6 +191,9 @@ public class stabilize_v2_1 implements Runnable {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
+                if (DemoDraw.drawing == 0) {
+                    orieninit = tmporiensensordata.getData();
+                }
                 Log.d(TAG, "getmessage");
                 if (tmpaccesensordata == null || Pos == null) {
                     return;
@@ -221,6 +234,7 @@ public class stabilize_v2_1 implements Runnable {
                     stastrokedeltabuffer = new ArrayList<sensordata>();
                     prevTime = 0;
                     prevStroke = null;
+                    tmp_prevStroke = null;
                     init = true;
                     toDraw = new ArrayList<stabilize_v3.Point>();
                     tmpaccesensordata = null;
@@ -282,22 +296,57 @@ public class stabilize_v2_1 implements Runnable {
                         //sumof stastrokedeltabuffer
                         prevStroke[0] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0];
                         prevStroke[1] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1];
+                        //prevStroke = bundle2sensordata(bundlegot).getData();
+
+
                         stastrokebuffer.add(new sensordata(stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getTime(), prevStroke));
+
+
+                        tmp_prevStroke[0] = strokebuffer.get(strokebuffer.size() - 1).getData()[0];
+                        tmp_prevStroke[1] = strokebuffer.get(strokebuffer.size() - 1).getData()[1];
                         //cal how far is fram prevStroke to finger(now)
                         float tofinger[] = new float[]{strokebuffer.get(strokebuffer.size() - 1).getData()[0] - prevStroke[0],
                                 strokebuffer.get(strokebuffer.size() - 1).getData()[1] - prevStroke[1]};
-                        toDraw = new ArrayList<stabilize_v3.Point>();
-                        for (sensordata msensordata : stastrokebuffer) {
-                            stabilize_v3.Point todrawPoint = new stabilize_v3.Point();
-                            todrawPoint.x = msensordata.getData()[0] + tofinger[0];
-                            todrawPoint.y = msensordata.getData()[1] + tofinger[1];
-                            Log.d(TAG, "todraw: " + todrawPoint.x + " " + todrawPoint.y);
 
+
+                        ArrayList<sensordata> r_stastrokebuffer = new ArrayList<>();
+                        for (int i = 0; i < stastrokebuffer.size(); i++) {
+                            sensordata tmp = new sensordata(strokebuffer.get(i));
+                            tmp.setData(new float[]{
+                                    stastrokebuffer.get(i).getData()[0] + tofinger[0],
+                                    stastrokebuffer.get(i).getData()[1] + tofinger[1]
+                            });
+                            r_stastrokebuffer.add(tmp);
+                        }
+
+                        rotateBuffer mrotateBuffer = new rotateBuffer();
+
+                        mrotateBuffer.rotateBuffer(r_stastrokebuffer, new float[]{
+                                0, 0, 0
+                        });
+
+
+                        toDraw = new ArrayList<stabilize_v3.Point>();
+                        Log.d("orien", String.valueOf(tmporiensensordata.getData()[2] - orieninit[2]));
+
+
+                        for (sensordata msensordata : mrotateBuffer.getRotated()) {
+                            stabilize_v3.Point todrawPoint = new stabilize_v3.Point();
+                            //float[] todrawArray = rotateInput(new float[]{msensordata.getData()[0],msensordata.getData()[1]},tmporiensensordata.getData()[2]-orieninit[2]);
+                            todrawPoint.x = msensordata.getData()[0];
+                            todrawPoint.y = msensordata.getData()[1];
+                            /*
+                            stabilize_v3.Point todrawPoint = new stabilize_v3.Point();
+                            todrawPoint.x = msensordata_r.getData()[0] + tofinger[0];
+                            todrawPoint.y = msensordata_r.getData()[1] + tofinger[1];*/
+                            Log.d(TAG, "todraw: " + todrawPoint.x + " " + todrawPoint.y);
                             //LogCSV("tmpaccesensordata.csv", String.valueOf(prevStroke[0]), String.valueOf(prevStroke[1]), "", "", "", "");
                             toDraw.add(todrawPoint);
                         }
+                        //toDraw = rotatePoints(toDraw);
                         bbox.set(toDraw);
                     } else {
+                        tmp_prevStroke = new float[]{0, 0};
                         prevStroke = new float[]{
                                 strokebuffer.get(0).getData()[0],
                                 strokebuffer.get(0).getData()[1]};
@@ -321,14 +370,23 @@ public class stabilize_v2_1 implements Runnable {
         Looper.loop();
     }
 
-    public sensordata rotateInput(sensordata msensordata, float deltaOrien_rad) {
-        double[][] rotationArray = {{Math.cos(Math.toDegrees(deltaOrien_rad)), -Math.sin(Math.toDegrees(deltaOrien_rad))}, {Math.sin(Math.toDegrees(deltaOrien_rad)), Math.cos(Math.toDegrees(deltaOrien_rad))}};
+    public List<stabilize_v3.Point> rotatePoints(List<stabilize_v3.Point> inputPoints) {
+        for (int i = 0; i < inputPoints.size(); i++) {
+            sensordata tmpsensordata = new sensordata(0, new float[]{inputPoints.get(i).x, inputPoints.get(i).y});
+            inputPoints.get(i).x = rotateInput(tmpsensordata.getData(), tmporiensensordata.getData()[2])[0];
+            inputPoints.get(i).y = rotateInput(tmpsensordata.getData(), tmporiensensordata.getData()[2])[1];
+        }
+        return inputPoints;
+    }
+
+    public float[] rotateInput(float[] inputData, float deltaOrien_rad) {
+        double[][] rotationArray = {{Math.cos(deltaOrien_rad), -Math.sin(deltaOrien_rad)}, {Math.sin(deltaOrien_rad), Math.cos(deltaOrien_rad)}};
         double[][] input = new double[1][2];
-        input[0][0] = msensordata.getData()[0];
-        input[0][1] = msensordata.getData()[1];
+        input[0][0] = inputData[0];
+        input[0][1] = inputData[1];
         double[][] result = multiplyByMatrix(input, rotationArray);
-        msensordata.setData(new float[]{(float) result[0][0], (float) result[0][1]});
-        return msensordata;
+
+        return new float[]{(float) result[0][0], (float) result[0][1]};
     }
 
     private void compare(ArrayList<sensordata> data1, ArrayList<sensordata> data2) {
@@ -498,6 +556,51 @@ public class stabilize_v2_1 implements Runnable {
 
         public void setY(float y) {
             this.y = y;
+        }
+    }
+
+    public class rotateBuffer {
+        ArrayList<sensordata> rotated = new ArrayList<>();
+
+        public void rotateBuffer(ArrayList<sensordata> msensordatabuffer, float[] rotateangle_rad) {
+            rotated = new ArrayList<>();
+            for (int i = 0; i < msensordatabuffer.size(); i++) {
+                Point tmpP = new Point(msensordatabuffer.get(i).getData()[0], msensordatabuffer.get(i).getData()[1]);
+                Point tmpP_cen = new Point(msensordatabuffer.get(msensordatabuffer.size() - 1).getData()[0], msensordatabuffer.get(msensordatabuffer.size() - 1).getData()[1]);
+                tmpP = rotate(tmpP, tmpP_cen, rotateangle_rad[2]);
+
+                sensordata tmpsensordata = new sensordata(msensordatabuffer.get(i));
+                tmpsensordata.setData(new float[]{
+                        tmpP.x, tmpP.y
+                });
+                rotated.add(tmpsensordata);
+            }
+        }
+
+        public ArrayList<sensordata> getRotated() {
+            return rotated;
+        }
+
+        public Point rotate(Point point, Point ard, float angle_rad) {
+            float x1 = point.x - ard.x;
+            float y1 = point.y - ard.y;
+
+            float x2 = (float) (x1 * Math.cos(angle_rad) - y1 * Math.sin(angle_rad));
+            float y2 = (float) (x1 * Math.sin(angle_rad) + y1 * Math.cos(angle_rad));
+
+            point.x = x2 + ard.x;
+            point.y = y2 + ard.y;
+            return point;
+        }
+
+        public class Point {
+            float x;
+            float y;
+
+            public Point(float x, float y) {
+                this.x = x;
+                this.y = y;
+            }
         }
     }
 

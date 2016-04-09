@@ -18,9 +18,9 @@ public class calRk4 {
     static final float NS2S = 1.0f / 1000000000.0f;
     public Position[] prevPosition = new Position[3];
     //init filters
-    filterSensorData filtercalRk4_ACCE = new filterSensorData(true, 10, 1, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false);
-    filterSensorData filtercalRk4_VELO = new filterSensorData(true, 1, 1, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false);
-    filterSensorData filtercalRk4_POSI = new filterSensorData(true, 10, 0.7f, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false);
+    filterSensorData filtercalRk4_ACCE = new filterSensorData(true, 10, 1, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, Float.MAX_VALUE);
+    filterSensorData filtercalRk4_VELO = new filterSensorData(true, 1, 0.7f, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, 0.05f);
+    filterSensorData filtercalRk4_POSI = new filterSensorData(true, 10, 0.7f, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, Float.MAX_VALUE);
 
     long last_timestamp = 0;
     private double prevPos;
@@ -47,16 +47,15 @@ public class calRk4 {
         Log.d("static?", String.valueOf(getAcceGyro.isStatic + " " + String.valueOf(DemoDraw2.drawing == 0)));
         //filter update
 
-        filtercalRk4_ACCE.paramUpdate(true, 10, 1, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false);
-        filtercalRk4_VELO.paramUpdate(true, 1, 1f, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false);
-        filtercalRk4_POSI.paramUpdate(true, 10, 0.7f, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false);
+        filtercalRk4_ACCE.paramUpdate(true, 10, 1, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, Float.MAX_VALUE);
+        filtercalRk4_VELO.paramUpdate(true, 1, 1f, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, 0.05f);
+        filtercalRk4_POSI.paramUpdate(true, 10, 0.7f, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, Float.MAX_VALUE);
         if (DemoDraw2.resetted == false) {
             Log.d("reset", String.valueOf(DemoDraw2.resetted));
             for (int i = 0; i < prevPosition.length; i++) {
                 prevPosition[i].v = 0;
                 prevPosition[i].pos = 0;
             }
-
             DemoDraw2.resetted = true;
         }
 
@@ -74,7 +73,7 @@ public class calRk4 {
         SensorCollect.sensordata toreturnsensordata = new SensorCollect.sensordata(msensordata.getTime(), toreurndata, SensorCollect.sensordata.TYPE.LOCA);
 
 
-        new LogCSV("RK73", "", new BigDecimal(msensordata.getTime()).toPlainString(),
+        new LogCSV("RK99", "", new BigDecimal(msensordata.getTime()).toPlainString(),
                 msensordata.getData()[0],
                 msensordata.getData()[1],
                 msensordata.getData()[2],

@@ -24,6 +24,7 @@ import java.util.List;
 public class DemoDraw2 extends View {
     private static final String TAG = "DemoDraw";
     public static boolean resetted = true;
+    public static boolean orienreset = false;
     public static int drawing = 3;
     public static Paint paint2 = new Paint();
     public static Path path2 = new Path();
@@ -88,6 +89,7 @@ public class DemoDraw2 extends View {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 resetted = false;
+                orienreset = false;
                 path.reset();
                 path2.reset();
                 path3.reset();

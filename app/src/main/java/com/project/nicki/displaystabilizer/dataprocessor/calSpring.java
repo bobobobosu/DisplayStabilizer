@@ -11,9 +11,9 @@ import java.util.List;
  */
 public class calSpring {
     //init filters
-    filterSensorData filtercalSpring_ACCE = new filterSensorData(true, 100, 1, 1, getAcceGyro.isStatic);
-    filterSensorData filtercalSpring_dPOS = new filterSensorData(true, 1, 1, 1, getAcceGyro.isStatic);
-    filterSensorData filtercalSpring_POSI = new filterSensorData(true, 100, 0.7f, 1, false);
+    filterSensorData filtercalSpring_ACCE = new filterSensorData(true, 100, 1, 1, getAcceGyro.isStatic, Float.MAX_VALUE);
+    filterSensorData filtercalSpring_dPOS = new filterSensorData(true, 1, 1, 1, getAcceGyro.isStatic, Float.MAX_VALUE);
+    filterSensorData filtercalSpring_POSI = new filterSensorData(true, 100, 0.7f, 1, false, Float.MAX_VALUE);
     float[] pos = new float[]{0, 0, 0};
     float[] dpos = new float[]{0, 0, 0};
     calEular mcalEular = new calEular();
