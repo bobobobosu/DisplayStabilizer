@@ -48,6 +48,7 @@ public class SensorCollect {
         if (msensordata.type == sensordata.TYPE.CAME) {
             CAMEstorage.add(msensordata);
         }
+        Log.d("TESTING", String.valueOf(msensordata.getTime()));
         motion_online.update(msensordata);
 
 

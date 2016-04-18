@@ -75,8 +75,8 @@ public class filterCollection {
     private float calculateAverage(List<Float> marks) {
         Float sum = 0f;
         if (!marks.isEmpty()) {
-            for (Float mark : marks) {
-                sum += mark;
+            for(int i =0;i<marks.size();i++){
+                sum += marks.get(i);
             }
             return sum.floatValue() / marks.size();
         }

@@ -1,1 +1,2 @@
 include ':app', ':dsp-collection', ':butterknife-7.0.1', ':opencsv-2.1-1.0.0', ':JKalman', ':commons-math3-3.6'
+include ':lipiTk'

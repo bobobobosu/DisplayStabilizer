@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
+import com.project.nicki.displaystabilizer.contentprovider.DemoDraw2;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali2;
 import com.project.nicki.displaystabilizer.init;
@@ -42,6 +43,7 @@ public class getAcceGyro implements Runnable {
     private Sensor mLSensor; //linear acce
     private Sensor mMSensor; //magn
     private Sensor mRSensor; //raw acce
+    private Sensor mMASensor;
     private SensorEventListener mSensorEventListener;
     private HandlerThread mHandlerThread;
     private String TAG = "getAcceGyro";
@@ -73,6 +75,7 @@ public class getAcceGyro implements Runnable {
         mLSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         mMSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         mRSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mMASensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         mHandlerThread = new HandlerThread("getAcceGyro");
         mHandlerThread.start();
 
@@ -101,7 +104,7 @@ public class getAcceGyro implements Runnable {
                 switch (event.sensor.getType()) {
                     case Sensor.TYPE_LINEAR_ACCELERATION:
                         isStatic = mstaticsensor.getStatic(event.values);
-                        if(DemoDraw.drawing==0 || DemoDraw.drawing==1){
+                        if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1){
                             mgetValusHT_ACCE_handler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -109,28 +112,33 @@ public class getAcceGyro implements Runnable {
                                 }
                             });
                         }
-
                 }
 
-                if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+                if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                     mGravity = event.values;
-                if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+                }
+                if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
                     mGeomagnetic = event.values;
+                }
                 if (mGravity != null && mGeomagnetic != null) {
+
                     float R[] = new float[9];
                     float I[] = new float[9];
                     boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
                     if (success) {
                         final float orientation[] = new float[3];
                         SensorManager.getOrientation(R, orientation);
-                        if(DemoDraw.drawing==0 || DemoDraw.drawing==1){
+                        if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1) {
                             mgetValusHT_ORIEN_handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), orientation, SensorCollect.sensordata.TYPE.ORIEN_radian));
+                                    Log.d("TESTING", String.valueOf(orientation));
+                                    init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), orientation, SensorCollect.sensordata.TYPE.ORIEN_radian));
                                 }
                             });
                         }
+                    }else {
+                        Log.d("TESTING", "error");
                     }
                 }
             }
@@ -146,6 +154,7 @@ public class getAcceGyro implements Runnable {
         mSensorManager.registerListener(mSensorEventListener, mLSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
         mSensorManager.registerListener(mSensorEventListener, mMSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
         mSensorManager.registerListener(mSensorEventListener, mRSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
+        mSensorManager.registerListener(mSensorEventListener, mMASensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
     }
 
     public void LogCSV(String a, String b, String c, String d, String g, String h) {

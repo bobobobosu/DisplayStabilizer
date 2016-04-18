@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,13 +16,19 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+
+import com.canvas.LipiTKJNIInterface;
+import com.canvas.LipitkResult;
+import com.canvas.Stroke;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2_1;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DemoDraw2 extends View {
+    public static int StrokeResultCount=0;
     private static final String TAG = "DemoDraw";
     public static boolean resetted = true;
     public static boolean orienreset = false;
@@ -37,6 +44,9 @@ public class DemoDraw2 extends View {
     public List<stabilize_v3.Point> incremental = new ArrayList<>();
     public Path path = new Path();
     protected Context mContext;
+    private LipiTKJNIInterface _lipitkInterface;
+    private LipiTKJNIInterface _recognizer = null;
+    public recognize_stroke mrecognize_stroke = new recognize_stroke();
 
     public DemoDraw2(Context context) {
         super(context);
@@ -44,7 +54,19 @@ public class DemoDraw2 extends View {
     }
 
     public DemoDraw2(Context context, AttributeSet attrs) {
+
         super(context, attrs);
+
+        //recognize
+        Context contextlipi = getContext();
+        File externalFileDir = contextlipi.getExternalFilesDir(null);
+        String path = externalFileDir.getPath();
+        Log.d("JNI", "Path: " + path);
+        _lipitkInterface = new LipiTKJNIInterface(path, "SHAPEREC_ALPHANUM");
+        _lipitkInterface.initialize();
+        _recognizer = _lipitkInterface;
+
+
         paint.setAntiAlias(true);
         paint.setStrokeWidth(5f);
         paint.setColor(Color.BLACK);
@@ -88,6 +110,7 @@ public class DemoDraw2 extends View {
         float eventY = event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                mrecognize_stroke.collect(event);
                 resetted = false;
                 orienreset = false;
                 path.reset();
@@ -98,11 +121,13 @@ public class DemoDraw2 extends View {
                 path.moveTo(eventX, eventY);
                 return true;
             case MotionEvent.ACTION_MOVE:
+                mrecognize_stroke.collect(event);
                 drawing = 1;
                 new passTouch(event);
                 path.lineTo(eventX, eventY);
                 break;
             case MotionEvent.ACTION_UP:
+                mrecognize_stroke.collect(event);
                 new passTouch(event);
                 drawing = 2;
                 // nothing to do
@@ -183,6 +208,43 @@ public class DemoDraw2 extends View {
             if (dataDRAWING[0] != 0 && dataDRAWING[1] != 0) {
                 stabilize_v2_1.getDraw.sendMessage(msgDRAWING);
             }
+        }
+    }
+
+    public class recognize_stroke {
+        private Stroke strokes = new Stroke();
+        private String[] character;
+
+        public void collect(MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                PointF p = new PointF(event.getX(), event.getY());
+                strokes.addPoint(p);
+            } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                PointF p = new PointF(event.getX(), event.getY());
+                strokes.addPoint(p);
+            } else if (event.getAction() == MotionEvent.ACTION_UP) {
+
+                PointF p = new PointF(event.getX(), event.getY());
+                strokes.addPoint(p);
+                recognize(strokes);
+                strokes = new Stroke();
+            }
+        }
+
+        private String[] recognize(Stroke _strokes) {
+
+            Stroke[] _recognitionStrokes = new Stroke[1];
+            _recognitionStrokes[0] = _strokes;
+            LipitkResult[] results = _recognizer.recognize(_recognitionStrokes);
+            String configFileDirectory = _recognizer.getLipiDirectory() + "/projects/alphanumeric/config/";
+            for (LipitkResult result : results) {
+                Log.e("jni",_recognizer.getSymbolName(results[0].Id, configFileDirectory) + " ShapeAID = " + result.Id + " Confidence = " + result.Confidence);
+            }
+
+            StrokeResultCount = results.length;
+
+            _recognitionStrokes = null;
+            return character;
         }
     }
 }

@@ -14,6 +14,7 @@ import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2_1;
+import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 
 import org.ejml.data.DenseMatrix64F;
 
