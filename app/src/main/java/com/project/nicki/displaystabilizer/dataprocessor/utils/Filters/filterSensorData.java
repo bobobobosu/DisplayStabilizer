@@ -1,5 +1,7 @@
 package com.project.nicki.displaystabilizer.dataprocessor.utils.Filters;
 
+import android.util.Log;
+
 /**
  * Created by nickisverygood on 3/6/2016.
  */
@@ -49,6 +51,7 @@ public class filterSensorData {
         //data = mfilterCollection.LowPassFilter(data, lowpass_alpha);
         data = mfilterCollection.StaticFilter(data, static_boo);
         //data = mfilterCollection.TooHighFilter(data,toohighfilter_thres);
+
         return data;
     }
     /*

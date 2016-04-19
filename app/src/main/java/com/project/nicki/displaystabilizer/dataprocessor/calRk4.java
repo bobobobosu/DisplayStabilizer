@@ -43,7 +43,6 @@ public class calRk4 {
 
     public SensorCollect.sensordata calc(SensorCollect.sensordata msensordata) {
 
-
         Log.d("static?", String.valueOf(getAcceGyro.isStatic + " " + String.valueOf(DemoDraw2.drawing == 0)));
         //filter update
 
@@ -61,8 +60,8 @@ public class calRk4 {
 
         //filter
         msensordata.setData(filtercalRk4_ACCE.filter(msensordata.getData()));
-        Log.d("debuggg", String.valueOf(msensordata.getData()[0]) + " " + getAcceGyro.isStatic);
 
+        Log.d("debuggg", String.valueOf(msensordata.getData()[0]) + " " + getAcceGyro.isStatic);
         float[] toreurndata =new float[msensordata.getData().length];
         for (int i = 0; i < prevPosition.length; i++) {
             prevPosition[i].pos = filtercalRk4_POSI.filter(new float[]{(float) prevPosition[0].pos, (float) prevPosition[1].pos, (float) prevPosition[2].pos})[i];

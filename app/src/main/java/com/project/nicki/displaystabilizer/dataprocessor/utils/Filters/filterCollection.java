@@ -63,7 +63,9 @@ public class filterCollection {
             if (rolling[i].size() < sample) {
                 rolling[i].add(data[i]);
             } else {
-                rolling[i].remove(0);
+                if (rolling.length > 0) {
+                    rolling[i].remove(0);
+                }
                 rolling[i].add(data[i]);
             }
             toreturn[i] = calculateAverage(rolling[i]);
@@ -73,14 +75,19 @@ public class filterCollection {
     }
 
     private float calculateAverage(List<Float> marks) {
-        Float sum = 0f;
-        if (!marks.isEmpty()) {
-            for(int i =0;i<marks.size();i++){
-                sum += marks.get(i);
+        if(marks.size()>0){
+            List<Float> clone = new ArrayList<>(marks);
+            float sum = 0;
+            for (Float mclone : clone) {
+                sum = sum + (mclone != null ? mclone :0);
             }
-            return sum.floatValue() / marks.size();
+
+            float average = sum / clone.size();
+            return average;
+        }else {
+            return 0f;
         }
-        return sum;
+
     }
 
     //StaticFilter

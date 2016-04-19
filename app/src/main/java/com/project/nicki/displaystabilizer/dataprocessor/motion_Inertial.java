@@ -62,14 +62,14 @@ public class motion_Inertial {
 
     public void update(SensorCollect.sensordata msensordata) {
         if (msensordata.getType() == SensorCollect.sensordata.TYPE.ACCE) {
-            if (ACCEstorage_online.size() > 2) {
+            if (ACCEstorage_online.size() > 1) {
                 ACCEstorage_online.remove(0);
             }
             ACCEstorage_online.add(msensordata);
 
         }
         if (msensordata.getType() == SensorCollect.sensordata.TYPE.ORIEN_radian) {
-            if (ORIENstorage_online.size() > 2) {
+            if (ORIENstorage_online.size() > 1) {
                 ORIENstorage_online.remove(0);
             }
             ORIENstorage_online.add(msensordata);
@@ -81,12 +81,12 @@ public class motion_Inertial {
             locationList_online.add(mcalRk4_online.calc(convertcorrPHN2WLD(ACCEstorage_online, ORIENstorage_online).get(0)));
         }
         try {
-            Log.d("TESTING",String.valueOf(ACCEstorage_online.size()+" "+ORIENstorage_online.size()));
-            Log.d("TESTING","YA");
-            Log.d("TESTING", String.valueOf(locationList_online.get(0).getData()[0]));
+            //Log.d("TESTING",String.valueOf(ACCEstorage_online.size()+" "+ORIENstorage_online.size()));
+            //Log.d("TESTING","YA");
+            //Log.d("TESTING", String.valueOf(locationList_online.get(0).getData()[0]));
         }catch (Exception ex){
-            Log.d("TESTING","ERROR");
-            Log.d("TESTING", String.valueOf(ex.toString()));
+            //Log.d("TESTING","ERROR");
+            //Log.d("TESTING", String.valueOf(ex.toString()));
         }
     }
 
@@ -106,8 +106,8 @@ public class motion_Inertial {
             if (i < msensordataORIENList.size()) {
                 Matrix3D rotMatrix = new Matrix3D();
                 rotMatrix.rotateX((double) (Math.toDegrees(msensordataORIENList_algnd.get(i).getData()[0] - initOrientation[0])));
-                rotMatrix.rotateY((double) (Math.toDegrees(msensordataORIENList_algnd.get(i).getData()[0] - initOrientation[0])));
-                rotMatrix.rotateZ((double) (Math.toDegrees(msensordataORIENList_algnd.get(i).getData()[0] - initOrientation[0])));
+                rotMatrix.rotateY((double) (Math.toDegrees(msensordataORIENList_algnd.get(i).getData()[1] - initOrientation[1])));
+                rotMatrix.rotateZ((double) (Math.toDegrees(msensordataORIENList_algnd.get(i).getData()[2] - initOrientation[2])));
                 double[][] rotMatrixArray = new double[4][4];
                 for (int k = 0; k < 4; k++) {
                     for (int j = 0; j < 4; j++) {
@@ -117,8 +117,8 @@ public class motion_Inertial {
 
                 float[][] result = toFloatArray(MatMultiply.multiplyByMatrix(rotMatrixArray, new double[][]{
                         {(double) msensordataACCEList_phone.get(i).getData()[0]},
-                        {(double) msensordataACCEList_phone.get(i).getData()[0]},
-                        {(double) msensordataACCEList_phone.get(i).getData()[0]},
+                        {(double) msensordataACCEList_phone.get(i).getData()[1]},
+                        {(double) msensordataACCEList_phone.get(i).getData()[2]},
                         {1}
                 }));
                 float[] data = new float[]{result[0][0], result[1][0], result[2][0]};

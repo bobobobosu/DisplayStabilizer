@@ -104,14 +104,14 @@ public class getAcceGyro implements Runnable {
                 switch (event.sensor.getType()) {
                     case Sensor.TYPE_LINEAR_ACCELERATION:
                         isStatic = mstaticsensor.getStatic(event.values);
-                        if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1){
+                        //if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1){
                             mgetValusHT_ACCE_handler.post(new Runnable() {
                                 @Override
                                 public void run() {
                                     init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), event.values, SensorCollect.sensordata.TYPE.ACCE));
                                 }
                             });
-                        }
+                        //}
                 }
 
                 if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
@@ -128,15 +128,14 @@ public class getAcceGyro implements Runnable {
                     if (success) {
                         final float orientation[] = new float[3];
                         SensorManager.getOrientation(R, orientation);
-                        if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1) {
+                        //if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1) {
                             mgetValusHT_ORIEN_handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    Log.d("TESTING", String.valueOf(orientation));
                                     init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), orientation, SensorCollect.sensordata.TYPE.ORIEN_radian));
                                 }
                             });
-                        }
+                        //}
                     }else {
                         Log.d("TESTING", "error");
                     }

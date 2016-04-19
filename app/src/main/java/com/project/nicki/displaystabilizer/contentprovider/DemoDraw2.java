@@ -20,12 +20,16 @@ import android.view.View;
 import com.canvas.LipiTKJNIInterface;
 import com.canvas.LipitkResult;
 import com.canvas.Stroke;
+import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
+import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2_1;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.project.nicki.displaystabilizer.stabilization.stabilize_v3.stabilize.getStabilized;
 
 public class DemoDraw2 extends View {
     public static int StrokeResultCount=0;
@@ -98,18 +102,30 @@ public class DemoDraw2 extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         Log.d(TAG, String.valueOf(stabilize_v2_1.toDraw.size()));
-        drawCanvas(canvas, stabilize_v2_1.toDraw);
-        canvas.drawPath(path, paint);
-        canvas.drawPath(path2, paint2);
+        if (drawing < 2) {
+            Log.e("TESTING", String.valueOf("draw "+drawing));
+            drawCanvas(canvas, stabilize_v3.stabilize.getStabilized("Online"));
+        }
+
+        //drawCanvas(canvas, stabilize_v2_1.toDraw);
+        //canvas.drawPath(path, paint);
+        //canvas.drawPath(path2, paint2);
     }
 
 
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
-        float eventX = event.getX();
-        float eventY = event.getY();
+        final float eventX = event.getX();
+        final float eventY = event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                getAcceGyro.mgetValusHT_TOUCH_handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        stabilize_v3.stabilize.createSession();
+                        stabilize_v3.stabilize.mstabilizeSession.setTouchList(new SensorCollect.sensordata(System.currentTimeMillis(), new float[]{eventX, eventY, 0}, SensorCollect.sensordata.TYPE.TOUCH));
+                    }
+                });
                 mrecognize_stroke.collect(event);
                 resetted = false;
                 orienreset = false;
@@ -121,12 +137,19 @@ public class DemoDraw2 extends View {
                 path.moveTo(eventX, eventY);
                 return true;
             case MotionEvent.ACTION_MOVE:
+                getAcceGyro.mgetValusHT_TOUCH_handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        stabilize_v3.stabilize.mstabilizeSession.setTouchList(new SensorCollect.sensordata(System.currentTimeMillis(), new float[]{eventX, eventY, 0}, SensorCollect.sensordata.TYPE.TOUCH));
+                    }
+                });
                 mrecognize_stroke.collect(event);
                 drawing = 1;
                 new passTouch(event);
                 path.lineTo(eventX, eventY);
                 break;
             case MotionEvent.ACTION_UP:
+
                 mrecognize_stroke.collect(event);
                 new passTouch(event);
                 drawing = 2;
