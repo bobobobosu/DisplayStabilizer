@@ -52,22 +52,24 @@ public class filterCollection {
     }
 
     public float[] MovingAvgFilter(float[] data, int sample) {
-        if (rolling == null) {
-            rolling = (ArrayList<Float>[]) new ArrayList[data.length];
+        List<Float>[]  mrolling = rolling.clone();
+        if (mrolling == null) {
+            mrolling = (ArrayList<Float>[]) new ArrayList[data.length];
             for (int i = 0; i < data.length; i++) {
-                rolling[i] = new ArrayList<>();
+                mrolling[i] = new ArrayList<>();
             }
         }
         float[] toreturn = new float[data.length];
         for (int i = 0; i < data.length; i++) {
-            if (rolling[i].size() < sample) {
-                rolling[i].add(data[i]);
+            if (mrolling[i].size() < sample) {
+                mrolling[i].add(data[i]);
             } else {
-                if (rolling.length > 0) {
-                    rolling[i].remove(0);
+                if (mrolling.length > 0) {
+                    mrolling[i].remove(0);
                 }
-                rolling[i].add(data[i]);
+                mrolling[i].add(data[i]);
             }
+            rolling =mrolling;
             toreturn[i] = calculateAverage(rolling[i]);
         }
 

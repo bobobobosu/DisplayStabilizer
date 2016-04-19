@@ -55,7 +55,7 @@ public class stabilize_v3 {
                 } else {
                     OnlineTouchList.add(mTouchsensordata);
                 }
-
+                getStabilized("Online");
             }
 
             public List<sensordata> getOnlineLocationList() {

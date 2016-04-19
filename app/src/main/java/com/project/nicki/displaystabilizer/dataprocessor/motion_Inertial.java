@@ -98,8 +98,9 @@ public class motion_Inertial {
         return mcalRk4_offline.calcList(convertcorrPHN2WLD(ACCEList, ORIENList));
     }
 
-    public List<SensorCollect.sensordata> convertcorrPHN2WLD(List<SensorCollect.sensordata> msensordataACCEList_phone, List<SensorCollect.sensordata> msensordataORIENList) {
+    public List<SensorCollect.sensordata> convertcorrPHN2WLD(List<SensorCollect.sensordata> sensordataACCEList_phone, List<SensorCollect.sensordata> msensordataORIENList) {
         List<SensorCollect.sensordata> msensordata_worldList = new ArrayList<>();
+        List<SensorCollect.sensordata> msensordataACCEList_phone = new ArrayList<>(sensordataACCEList_phone);
         List<SensorCollect.sensordata> msensordataORIENList_algnd = new ArrayList<>(alignListbyTime(msensordataACCEList_phone, msensordataORIENList));
         Log.d("convertcorrPHN2WLD",msensordataACCEList_phone.size()+" "+msensordataORIENList_algnd.size());
         for (int i = 0; i < msensordataACCEList_phone.size() && i < msensordataACCEList_phone.size(); i++) {
