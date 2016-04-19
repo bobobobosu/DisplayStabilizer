@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.util.StringTokenizer;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by nickisverygood on 3/6/2016.
@@ -39,23 +40,35 @@ public class stabilize_v3 {
             public List<sensordata> OnlineTouchList = new ArrayList<>();
             //tmps
             List<Point> tmpPoint = new ArrayList<>();
+            //RESULTS
+            public List<Point> todraw = new ArrayList<>();
+
 
             public stabilizeSession() {
                 init.initSensorCollection = new SensorCollect();
                 tmpPoint = new ArrayList<>();
             }
 
+            public void updateToDraw(String mode){
+                if(mode == "Online"){
+                    todraw = getStabilized("Online");
+                }else if(mode=="Offline"){
+                    todraw = getStabilized("Offline");
+                }
+
+            }
             public void setTouchList(sensordata mTouchsensordata) {
                 OfflineTouchList.add(mTouchsensordata);
 
                 if (OnlineTouchList.size() > 0) {
                     OnlineTouchList = new ArrayList<>();
                     OnlineTouchList.add(mTouchsensordata);
-
                 } else {
                     OnlineTouchList.add(mTouchsensordata);
                 }
-                getStabilized("Online");
+
+                updateToDraw("Online");
+
             }
 
             public List<sensordata> getOnlineLocationList() {
@@ -124,68 +137,75 @@ public class stabilize_v3 {
             List<sensordata> mInertialOrientationList = mstabilizeSession.getOfflinOrientationList();
             List<sensordata> mTouchList = mstabilizeSession.OnlineTouchList;
             mstabilizeSession.tmpPoint.addAll(stabilizedPoint(mLocationList, mInertialOrientationList, mTouchList));
-            new LogCSV("Online1","",new BigDecimal(mLocationList.get(mLocationList.size()-1).getTime()).toPlainString(),
-                    mstabilizeSession.tmpPoint.get(mstabilizeSession.tmpPoint.size()-1).x,
-                    mstabilizeSession.tmpPoint.get(mstabilizeSession.tmpPoint.size()-1).y);
+            //new LogCSV("Online1","",new BigDecimal(mLocationList.get(mLocationList.size()-1).getTime()).toPlainString(),
+            //        mstabilizeSession.tmpPoint.get(mstabilizeSession.tmpPoint.size()-1).x,
+            //        mstabilizeSession.tmpPoint.get(mstabilizeSession.tmpPoint.size()-1).y);
             return mstabilizeSession.tmpPoint;
         }
 
         private static List<Point> stabilizedPoint(List<sensordata> mLocationList, List<sensordata> mInertialOrientationList, List<sensordata> mTouchList) {
-
             List<sensordata> sync_mLocationList = new ArrayList<>();
             List<sensordata> sync_InertialOrientationList = new ArrayList<>();
             List<Point> stabilizedPointList = new ArrayList<>();
+            try {
 
-            Log.d("debug1", String.valueOf(mLocationList.get(0).getTime()));
-            for (int i = 0; i < mTouchList.size(); i++) {
-                sync_mLocationList.add(new motion_Inertial().getbyTime(mTouchList.get(i).getTime(), mLocationList));
-                sync_InertialOrientationList.add(new motion_Inertial().getbyTime(mTouchList.get(i).getTime(), mInertialOrientationList));
-            }
-            int num_mTouchList = mTouchList.size();
-            while (sync_mLocationList.size() < num_mTouchList) {
-                sync_mLocationList.add(sync_mLocationList.get(sync_mLocationList.size() - 1));
-            }
-            while (sync_InertialOrientationList.size() < num_mTouchList) {
-                sync_InertialOrientationList.add(sync_InertialOrientationList.get(sync_InertialOrientationList.size() - 1));
-            }
-            while (sync_mLocationList.size() > num_mTouchList) {
-                sync_mLocationList.remove(0);
-            }
-            while (sync_InertialOrientationList.size() > num_mTouchList) {
-                sync_InertialOrientationList.remove(0);
-            }
-            for (int i = 0; i < mTouchList.size(); i++) {
-                //construct 2d transfomation
-                Vector3D mVec = new Vector3D();
-                Matrix3D mMatrix = new Matrix3D();
-                String Coefficient = "1";
-                mVec.set(
-                        multiply(20, double2String(-sync_mLocationList.get(i).getData()[0]), Coefficient).doubleValue(),
-                        multiply(20, double2String(-sync_mLocationList.get(i).getData()[1]), Coefficient).doubleValue(),
-                        multiply(20, double2String(-sync_mLocationList.get(i).getData()[2]), Coefficient).doubleValue());
-                mMatrix.translate(mVec);
-                mMatrix.rotateX(-sync_InertialOrientationList.get(i).getData()[0]);
-                mMatrix.rotateY(-sync_InertialOrientationList.get(i).getData()[1]);
-                mMatrix.rotateZ(-sync_InertialOrientationList.get(i).getData()[2]);
-                double[][] _rotMatrixArray = new double[4][4];
-                for (int k = 0; k < 4; k++) {
-                    for (int j = 0; j < 4; j++) {
-                        _rotMatrixArray[k][j] = (double) mMatrix.get(k).get(j);
-                    }
+                Log.d("debug1", String.valueOf(mLocationList.get(0).getTime()));
+                for (int i = 0; i < mTouchList.size(); i++) {
+                    sync_mLocationList.add(new motion_Inertial().getbyTime(mTouchList.get(i).getTime(), mLocationList));
+                    sync_InertialOrientationList.add(new motion_Inertial().getbyTime(mTouchList.get(i).getTime(), mInertialOrientationList));
                 }
-                float[][] _result = new motion_Inertial().toFloatArray(MatMultiply.multiplyByMatrix(_rotMatrixArray, new double[][]{
-                        {(double) mTouchList.get(i).getData()[0]},
-                        {(double) mTouchList.get(i).getData()[1]},
-                        {(double) mTouchList.get(i).getData()[2]},
-                        {1}
-                }));
-                Point addPoint = new Point();
-                addPoint.setX(mTouchList.get(i).getData()[0] + 100);
-                addPoint.setY(mTouchList.get(i).getData()[1] + 100);
-                stabilizedPointList.add(addPoint);
+                int num_mTouchList = mTouchList.size();
+                while (sync_mLocationList.size() < num_mTouchList) {
+                    sync_mLocationList.add(sync_mLocationList.get(sync_mLocationList.size() - 1));
+                }
+                while (sync_InertialOrientationList.size() < num_mTouchList) {
+                    sync_InertialOrientationList.add(sync_InertialOrientationList.get(sync_InertialOrientationList.size() - 1));
+                }
+                while (sync_mLocationList.size() > num_mTouchList) {
+                    sync_mLocationList.remove(0);
+                }
+                while (sync_InertialOrientationList.size() > num_mTouchList) {
+                    sync_InertialOrientationList.remove(0);
+                }
+                for (int i = 0; i < mTouchList.size(); i++) {
+                    /*
+                    //construct 2d transfomation
+                    Vector3D mVec = new Vector3D();
+                    Matrix3D mMatrix = new Matrix3D();
+                    String Coefficient = "1";
+                    mVec.set(
+                            multiply(20, double2String(-sync_mLocationList.get(i).getData()[0]), Coefficient).doubleValue(),
+                            multiply(20, double2String(-sync_mLocationList.get(i).getData()[1]), Coefficient).doubleValue(),
+                            multiply(20, double2String(-sync_mLocationList.get(i).getData()[2]), Coefficient).doubleValue());
+                    mMatrix.translate(mVec);
+                    mMatrix.rotateX(-sync_InertialOrientationList.get(i).getData()[0]);
+                    mMatrix.rotateY(-sync_InertialOrientationList.get(i).getData()[1]);
+                    mMatrix.rotateZ(-sync_InertialOrientationList.get(i).getData()[2]);
+                    double[][] _rotMatrixArray = new double[4][4];
+                    for (int k = 0; k < 4; k++) {
+                        for (int j = 0; j < 4; j++) {
+                            _rotMatrixArray[k][j] = (double) mMatrix.get(k).get(j);
+                        }
+                    }
+                    float[][] _result = new motion_Inertial().toFloatArray(MatMultiply.multiplyByMatrix(_rotMatrixArray, new double[][]{
+                            {(double) mTouchList.get(i).getData()[0]},
+                            {(double) mTouchList.get(i).getData()[1]},
+                            {(double) mTouchList.get(i).getData()[2]},
+                            {1}
+                    }));
+                    */
+                    Point addPoint = new Point();
+                    addPoint.setX(mTouchList.get(i).getData()[0] + 100);
+                    addPoint.setY(mTouchList.get(i).getData()[1] + 100);
+                    stabilizedPointList.add(addPoint);
+                    Log.e("TESTING", String.valueOf(mTouchList.get(mTouchList.size()-1).getData()[0]));
 
+                }
+                return stabilizedPointList;
+            }catch (Exception ex){
+                Log.e("stabilizedPoint", String.valueOf(ex));
+                return stabilizedPointList;
             }
-            return stabilizedPointList;
         }
     }
 

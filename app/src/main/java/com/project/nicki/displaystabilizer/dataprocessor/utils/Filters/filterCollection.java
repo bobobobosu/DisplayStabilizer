@@ -52,28 +52,32 @@ public class filterCollection {
     }
 
     public float[] MovingAvgFilter(float[] data, int sample) {
-        List<Float>[]  mrolling = rolling.clone();
-        if (mrolling == null) {
-            mrolling = (ArrayList<Float>[]) new ArrayList[data.length];
-            for (int i = 0; i < data.length; i++) {
-                mrolling[i] = new ArrayList<>();
-            }
-        }
-        float[] toreturn = new float[data.length];
-        for (int i = 0; i < data.length; i++) {
-            if (mrolling[i].size() < sample) {
-                mrolling[i].add(data[i]);
-            } else {
-                if (mrolling.length > 0) {
-                    mrolling[i].remove(0);
+        if (rolling != null && rolling.length>0) {
+            List<Float>[] mrolling = rolling.clone();
+            if (mrolling == null) {
+                mrolling = (ArrayList<Float>[]) new ArrayList[data.length];
+                for (int i = 0; i < data.length; i++) {
+                    mrolling[i] = new ArrayList<>();
                 }
-                mrolling[i].add(data[i]);
             }
-            rolling =mrolling;
-            toreturn[i] = calculateAverage(rolling[i]);
+            float[] toreturn = new float[data.length];
+            for (int i = 0; i < data.length; i++) {
+                if (mrolling[i].size() < sample) {
+                    mrolling[i].add(data[i]);
+                } else {
+                    if (mrolling.length > 0) {
+                        mrolling[i].remove(0);
+                    }
+                    mrolling[i].add(data[i]);
+                }
+                rolling = mrolling;
+                toreturn[i] = calculateAverage(rolling[i]);
+            }
+            return toreturn;
+        }else {
+            return  data;
         }
 
-        return toreturn;
     }
 
     private float calculateAverage(List<Float> marks) {

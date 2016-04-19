@@ -67,8 +67,12 @@ public class init extends AppCompatActivity {
         //new Thread(new stabilize_v1(getBaseContext())).start();
 
 
-        //new Thread(new stabilize_v2_1(getBaseContext())).start();
-        new Thread(new getAcceGyro(getBaseContext())).start();
+        new Thread(new stabilize_v2_1(getBaseContext())).start();
+        try {
+            new Thread(new getAcceGyro(getBaseContext())).start();
+        }catch (Exception ex){
+            Log.e("init", String.valueOf(ex));
+        }
         Intent goto_DemoDrawUI2 = new Intent();
         overridePendingTransition(0, 0);
         goto_DemoDrawUI2.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);

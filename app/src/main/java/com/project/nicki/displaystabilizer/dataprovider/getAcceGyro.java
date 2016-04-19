@@ -105,12 +105,12 @@ public class getAcceGyro implements Runnable {
                     case Sensor.TYPE_LINEAR_ACCELERATION:
                         isStatic = mstaticsensor.getStatic(event.values);
                         //if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1){
-                            mgetValusHT_ACCE_handler.post(new Runnable() {
-                                @Override
-                                public void run() {
+                            //mgetValusHT_ACCE_handler.post(new Runnable() {
+                                //@Override
+                                //public void run() {
                                     init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), event.values, SensorCollect.sensordata.TYPE.ACCE));
-                                }
-                            });
+                                //}
+                            //});
                         //}
                 }
 
@@ -129,12 +129,12 @@ public class getAcceGyro implements Runnable {
                         final float orientation[] = new float[3];
                         SensorManager.getOrientation(R, orientation);
                         //if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1) {
-                            mgetValusHT_ORIEN_handler.post(new Runnable() {
-                                @Override
-                                public void run() {
+                            //mgetValusHT_ORIEN_handler.post(new Runnable() {
+                                //@Override
+                                //public void run() {
                                     init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), orientation, SensorCollect.sensordata.TYPE.ORIEN_radian));
-                                }
-                            });
+                                //}
+                            //});
                         //}
                     }else {
                         Log.d("TESTING", "error");
