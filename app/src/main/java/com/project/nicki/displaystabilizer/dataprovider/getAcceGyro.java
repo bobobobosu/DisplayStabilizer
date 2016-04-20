@@ -108,7 +108,7 @@ public class getAcceGyro implements Runnable {
                             //mgetValusHT_ACCE_handler.post(new Runnable() {
                                 //@Override
                                 //public void run() {
-                                    init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), event.values, SensorCollect.sensordata.TYPE.ACCE));
+                                    //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), event.values, SensorCollect.sensordata.TYPE.ACCE));
                                 //}
                             //});
                         //}
@@ -132,7 +132,7 @@ public class getAcceGyro implements Runnable {
                             //mgetValusHT_ORIEN_handler.post(new Runnable() {
                                 //@Override
                                 //public void run() {
-                                    init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), orientation, SensorCollect.sensordata.TYPE.ORIEN_radian));
+                                    //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), orientation, SensorCollect.sensordata.TYPE.ORIEN_radian));
                                 //}
                             //});
                         //}

@@ -104,11 +104,11 @@ public class DemoDraw2 extends View {
     protected void onDraw(Canvas canvas) {
         Log.d(TAG, String.valueOf(stabilize_v2_1.toDraw.size()));
         if(drawing==1 || drawing==0){
-           drawCanvas(canvas, stabilize_v3.stabilize.mstabilizeSession.todraw);
+           //drawCanvas(canvas, stabilize_v3.stabilize.mstabilizeSession.todraw);
         }
-        //drawCanvas(canvas, stabilize_v2_1.toDraw);
-        //canvas.drawPath(path, paint);
-        //canvas.drawPath(path2, paint2);
+        drawCanvas(canvas, stabilize_v2_1.toDraw);
+        canvas.drawPath(path, paint);
+        canvas.drawPath(path2, paint2);
     }
 
 
@@ -238,7 +238,7 @@ public class DemoDraw2 extends View {
             drawposBundleDRAWING.putLong("Time", currTimeDRAWING);
             msgDRAWING.setData(drawposBundleDRAWING);
             if (dataDRAWING[0] != 0 && dataDRAWING[1] != 0) {
-                //stabilize_v2_1.getDraw.sendMessage(msgDRAWING);
+                stabilize_v2_1.getDraw.sendMessage(msgDRAWING);
             }
         }
     }

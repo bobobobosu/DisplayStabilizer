@@ -52,48 +52,35 @@ public class filterCollection {
     }
 
     public float[] MovingAvgFilter(float[] data, int sample) {
-        if (rolling != null && rolling.length>0) {
-            List<Float>[] mrolling = rolling.clone();
-            if (mrolling == null) {
-                mrolling = (ArrayList<Float>[]) new ArrayList[data.length];
-                for (int i = 0; i < data.length; i++) {
-                    mrolling[i] = new ArrayList<>();
-                }
-            }
-            float[] toreturn = new float[data.length];
+        if (rolling == null) {
+            rolling = (ArrayList<Float>[]) new ArrayList[data.length];
             for (int i = 0; i < data.length; i++) {
-                if (mrolling[i].size() < sample) {
-                    mrolling[i].add(data[i]);
-                } else {
-                    if (mrolling.length > 0) {
-                        mrolling[i].remove(0);
-                    }
-                    mrolling[i].add(data[i]);
-                }
-                rolling = mrolling;
-                toreturn[i] = calculateAverage(rolling[i]);
+                rolling[i] = new ArrayList<>();
             }
-            return toreturn;
-        }else {
-            return  data;
+        }
+        float[] toreturn = new float[data.length];
+        for (int i = 0; i < data.length; i++) {
+            if (rolling[i].size() < sample) {
+                rolling[i].add(data[i]);
+            } else {
+                rolling[i].remove(0);
+                rolling[i].add(data[i]);
+            }
+            toreturn[i] = calculateAverage(rolling[i]);
         }
 
+        return toreturn;
     }
 
     private float calculateAverage(List<Float> marks) {
-        if(marks.size()>0){
-            List<Float> clone = new ArrayList<>(marks);
-            float sum = 0;
-            for (Float mclone : clone) {
-                sum = sum + (mclone != null ? mclone :0);
+        Float sum = 0f;
+        if (!marks.isEmpty()) {
+            for (Float mark : marks) {
+                sum += mark;
             }
-
-            float average = sum / clone.size();
-            return average;
-        }else {
-            return 0f;
+            return sum.floatValue() / marks.size();
         }
-
+        return sum;
     }
 
     //StaticFilter
