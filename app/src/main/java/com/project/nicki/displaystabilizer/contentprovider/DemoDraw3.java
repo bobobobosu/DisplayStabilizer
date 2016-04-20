@@ -1,15 +1,14 @@
 package com.project.nicki.displaystabilizer.contentprovider;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.Rect;
-import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -20,23 +19,18 @@ import android.view.View;
 import com.canvas.LipiTKJNIInterface;
 import com.canvas.LipitkResult;
 import com.canvas.Stroke;
-import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
-import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
-import com.project.nicki.displaystabilizer.stabilization.stabilize_v2_1;
+import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3_1;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.RunnableFuture;
 
-import static com.project.nicki.displaystabilizer.stabilization.stabilize_v3.stabilize.getStabilized;
+public class DemoDraw3 extends View {
 
-public class DemoDraw2 extends View {
     public static int StrokeResultCount=0;
     private static final String TAG = "DemoDraw";
-    public static boolean resetted = true;
     public static boolean orienreset = false;
     public static int drawing = 3;
     public static Paint paint2 = new Paint();
@@ -46,7 +40,6 @@ public class DemoDraw2 extends View {
     public static Handler mhandler;
     public static Paint paint = new Paint();
     public static Paint paint3 = new Paint();
-    public static int rectX, rectY, sideLength;
     public List<stabilize_v3.Point> incremental = new ArrayList<>();
     public Path path = new Path();
     protected Context mContext;
@@ -54,12 +47,12 @@ public class DemoDraw2 extends View {
     private LipiTKJNIInterface _recognizer = null;
     public recognize_stroke mrecognize_stroke = new recognize_stroke();
 
-    public DemoDraw2(Context context) {
+    public DemoDraw3(Context context) {
         super(context);
         this.mContext = context.getApplicationContext();
     }
 
-    public DemoDraw2(Context context, AttributeSet attrs) {
+    public DemoDraw3(Context context, AttributeSet attrs) {
 
         super(context, attrs);
 
@@ -67,7 +60,6 @@ public class DemoDraw2 extends View {
         Context contextlipi = getContext();
         File externalFileDir = contextlipi.getExternalFilesDir(null);
         String path = externalFileDir.getPath();
-        Log.d("JNI", "Path: " + path);
         _lipitkInterface = new LipiTKJNIInterface(path, "SHAPEREC_ALPHANUM");
         _lipitkInterface.initialize();
         _recognizer = _lipitkInterface;
@@ -104,7 +96,7 @@ public class DemoDraw2 extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         if(drawing==1 || drawing==0){
-           //drawCanvas(canvas, stabilize_v3.stabilize.mstabilizeSession.todraw);
+            //drawCanvas(canvas, stabilize_v3.stabilize.mstabilizeSession.todraw);
         }
         drawCanvas(canvas, stabilize_v3_1.toDraw);
         canvas.drawPath(path, paint);
@@ -118,15 +110,6 @@ public class DemoDraw2 extends View {
         final float eventY = event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        stabilize_v3.stabilize.createSession();
-                        stabilize_v3.stabilize.mstabilizeSession.setTouchList(new SensorCollect.sensordata(System.currentTimeMillis(), new float[]{eventX, eventY, 0}, SensorCollect.sensordata.TYPE.TOUCH));
-                    }
-                }).start();
-
-                mrecognize_stroke.collect(event);
                 //resetted = false;
                 orienreset = false;
                 //path.reset();
@@ -137,32 +120,13 @@ public class DemoDraw2 extends View {
                 path.moveTo(eventX, eventY);
                 return true;
             case MotionEvent.ACTION_MOVE:
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        stabilize_v3.stabilize.mstabilizeSession.setTouchList(new SensorCollect.sensordata(System.currentTimeMillis(), new float[]{eventX, eventY, 0}, SensorCollect.sensordata.TYPE.TOUCH));
-                    }
-                }).start();
-                mrecognize_stroke.collect(event);
                 drawing = 1;
                 new passTouch(event);
                 path.lineTo(eventX, eventY);
                 break;
             case MotionEvent.ACTION_UP:
-
-                mrecognize_stroke.collect(event);
                 new passTouch(event);
                 drawing = 2;
-                // nothing to do
-                Thread r = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        stabilize_v3.stabilize.getStabilized("Offline");
-                    }
-                });
-                r.start();
-
-
                 break;
             default:
                 drawing = 3;
@@ -219,27 +183,11 @@ public class DemoDraw2 extends View {
         }
     }
 
-    private void drawBitmap(Bitmap bmp, List<stabilize_v3.Point> pts) {
-        Canvas c = new Canvas(bmp);
-        drawCanvas(c, pts);
-    }
+    //pass touch
+    public class passTouch {
+        public passTouch(final MotionEvent event) {
+            init.initTouchCollection.setTouch(event);
 
-    public static class passTouch {
-        public passTouch(MotionEvent event) {
-            Message msgDRAWING = new Message();
-            msgDRAWING.what = 1;
-            msgDRAWING.arg1 = 0;
-            float[] dataDRAWING = new float[2];
-            long currTimeDRAWING = System.currentTimeMillis();
-            Bundle drawposBundleDRAWING = new Bundle();
-            dataDRAWING[0] = event.getX();
-            dataDRAWING[1] = event.getY();
-            drawposBundleDRAWING.putFloatArray("Draw", dataDRAWING);
-            drawposBundleDRAWING.putLong("Time", currTimeDRAWING);
-            msgDRAWING.setData(drawposBundleDRAWING);
-            if (dataDRAWING[0] != 0 && dataDRAWING[1] != 0) {
-                stabilize_v3_1.getDraw.sendMessage(msgDRAWING);
-            }
         }
     }
 

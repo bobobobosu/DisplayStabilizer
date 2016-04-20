@@ -178,7 +178,7 @@ public class stabilize_v2_1 implements Runnable {
                     prevStroke = null;
                     tmp_prevStroke = null;
                     init = true;
-                    toDraw = new ArrayList<stabilize_v3.Point>();
+                    //toDraw = new ArrayList<stabilize_v3.Point>();
                     tmpaccesensordata = null;
                     deltaingStatus = 0;
                 }

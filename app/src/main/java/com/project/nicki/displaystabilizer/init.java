@@ -10,11 +10,15 @@ import android.util.Log;
 import android.view.Display;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI2;
+import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_main0;
+import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_settings0;
+import com.project.nicki.displaystabilizer.contentprovider.utils.TouchCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2_1;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
+import com.project.nicki.displaystabilizer.stabilization.stabilize_v3_1;
 
 import org.ejml.data.DenseMatrix64F;
 
@@ -24,18 +28,16 @@ public class init extends AppCompatActivity {
 
     //Static Classes
     public static SensorCollect initSensorCollection = new SensorCollect();
+    public static TouchCollect initTouchCollection = new TouchCollect();
+    public static stabilize_v3_1 initStabilize = new stabilize_v3_1();
 
 
-    public static double xdpc;
-    public static double ydpc;
+
     public static double widthm, heightcm, widthpix, heightpix, pix2m;
     String TAG = "init";
-    double g = 9.806-(1/2)*(9.832-9.780)*Math.cos(2*25.048212*Math.PI/180);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        SensorCollect.sensordata a = new SensorCollect.sensordata(System.currentTimeMillis(),new float[]{0,0,0},SensorCollect.sensordata.TYPE.ACCE);
         Log.d(TAG, "");
 
         DisplayMetrics dm = new DisplayMetrics();
@@ -67,18 +69,31 @@ public class init extends AppCompatActivity {
         //new Thread(new stabilize_v1(getBaseContext())).start();
 
 
-        new Thread(new stabilize_v2_1(getBaseContext())).start();
+        //new Thread(new stabilize_v3_1(getBaseContext())).start();
         try {
             new Thread(new getAcceGyro(getBaseContext())).start();
         }catch (Exception ex){
             Log.e("init", String.valueOf(ex));
         }
+        /*
         Intent goto_DemoDrawUI2 = new Intent();
         overridePendingTransition(0, 0);
         goto_DemoDrawUI2.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_DemoDrawUI2.setClass(init.this, DemoDrawUI2.class);
         startActivity(goto_DemoDrawUI2);
-
+*/
+        Intent goto_UIv1_main0 = new Intent();
+        overridePendingTransition(0, 0);
+        goto_UIv1_main0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        goto_UIv1_main0.setClass(init.this, UIv1_main0.class);
+        startActivity(goto_UIv1_main0);
+/*
+        Intent goto_UIv1_settings0= new Intent();
+        overridePendingTransition(0, 0);
+        goto_UIv1_settings0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        goto_UIv1_settings0.setClass(init.this, UIv1_settings0.class);
+        startActivity(goto_UIv1_settings0);
+        */
 /*
         Intent goto_OdometryMainActivity = new Intent();
         overridePendingTransition(0, 0);

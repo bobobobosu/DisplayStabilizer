@@ -14,6 +14,7 @@ import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw2;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali2;
+import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali3;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
@@ -33,6 +34,9 @@ import au.com.bytecode.opencsv.CSVWriter;
  * Created by nickisverygood on 12/17/2015.
  */
 public class getAcceGyro implements Runnable {
+    private Handler sensor_ThreadHandler;
+    private HandlerThread sensor_Thread;
+
     public static Handler mgetValusHT_TOUCH_handler;
     public static boolean isStatic = true;
     String csvName = "getAcceGyro.csv";
@@ -57,6 +61,11 @@ public class getAcceGyro implements Runnable {
 
     @Override
     public void run() {
+        //sensor
+        sensor_Thread = new HandlerThread("sensor handler");
+        sensor_Thread.start();
+        sensor_ThreadHandler=new Handler(sensor_Thread.getLooper());
+
         final StaticSensor mstaticsensor = new StaticSensor();
         final HandlerThread mgetValusHT_TOUCH = new HandlerThread("getValues_TOUCH");
         mgetValusHT_TOUCH.start();
@@ -70,6 +79,7 @@ public class getAcceGyro implements Runnable {
 
         //final proAcceGyroCali mproAcceGyroCali = new proAcceGyroCali(mContext);
         final proAcceGyroCali2 mproAcceGyroCali2 = new proAcceGyroCali2(mContext);
+        final proAcceGyroCali3 mproAcceGyroCali3 = new proAcceGyroCali3(mContext);
         //mproAcceGyroCali.TEST();
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
         mLSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
@@ -100,7 +110,12 @@ public class getAcceGyro implements Runnable {
                 });
 
                 //mproAcceGyroCali.Controller(event);
-                mproAcceGyroCali2.Controller(event);
+                sensor_ThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mproAcceGyroCali3.Controller(event);
+                    }
+                });
                 switch (event.sensor.getType()) {
                     case Sensor.TYPE_LINEAR_ACCELERATION:
                         isStatic = mstaticsensor.getStatic(event.values);
