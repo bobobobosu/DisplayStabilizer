@@ -102,7 +102,7 @@ public class DemoDraw2 extends View {
         if(drawing==1 || drawing==0){
            //drawCanvas(canvas, stabilize_v3.stabilize.mstabilizeSession.todraw);
         }
-        //drawCanvas(canvas, init.initTouchCollection.sta_Online_todraw);
+        //drawCanvas(canvas, init.initTouchCollection.sta_Online_todraw_stroke);
         canvas.drawPath(path, paint);
         canvas.drawPath(path2, paint2);
     }

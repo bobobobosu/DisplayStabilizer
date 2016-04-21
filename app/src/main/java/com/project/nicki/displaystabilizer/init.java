@@ -12,6 +12,7 @@ import android.view.Display;
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI2;
 import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_main0;
 import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_settings0;
+import com.project.nicki.displaystabilizer.contentprovider.utils.Recognize;
 import com.project.nicki.displaystabilizer.contentprovider.utils.TouchCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;

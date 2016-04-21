@@ -114,7 +114,7 @@ public class stabilize_v3_1 {
 
     }
 
-    public List<stabilize_v3.Point> gen_Draw(final Bundle bundlegot) {
+    public ArrayList<sensordata> gen_Draw(final Bundle bundlegot) {
         try {
             if (DemoDraw.drawing == 0) {
                 orieninit = tmporiensensordata.getData();
@@ -187,7 +187,7 @@ public class stabilize_v3_1 {
                             strokebuffer.get(strokebuffer.size() - 1).getData()[1] - prevStroke[1]};
                     ArrayList<sensordata> r_stastrokebuffer = new ArrayList<>();
 
-                    //init.initTouchCollection.sta_Online_todraw = new ArrayList<>();
+                    //init.initTouchCollection.sta_Online_todraw_stroke = new ArrayList<>();
 
 
                     List<stabilize_v3.Point> tofingerList = new ArrayList<>();
@@ -197,6 +197,7 @@ public class stabilize_v3_1 {
                                 stastrokebuffer.get(i).getData()[0] + tofinger[0],
                                 stastrokebuffer.get(i).getData()[1] + tofinger[1]
                         });
+                        tmp.setTime(stastrokebuffer.get(i).getTime());
 
                         stabilize_v3.Point todraw = new stabilize_v3.Point();
                         todraw.setX(stastrokebuffer.get(i).getData()[0] + tofinger[0]);
@@ -209,7 +210,7 @@ public class stabilize_v3_1 {
 
                    // DemoDraw3.pending_to_draw_direct = tofingerList;
 
-                    return tofingerList;
+                    return r_stastrokebuffer;
 
 
 

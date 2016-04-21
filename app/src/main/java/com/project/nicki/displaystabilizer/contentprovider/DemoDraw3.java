@@ -57,7 +57,7 @@ public class DemoDraw3 extends View {
     public static List<List<stabilize_v3.Point>> pending_to_draw = new ArrayList<>();
     public static List<stabilize_v3.Point> pending_to_draw_direct = new ArrayList<>();
 
-    public static int StrokeResultCount=0;
+
     private static final String TAG = "DemoDraw";
     public static boolean orienreset = false;
     public static int drawing = 3;
@@ -71,9 +71,8 @@ public class DemoDraw3 extends View {
     public List<stabilize_v3.Point> incremental = new ArrayList<>();
     public Path path = new Path();
     protected Context mContext;
-    private LipiTKJNIInterface _lipitkInterface;
-    private LipiTKJNIInterface _recognizer = null;
-    public recognize_stroke mrecognize_stroke = new recognize_stroke();
+
+
 
     public DemoDraw3(Context context) {
         super(context);
@@ -84,13 +83,8 @@ public class DemoDraw3 extends View {
 
         super(context, attrs);
 
-        //recognize
-        Context contextlipi = getContext();
-        File externalFileDir = contextlipi.getExternalFilesDir(null);
-        String path = externalFileDir.getPath();
-        _lipitkInterface = new LipiTKJNIInterface(path, "SHAPEREC_ALPHANUM");
-        _lipitkInterface.initialize();
-        _recognizer = _lipitkInterface;
+
+
 
 
         paint.setAntiAlias(true);
@@ -127,14 +121,12 @@ public class DemoDraw3 extends View {
             //drawCanvas(canvas, stabilize_v3.stabilize.mstabilizeSession.todraw);
         }
 
-
-
         try {
             drawCanvas(canvas,path3,pending_to_draw_direct);
             draw_ListofPaths(canvas,paint3,pending_to_draw);
 
         }catch (Exception ex){
-            Log.e("onDraw",String.valueOf(ex));
+            //Log.e("onDraw",String.valueOf(ex));
         }
 
         mpath_ctrl.drawAll(canvas,paint3);
@@ -143,8 +135,14 @@ public class DemoDraw3 extends View {
     }
 
     public void draw_ListofPaths(Canvas canvas,Paint paint,List<List<stabilize_v3.Point>> pending_to_draw){
+        Path mpath = new Path();
         for(List<stabilize_v3.Point> impending_to_draw:pending_to_draw){
-            Path mpath = new Path();
+            try {
+                Log.e("TESTING",String.valueOf("THE SIZE: "+impending_to_draw.size()));
+            }catch (Exception ex){
+
+            }
+
             drawCanvas(canvas, mpath,impending_to_draw);
         }
     }
@@ -240,40 +238,5 @@ public class DemoDraw3 extends View {
         }
     }
 
-    public class recognize_stroke {
-        private Stroke strokes = new Stroke();
-        private String[] character;
 
-        public void collect(MotionEvent event) {
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                PointF p = new PointF(event.getX(), event.getY());
-                strokes.addPoint(p);
-            } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                PointF p = new PointF(event.getX(), event.getY());
-                strokes.addPoint(p);
-            } else if (event.getAction() == MotionEvent.ACTION_UP) {
-
-                PointF p = new PointF(event.getX(), event.getY());
-                strokes.addPoint(p);
-                recognize(strokes);
-                strokes = new Stroke();
-            }
-        }
-
-        private String[] recognize(Stroke _strokes) {
-
-            Stroke[] _recognitionStrokes = new Stroke[1];
-            _recognitionStrokes[0] = _strokes;
-            LipitkResult[] results = _recognizer.recognize(_recognitionStrokes);
-            String configFileDirectory = _recognizer.getLipiDirectory() + "/projects/alphanumeric/config/";
-            for (LipitkResult result : results) {
-                Log.e("jni",_recognizer.getSymbolName(results[0].Id, configFileDirectory) + " ShapeAID = " + result.Id + " Confidence = " + result.Confidence);
-            }
-
-            StrokeResultCount = results.length;
-
-            _recognitionStrokes = null;
-            return character;
-        }
-    }
 }
