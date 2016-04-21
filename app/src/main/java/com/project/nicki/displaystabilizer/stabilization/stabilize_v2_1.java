@@ -70,7 +70,7 @@ public class stabilize_v2_1 implements Runnable {
     int deltaingStatus = 0;
     sensordata tmp1accesensordata;
     long prev = System.currentTimeMillis();
-    //init specific
+    //init_yesno specific
     float[] orieninit;
     private String csvName = "stabilize_v2.csv";
     private String TAG = "stabilize_v2";
@@ -161,7 +161,7 @@ public class stabilize_v2_1 implements Runnable {
                             tmpaccesensordata.getData()[0] - tmp1accesensordata.getData()[1],
                             tmpaccesensordata.getData()[1] - tmp1accesensordata.getData()[1]});
                 }
-                //init
+                //init_yesno
                 if (prevdrawSTATUS == false && drawSTATUS == true || init == false) {
                     orieninit = tmporiensensordata.getData();
 
@@ -178,7 +178,7 @@ public class stabilize_v2_1 implements Runnable {
                     prevStroke = null;
                     tmp_prevStroke = null;
                     init = true;
-                    //toDraw = new ArrayList<stabilize_v3.Point>();
+                    //sta_Online = new ArrayList<stabilize_v3.Point>();
                     tmpaccesensordata = null;
                     deltaingStatus = 0;
                 }
@@ -203,8 +203,8 @@ public class stabilize_v2_1 implements Runnable {
                 drawSTATUS = DemoDraw2.drawing < 2;
 
 
-                //init
-                //if (prevdrawSTATUS == false && drawSTATUS == true || init == false || System.currentTimeMillis() - prev > 200) {
+                //init_yesno
+                //if (prevdrawSTATUS == false && drawSTATUS == true || init_yesno == false || System.currentTimeMillis() - prev > 200) {
                 if (prevdrawSTATUS == false && drawSTATUS == true || init == false) {
                     prev = System.currentTimeMillis();
                     fakeposposition = 0;
@@ -343,7 +343,7 @@ public class stabilize_v2_1 implements Runnable {
                             //LogCSV("tmpaccesensordata.csv", String.valueOf(prevStroke[0]), String.valueOf(prevStroke[1]), "", "", "", "");
                             toDraw.add(todrawPoint);
                         }
-                        //toDraw = rotatePoints(toDraw);
+                        //sta_Online = rotatePoints(sta_Online);
                         bbox.set(toDraw);
                     } else {
                         tmp_prevStroke = new float[]{0, 0};
@@ -454,7 +454,7 @@ public class stabilize_v2_1 implements Runnable {
     }
 
     public void LogCSV(String Name, String a, String b, String c, String d, String g, String h) {
-        //init CSV logging
+        //init_yesno CSV logging
         String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
         //String fileName = csvName;
         String fileName = Name + ".csv";

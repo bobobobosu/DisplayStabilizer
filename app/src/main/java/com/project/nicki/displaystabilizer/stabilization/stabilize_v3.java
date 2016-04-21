@@ -90,7 +90,7 @@ public class stabilize_v3 {
         }
 
         public static List<Point> getStabilized(String Mode) {
-            Log.d("getStabilized","init");
+            Log.d("getStabilized","init_yesno");
             if (mstabilizeSession == null) {
                 mstabilizeSession = new stabilizeSession();
             }
@@ -198,7 +198,6 @@ public class stabilize_v3 {
                     addPoint.setX(mTouchList.get(i).getData()[0] + 100);
                     addPoint.setY(mTouchList.get(i).getData()[1] + 100);
                     stabilizedPointList.add(addPoint);
-                    Log.e("TESTING", String.valueOf(mTouchList.get(mTouchList.size()-1).getData()[0]));
 
                 }
                 return stabilizedPointList;
@@ -214,6 +213,11 @@ public class stabilize_v3 {
         public float y;
         public float dx;
         public float dy;
+        public Point(){}
+        public Point(float x, float y){
+            this.x = x;
+            this.y = y;
+        }
 
         public void setX(float x) {
             this.x = x;

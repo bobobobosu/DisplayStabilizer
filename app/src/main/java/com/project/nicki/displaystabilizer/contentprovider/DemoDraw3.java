@@ -8,7 +8,6 @@ import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -21,13 +20,42 @@ import com.canvas.LipitkResult;
 import com.canvas.Stroke;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
-import com.project.nicki.displaystabilizer.stabilization.stabilize_v3_1;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DemoDraw3 extends View {
+    private class path_ctrl{
+        List<Path> pathList = new ArrayList<>();
+        public path_ctrl(){
+            pathList.add(new Path());
+        }
+        public Path getNew(){
+            pathList.add(new Path());
+            return pathList.get(pathList.size()-1);
+        }
+        public Path getReplace(){
+            try {
+                pathList.remove(pathList.size()-1);
+            }catch (Exception ex){
+
+            }
+            pathList.add(new Path());
+            return pathList.get(pathList.size()-1);
+        }
+        public Path getCurr(){
+            return pathList.get(pathList.size()-1);
+        }
+        public void drawAll(Canvas canvas,Paint paint){
+            for(Path mpath:pathList){
+                canvas.drawPath(mpath,paint);
+            }
+        }
+    }
+    public path_ctrl mpath_ctrl= new path_ctrl();
+    public static List<List<stabilize_v3.Point>> pending_to_draw = new ArrayList<>();
+    public static List<stabilize_v3.Point> pending_to_draw_direct = new ArrayList<>();
 
     public static int StrokeResultCount=0;
     private static final String TAG = "DemoDraw";
@@ -35,7 +63,7 @@ public class DemoDraw3 extends View {
     public static int drawing = 3;
     public static Paint paint2 = new Paint();
     public static Path path2 = new Path();
-    public static Path path3 = new Path();
+    //public static Path path3 = new Path();
     public static Rect rectangle;
     public static Handler mhandler;
     public static Paint paint = new Paint();
@@ -98,11 +126,28 @@ public class DemoDraw3 extends View {
         if(drawing==1 || drawing==0){
             //drawCanvas(canvas, stabilize_v3.stabilize.mstabilizeSession.todraw);
         }
-        drawCanvas(canvas, stabilize_v3_1.toDraw);
+
+
+
+        try {
+            drawCanvas(canvas,path3,pending_to_draw_direct);
+            draw_ListofPaths(canvas,paint3,pending_to_draw);
+
+        }catch (Exception ex){
+            Log.e("onDraw",String.valueOf(ex));
+        }
+
+        mpath_ctrl.drawAll(canvas,paint3);
         canvas.drawPath(path, paint);
         canvas.drawPath(path2, paint2);
     }
 
+    public void draw_ListofPaths(Canvas canvas,Paint paint,List<List<stabilize_v3.Point>> pending_to_draw){
+        for(List<stabilize_v3.Point> impending_to_draw:pending_to_draw){
+            Path mpath = new Path();
+            drawCanvas(canvas, mpath,impending_to_draw);
+        }
+    }
 
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
@@ -120,11 +165,13 @@ public class DemoDraw3 extends View {
                 path.moveTo(eventX, eventY);
                 return true;
             case MotionEvent.ACTION_MOVE:
+                mpath_ctrl.getReplace();
                 drawing = 1;
                 new passTouch(event);
                 path.lineTo(eventX, eventY);
                 break;
             case MotionEvent.ACTION_UP:
+                mpath_ctrl.getNew();
                 new passTouch(event);
                 drawing = 2;
                 break;
@@ -139,12 +186,15 @@ public class DemoDraw3 extends View {
     }
 
 
+
+
+    private Path path3;
     //todraw
-    private void drawCanvas(Canvas canvas, List<stabilize_v3.Point> pts) {
+    private void drawCanvas(Canvas canvas,Path mpath, List<stabilize_v3.Point> pts) {
         if (pts.size() > 1) {
-            path3 = new Path();
             final int SMOOTH_VAL = 6;
             for (int i = pts.size() - 2; i < pts.size(); i++) {
+                Log.e("draw",String.valueOf(pts.get(i).x));
                 if (i >= 0) {
                     stabilize_v3.Point point = pts.get(i);
                     if (i == 0) {
@@ -168,13 +218,13 @@ public class DemoDraw3 extends View {
                 stabilize_v3.Point point = pts.get(i);
                 if (first) {
                     first = false;
-                    path3.moveTo(point.x, point.y);
+                    mpath.moveTo(point.x, point.y);
                 } else {
                     stabilize_v3.Point prev = pts.get(i - 1);
-                    path3.cubicTo(prev.x + prev.dx, prev.y + prev.dy, point.x - point.dx, point.y - point.dy, point.x, point.y);
+                    mpath.cubicTo(prev.x + prev.dx, prev.y + prev.dy, point.x - point.dx, point.y - point.dy, point.x, point.y);
                 }
             }
-            canvas.drawPath(path3, paint3);
+            canvas.drawPath(mpath, paint3);
         } else {
             if (pts.size() == 1) {
                 stabilize_v3.Point point = pts.get(0);
@@ -186,8 +236,7 @@ public class DemoDraw3 extends View {
     //pass touch
     public class passTouch {
         public passTouch(final MotionEvent event) {
-            init.initTouchCollection.setTouch(event);
-
+            init.initTouchCollection.set_Touch(event);
         }
     }
 

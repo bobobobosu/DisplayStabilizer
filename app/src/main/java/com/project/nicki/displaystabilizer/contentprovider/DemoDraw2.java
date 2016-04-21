@@ -21,17 +21,13 @@ import com.canvas.LipiTKJNIInterface;
 import com.canvas.LipitkResult;
 import com.canvas.Stroke;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
-import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
-import com.project.nicki.displaystabilizer.stabilization.stabilize_v2_1;
+import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3_1;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.RunnableFuture;
-
-import static com.project.nicki.displaystabilizer.stabilization.stabilize_v3.stabilize.getStabilized;
 
 public class DemoDraw2 extends View {
     public static int StrokeResultCount=0;
@@ -106,7 +102,7 @@ public class DemoDraw2 extends View {
         if(drawing==1 || drawing==0){
            //drawCanvas(canvas, stabilize_v3.stabilize.mstabilizeSession.todraw);
         }
-        drawCanvas(canvas, stabilize_v3_1.toDraw);
+        //drawCanvas(canvas, init.initTouchCollection.sta_Online_todraw);
         canvas.drawPath(path, paint);
         canvas.drawPath(path2, paint2);
     }

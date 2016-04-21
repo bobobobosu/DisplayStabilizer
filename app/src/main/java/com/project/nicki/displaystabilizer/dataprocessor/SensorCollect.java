@@ -112,6 +112,12 @@ public class SensorCollect {
                 this.Data[i] = data[i];
             }
         }
+        public sensordata(long time, float[] data) {
+            this.Time = time;
+            for (int i = 0; i < data.length; i++) {
+                this.Data[i] = data[i];
+            }
+        }
 
         public long getTime() {
             return Time;

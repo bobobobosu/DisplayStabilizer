@@ -145,7 +145,7 @@ public class stabilize_v2 implements Runnable {
                             tmpaccesensordata.getData()[0] - tmp1accesensordata.getData()[1],
                             tmpaccesensordata.getData()[1] - tmp1accesensordata.getData()[1]});
                 }
-                //init
+                //init_yesno
                 if (prevdrawSTATUS == false && drawSTATUS == true || init == false) {
                     if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
                         //cX = Math.abs(getSumArray(strokedeltabuffer).get(strokedeltabuffer.size()-1 +1).getData()[0])/Math.abs(getSumArray(posdeltabuffer).get(posdeltabuffer.size() - 1).getData()[0]);
@@ -185,8 +185,8 @@ public class stabilize_v2 implements Runnable {
                 drawSTATUS = DemoDraw.drawing < 2;
 
 
-                //init
-                //if (prevdrawSTATUS == false && drawSTATUS == true || init == false || System.currentTimeMillis() - prev > 200) {
+                //init_yesno
+                //if (prevdrawSTATUS == false && drawSTATUS == true || init_yesno == false || System.currentTimeMillis() - prev > 200) {
                 if (prevdrawSTATUS == false && drawSTATUS == true || init == false) {
                     prev = System.currentTimeMillis();
                     fakeposposition = 0;
@@ -282,8 +282,8 @@ public class stabilize_v2 implements Runnable {
                             String.valueOf(proAcceGyroCali.nowmultip),
                             String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0]),
                             String.valueOf(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1]),
-                            String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * cX / (float) com.project.nicki.displaystabilizer.init.pix2m),
-                            String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY / (float) com.project.nicki.displaystabilizer.init.pix2m),
+                            String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * cX / (float) com.project.nicki.displaystabilizer.init_yesno.pix2m),
+                            String.valueOf(posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY / (float) com.project.nicki.displaystabilizer.init_yesno.pix2m),
                             String.valueOf(Math.pow(Math.pow(stastrokedelta.getData()[0], 2) + Math.pow(stastrokedelta.getData()[1], 2), 0.5))
                     );
                     */
@@ -404,7 +404,7 @@ public class stabilize_v2 implements Runnable {
     }
 
     public void LogCSV(String Name, String a, String b, String c, String d, String g, String h) {
-        //init CSV logging
+        //init_yesno CSV logging
         String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
         //String fileName = csvName;
         String fileName = Name + ".csv";
