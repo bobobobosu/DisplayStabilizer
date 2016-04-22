@@ -69,9 +69,10 @@ public class DemoDraw3 extends View {
     public static int drawing = 3;
     public static Paint paint2 = new Paint();
     public static Path path2 = new Path();
-    //public static Path path3 = new Path();
+    public static Path path3 = new Path();
     public static Rect rectangle;
-    public static Handler mhandler;
+    public static Handler clean_and_refresh;
+    public static Handler refresh;
     public static Paint paint = new Paint();
     public static Paint paint3 = new Paint();
     public List<stabilize_v3.Point> incremental = new ArrayList<>();
@@ -89,9 +90,9 @@ public class DemoDraw3 extends View {
         super(context, attrs);
         //recognize
         File externalFileDir = getContext().getExternalFilesDir(null);
-        String path = externalFileDir.getPath();
-        Log.d("JNI", "Path: " + path);
-        _lipitkInterface = new LipiTKJNIInterface(path, "SHAPEREC_ALPHANUM");
+        final String externalFileDirPath = externalFileDir.getPath();
+        Log.d("JNI", "Path: " + externalFileDirPath);
+        _lipitkInterface = new LipiTKJNIInterface(externalFileDirPath, "SHAPEREC_ALPHANUM");
         _lipitkInterface.initialize();
         _recognizer = _lipitkInterface;
 
@@ -113,10 +114,21 @@ public class DemoDraw3 extends View {
         paint3.setStyle(Paint.Style.STROKE);
         paint3.setStrokeJoin(Paint.Join.ROUND);
 
-        mhandler = new Handler() {
+        refresh = new Handler(){
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
+                invalidate();
+            }
+        };
+        clean_and_refresh = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                Log.e("LOG","bibibib");
+                path = new Path();
+                path2 = new Path();
+                path3 = new Path();
                 invalidate();
             }
         };
@@ -143,7 +155,7 @@ public class DemoDraw3 extends View {
     }
 
     public void draw_ListofPaths(Canvas canvas,Paint paint,List<List<stabilize_v3.Point>> pending_to_draw){
-        Path mpath = new Path();
+        path3= new Path();
         for(List<stabilize_v3.Point> impending_to_draw:pending_to_draw){
             try {
                 Log.e("TESTING",String.valueOf("THE SIZE: "+impending_to_draw.size()));
@@ -151,7 +163,7 @@ public class DemoDraw3 extends View {
 
             }
 
-            drawCanvas(canvas, mpath,impending_to_draw);
+            drawCanvas(canvas, path3,impending_to_draw);
         }
     }
 
@@ -194,7 +206,6 @@ public class DemoDraw3 extends View {
 
 
 
-    private Path path3;
     //todraw
     private void drawCanvas(Canvas canvas,Path mpath, List<stabilize_v3.Point> pts) {
         if (pts.size() > 1) {

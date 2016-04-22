@@ -3,9 +3,11 @@ package com.project.nicki.displaystabilizer.contentprovider.utils;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Message;
 import android.util.Log;
 import android.view.MotionEvent;
 
+import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_draw0;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.init;
@@ -43,7 +45,6 @@ public class TouchCollect {
             @Override
             public void run() {
                 while (true) {
-
                     try {
                         Thread.sleep(20);
                         //Log.e("varrays: ",String.valueOf(currentState));
@@ -55,33 +56,7 @@ public class TouchCollect {
                                 }
                                 Log.e("THREAD", String.valueOf(currentState + " " + sta_Online_todraw_stroke.size() + " " + ori_Online_todraw_stroke.size()));
                                 if (currentState == states.STOP && sta_Online_todraw_stroke.size() > 0 && ori_Online_todraw_stroke.size() > 0) {
-                                    Log.e("THREAD2", String.valueOf(currentState + " " + sta_Online_todraw_stroke.size() + " " + ori_Online_todraw_stroke.size()));
-                                    //split to char sta
-                                    sta_Online_todraw_char.add(sta_Online_todraw_stroke);
-                                    //split to char ori
-                                    ori_Online_todraw_char.add(ori_Online_todraw_stroke);
-                                    sta_Online_todraw_stroke = new ArrayList<>();
-                                    ori_Online_todraw_stroke = new ArrayList<>();
-
-                                    try {
-                                        DemoDraw3.recognized_data sta_result = DemoDraw3.recognize_stroke(new ArrayList<>(sta_Online_todraw_char.get(sta_Online_todraw_char.size() - 1)));
-                                        DemoDraw3.recognized_data ori_result = DemoDraw3.recognize_stroke(new ArrayList<>(ori_Online_todraw_char.get(ori_Online_todraw_char.size() - 1)));
-                                        Log.e("REC", String.valueOf(
-                                                "STA: " + sta_result.getCharIndex(0) + " " + sta_result.getConfidenceIndex(0) +
-                                                        " ORI: " + ori_result.getCharIndex(0) + " " + ori_result.getConfidenceIndex(0)) +
-                                                " " + (sta_result.getConfidenceIndex(0) > ori_result.getConfidenceIndex(0)));
-                                    }catch (Exception ex){
-                                        Log.e("REC",String.valueOf(ex));
-                                    }
-                                    /*
-                                    recognized_result.add(new StabilizeResult(
-                                            new ArrayList<>(ori_Online_todraw_char.get(ori_Online_todraw_char.size() - 1)),
-                                            new ArrayList<>(sta_Online_todraw_char.get(sta_Online_todraw_char.size() - 1)),
-                                            ori_result,
-                                            sta_result
-                                    ));*/
-
-
+                                    recognized_and_save();
                                 }
                             }
                         }
@@ -99,12 +74,66 @@ public class TouchCollect {
         split_ThreadHandler = new Handler(split_Thread.getLooper());
     }
 
+    public void recognized_and_save() {
+        Log.e("THREAD2", String.valueOf(currentState + " " + sta_Online_todraw_stroke.size() + " " + ori_Online_todraw_stroke.size()));
+        //split to char sta
+        sta_Online_todraw_char.add(sta_Online_todraw_stroke);
+        //split to char ori
+        ori_Online_todraw_char.add(ori_Online_todraw_stroke);
+        sta_Online_todraw_stroke = new ArrayList<>();
+        ori_Online_todraw_stroke = new ArrayList<>();
+
+        try {
+            DemoDraw3.recognized_data sta_result = DemoDraw3.recognize_stroke(new ArrayList<>(sta_Online_todraw_char.get(sta_Online_todraw_char.size() - 1)));
+            DemoDraw3.recognized_data ori_result = DemoDraw3.recognize_stroke(new ArrayList<>(ori_Online_todraw_char.get(ori_Online_todraw_char.size() - 1)));
+            Log.e("REC", String.valueOf(
+                    "STA: " + sta_result.getCharIndex(0) + " " + sta_result.getConfidenceIndex(0) +
+                            " ORI: " + ori_result.getCharIndex(0) + " " + ori_result.getConfidenceIndex(0)) +
+                    " " + (sta_result.getConfidenceIndex(0) > ori_result.getConfidenceIndex(0)));
+            recognized_result.add(new StabilizeResult(
+                    new ArrayList<>(ori_Online_todraw_char.get(ori_Online_todraw_char.size() - 1)),
+                    new ArrayList<>(sta_Online_todraw_char.get(sta_Online_todraw_char.size() - 1)),
+                    ori_result,
+                    sta_result
+            ));
+
+            Message msg = new Message();
+            Bundle bundle = new Bundle();
+            bundle.putString("ORI_CHAR",ori_result.getCharIndex(0));
+            bundle.putString("STA_CHAR",sta_result.getCharIndex(0));
+            bundle.putFloat("ORI_CONF",ori_result.getConfidenceIndex(0));
+            bundle.putFloat("STA_CONF",sta_result.getConfidenceIndex(0));
+            msg.setData(bundle);
+            UIv1_draw0.update_results.sendMessage(msg);
+        }catch (Exception ex){
+            Log.e("REC",String.valueOf(ex));
+        }
+    }
+
     public void set_Touch(MotionEvent event) {
         raw_Online.add(new SensorCollect.sensordata(System.currentTimeMillis(), new float[]{event.getX(), event.getY(), 0}, SensorCollect.sensordata.TYPE.TOUCH));
         ctrl_flow(event);
         gen_Online(event);
     }
 
+    public void save_and_clean(){
+        try{
+            recognized_and_save();
+        }catch (Exception ex){
+            Log.e("save_and_clean",String.valueOf(ex));
+        }
+
+        Log.e("LOG","hihi");
+        raw_Online = new ArrayList<>();
+        raw_Offline = new ArrayList<>();
+        sta_Online_raw = new ArrayList<SensorCollect.sensordata>();
+        sta_Online_todraw_stroke = new ArrayList<>();
+        sta_Online_todraw_char = new ArrayList<>();
+        ori_Online_todraw_stroke = new ArrayList<>();
+        ori_Online_todraw_char = new ArrayList<>();
+        DemoDraw3.pending_to_draw = new ArrayList<>();
+        DemoDraw3.clean_and_refresh.sendEmptyMessage(0);
+    }
     public void gen_Online(final MotionEvent event) {
         if (raw_Online.size() > 0) {
             final Bundle drawposBundleDRAWING = new Bundle();
@@ -160,6 +189,10 @@ public class TouchCollect {
             }
         }
 
+        upadteDraw();
+    }
+
+    public void upadteDraw(){
         //draw
         List<List<stabilize_v3.Point>> toDrawList = new ArrayList<>();
         for (List<List<SensorCollect.sensordata>> mchar : sta_Online_todraw_char) {
@@ -172,11 +205,8 @@ public class TouchCollect {
         }
 
         DemoDraw3.pending_to_draw = toDrawList;
-        DemoDraw3.mhandler.sendEmptyMessage(0);
-
-
+        DemoDraw3.refresh.sendEmptyMessage(0);
     }
-
     private List<stabilize_v3.Point> sensordataList2pntList(List<SensorCollect.sensordata> stroke) {
         List<stabilize_v3.Point> retunList = new ArrayList<>();
         for (SensorCollect.sensordata msensordata : stroke) {

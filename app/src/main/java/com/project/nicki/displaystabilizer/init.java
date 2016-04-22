@@ -10,8 +10,9 @@ import android.util.Log;
 import android.view.Display;
 
 import com.canvas.Canvas1;
-import com.canvas.CanvasClass;
+import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_draw0;
 import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_main0;
+import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_splash;
 import com.project.nicki.displaystabilizer.contentprovider.utils.TouchCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
@@ -66,6 +67,12 @@ public class init extends AppCompatActivity {
         //new Thread(new stabilize_v1(getBaseContext())).start();
 
 
+        Intent goto_UIv1_splash0 = new Intent();
+        overridePendingTransition(0, 0);
+        goto_UIv1_splash0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        goto_UIv1_splash0.setClass(init.this, UIv1_splash.class);
+        startActivity(goto_UIv1_splash0);
+
         //new Thread(new stabilize_v3_1(getBaseContext())).start();
         try {
             new Thread(new getAcceGyro(getBaseContext())).start();
@@ -83,13 +90,21 @@ public class init extends AppCompatActivity {
         overridePendingTransition(0, 0);
         goto_UIv1_main0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_UIv1_main0.setClass(init.this, UIv1_main0.class);
-        startActivity(goto_UIv1_main0);
+        //startActivity(goto_UIv1_main0);
+
+        Intent goto_UIv1_draw0 = new Intent();
+        overridePendingTransition(0, 0);
+        goto_UIv1_draw0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        goto_UIv1_draw0.setClass(init.this, UIv1_draw0.class);
+        //startActivity(goto_UIv1_draw0);
 
         Intent goto_Canvas1 = new Intent();
         overridePendingTransition(0, 0);
         goto_Canvas1.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_Canvas1.setClass(init.this, Canvas1.class);
         //startActivity(goto_Canvas1);
+
+
 /*
         Intent goto_UIv1_settings0= new Intent();
         overridePendingTransition(0, 0);
