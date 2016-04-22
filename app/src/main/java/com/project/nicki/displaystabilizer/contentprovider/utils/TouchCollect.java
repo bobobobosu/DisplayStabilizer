@@ -55,22 +55,31 @@ public class TouchCollect {
                                 }
                                 Log.e("THREAD", String.valueOf(currentState + " " + sta_Online_todraw_stroke.size() + " " + ori_Online_todraw_stroke.size()));
                                 if (currentState == states.STOP && sta_Online_todraw_stroke.size() > 0 && ori_Online_todraw_stroke.size() > 0) {
+                                    Log.e("THREAD2", String.valueOf(currentState + " " + sta_Online_todraw_stroke.size() + " " + ori_Online_todraw_stroke.size()));
                                     //split to char sta
                                     sta_Online_todraw_char.add(sta_Online_todraw_stroke);
                                     //split to char ori
                                     ori_Online_todraw_char.add(ori_Online_todraw_stroke);
                                     sta_Online_todraw_stroke = new ArrayList<>();
                                     ori_Online_todraw_stroke = new ArrayList<>();
-                                    DemoDraw3.recognized_data sta_result = DemoDraw3.recognize_stroke(new ArrayList<>(sta_Online_todraw_char.get(sta_Online_todraw_char.size() - 1)));
-                                    DemoDraw3.recognized_data ori_result = DemoDraw3.recognize_stroke(new ArrayList<>(ori_Online_todraw_char.get(ori_Online_todraw_char.size() - 1)));
-                                    Log.e("REC", String.valueOf("STA: " + sta_result.getCharIndex(0) + " " + sta_result.getConfidenceIndex(0) + " ORI: " + ori_result.getCharIndex(0) + " " + ori_result.getConfidenceIndex(0)
-                                            + " " + (sta_result.getConfidenceIndex(0) > ori_result.getConfidenceIndex(0))));
+
+                                    try {
+                                        DemoDraw3.recognized_data sta_result = DemoDraw3.recognize_stroke(new ArrayList<>(sta_Online_todraw_char.get(sta_Online_todraw_char.size() - 1)));
+                                        DemoDraw3.recognized_data ori_result = DemoDraw3.recognize_stroke(new ArrayList<>(ori_Online_todraw_char.get(ori_Online_todraw_char.size() - 1)));
+                                        Log.e("REC", String.valueOf(
+                                                "STA: " + sta_result.getCharIndex(0) + " " + sta_result.getConfidenceIndex(0) +
+                                                        " ORI: " + ori_result.getCharIndex(0) + " " + ori_result.getConfidenceIndex(0)) +
+                                                " " + (sta_result.getConfidenceIndex(0) > ori_result.getConfidenceIndex(0)));
+                                    }catch (Exception ex){
+                                        Log.e("REC",String.valueOf(ex));
+                                    }
+                                    /*
                                     recognized_result.add(new StabilizeResult(
                                             new ArrayList<>(ori_Online_todraw_char.get(ori_Online_todraw_char.size() - 1)),
                                             new ArrayList<>(sta_Online_todraw_char.get(sta_Online_todraw_char.size() - 1)),
                                             ori_result,
                                             sta_result
-                                    ));
+                                    ));*/
 
 
                                 }

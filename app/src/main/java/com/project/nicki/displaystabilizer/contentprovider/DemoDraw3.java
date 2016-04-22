@@ -261,6 +261,7 @@ public class DemoDraw3 extends View {
                 _strokes.add(mstroke);
             }
 
+            _strokes = merge_strokes(_strokes);
 
             Stroke[] _recognitionStrokes = new Stroke[_strokes.size()];
             for (int s = 0; s < _strokes.size(); s++)
@@ -284,6 +285,18 @@ public class DemoDraw3 extends View {
             return null;
         }
 
+    }
+
+    private static List<Stroke> merge_strokes(List<Stroke> strokes) {
+        List<Stroke> return_strokeList = new ArrayList<>();
+        Stroke merged_stroke = new Stroke();
+        for(Stroke mstroke:strokes){
+            for (int i=0;i<mstroke.getPoints().size();i++){
+                merged_stroke.addPoint(mstroke.getPointAt(i));
+            }
+        }
+        return_strokeList.add(merged_stroke);
+        return return_strokeList;
     }
 
     public static class recognized_data{

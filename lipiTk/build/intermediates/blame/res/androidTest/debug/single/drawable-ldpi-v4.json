@@ -1,14 +1,14 @@
 [
     {
+        "merged": "C:\\Users\\nickisverygood\\AndroidProjects\\gitprojects\\DisplayStabilizer\\lipiTk\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable-ldpi-v4\\icon.png",
+        "source": "C:\\Users\\nickisverygood\\AndroidProjects\\gitprojects\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\drawable-ldpi-v4\\icon.png"
+    },
+    {
         "merged": "C:\\Users\\nicki\\StudioProjects\\DisplayStabilizer\\lipiTk\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable-ldpi-v4\\icon.png",
         "source": "C:\\Users\\nicki\\StudioProjects\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\drawable-ldpi-v4\\icon.png"
     },
     {
         "merged": "C:\\Users\\nickisverygood\\AndroidProjects\\DisplayStabilizerYes\\DisplayStabilizer\\lipiTk\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable-ldpi-v4\\icon.png",
         "source": "C:\\Users\\nickisverygood\\AndroidProjects\\DisplayStabilizerYes\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\drawable-ldpi-v4\\icon.png"
-    },
-    {
-        "merged": "C:\\Users\\nickisverygood\\AndroidProjects\\gitprojects\\DisplayStabilizer\\lipiTk\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable-ldpi-v4\\icon.png",
-        "source": "C:\\Users\\nickisverygood\\AndroidProjects\\gitprojects\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\drawable-ldpi-v4\\icon.png"
     }
 ]
