@@ -18,6 +18,7 @@ import android.view.View;
 import com.canvas.LipiTKJNIInterface;
 import com.canvas.LipitkResult;
 import com.canvas.Stroke;
+import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 
@@ -26,6 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DemoDraw3 extends View {
+    //recognize
+    private LipiTKJNIInterface _lipitkInterface;
+    private static LipiTKJNIInterface _recognizer = null;
+    public static int StrokeResultCount = 0;
+
     private class path_ctrl{
         List<Path> pathList = new ArrayList<>();
         public path_ctrl(){
@@ -80,12 +86,14 @@ public class DemoDraw3 extends View {
     }
 
     public DemoDraw3(Context context, AttributeSet attrs) {
-
         super(context, attrs);
-
-
-
-
+        //recognize
+        File externalFileDir = getContext().getExternalFilesDir(null);
+        String path = externalFileDir.getPath();
+        Log.d("JNI", "Path: " + path);
+        _lipitkInterface = new LipiTKJNIInterface(path, "SHAPEREC_ALPHANUM");
+        _lipitkInterface.initialize();
+        _recognizer = _lipitkInterface;
 
         paint.setAntiAlias(true);
         paint.setStrokeWidth(5f);
@@ -119,7 +127,7 @@ public class DemoDraw3 extends View {
     protected void onDraw(Canvas canvas) {
         if(drawing==1 || drawing==0){
             //drawCanvas(canvas, stabilize_v3.stabilize.mstabilizeSession.todraw);
-        }
+    }
 
         try {
             drawCanvas(canvas,path3,pending_to_draw_direct);
@@ -238,5 +246,65 @@ public class DemoDraw3 extends View {
         }
     }
 
+
+    public static recognized_data recognize_stroke(List<List<SensorCollect.sensordata>> lists) {
+        if (lists.size() > 0) {
+            String[] character = new String[0];
+
+            List<Stroke> _strokes = new ArrayList<>();
+
+            for (List<SensorCollect.sensordata> stroke : lists) {
+                Stroke mstroke = new Stroke();
+                for (SensorCollect.sensordata point : stroke) {
+                    mstroke.addPoint(new PointF(point.getData()[0], point.getData()[1]));
+                }
+                _strokes.add(mstroke);
+            }
+
+
+            Stroke[] _recognitionStrokes = new Stroke[_strokes.size()];
+            for (int s = 0; s < _strokes.size(); s++)
+                _recognitionStrokes[s] = _strokes.get(s);
+
+            _recognitionStrokes = new Stroke[1];
+            _recognitionStrokes[0] = _strokes.get(0);
+
+            LipitkResult[] results = _recognizer.recognize(_recognitionStrokes);
+            String configFileDirectory = _recognizer.getLipiDirectory() + "/projects/alphanumeric/config/";
+            character = new String[results.length];
+            for (int i = 0; i < character.length; i++) {
+                character[i] = _recognizer.getSymbolName(results[i].Id, configFileDirectory);
+                Log.e("jni", _recognizer.getSymbolName(results[i].Id, configFileDirectory) + " ShapeAID = " + results[i].Id + " Confidence = " + results[i].Confidence);
+            }
+
+            StrokeResultCount = results.length;
+
+            return new recognized_data(results);
+        } else {
+            return null;
+        }
+
+    }
+
+    public static class recognized_data{
+        String configFileDirectory = _recognizer.getLipiDirectory() + "/projects/alphanumeric/config/";
+        String[] characterArr;
+        float[] confidenceArr;
+        public recognized_data(LipitkResult[] results){
+            characterArr = new String[results.length];
+            confidenceArr = new float[results.length];
+            for(int i=0;i<results.length;i++){
+                characterArr[i] = _recognizer.getSymbolName(results[i].Id, configFileDirectory);
+                confidenceArr[i] = results[i].Confidence;
+            }
+        }
+
+        public String getCharIndex(int i){
+            return characterArr[i];
+        }
+        public float getConfidenceIndex(int i){
+            return confidenceArr[i];
+        }
+    }
 
 }

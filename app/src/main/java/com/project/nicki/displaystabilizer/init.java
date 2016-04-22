@@ -9,16 +9,13 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 
-import com.project.nicki.displaystabilizer.UI.DemoDrawUI2;
+import com.canvas.Canvas1;
+import com.canvas.CanvasClass;
 import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_main0;
-import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_settings0;
-import com.project.nicki.displaystabilizer.contentprovider.utils.Recognize;
 import com.project.nicki.displaystabilizer.contentprovider.utils.TouchCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
-import com.project.nicki.displaystabilizer.stabilization.stabilize_v2_1;
-import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3_1;
 
 import org.ejml.data.DenseMatrix64F;
@@ -31,7 +28,6 @@ public class init extends AppCompatActivity {
     public static SensorCollect initSensorCollection = new SensorCollect();
     public static TouchCollect initTouchCollection = new TouchCollect();
     public static stabilize_v3_1 initStabilize = new stabilize_v3_1();
-
 
 
     public static double widthm, heightcm, widthpix, heightpix, pix2m;
@@ -88,6 +84,12 @@ public class init extends AppCompatActivity {
         goto_UIv1_main0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_UIv1_main0.setClass(init.this, UIv1_main0.class);
         startActivity(goto_UIv1_main0);
+
+        Intent goto_Canvas1 = new Intent();
+        overridePendingTransition(0, 0);
+        goto_Canvas1.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        goto_Canvas1.setClass(init.this, Canvas1.class);
+        //startActivity(goto_Canvas1);
 /*
         Intent goto_UIv1_settings0= new Intent();
         overridePendingTransition(0, 0);

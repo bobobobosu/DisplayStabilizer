@@ -40,9 +40,15 @@
         <activity android:name=".UI.DemoDrawUI2" />
         <activity android:name=".Odometry.VideoActivity" />
         <activity android:name=".UI.UIv1.UIv1_main0" />
+        <activity android:name="com.canvas.Canvas1" />
         <activity
             android:name=".UI.UIv1.UIv1_settings0"
             android:label="@string/title_activity_uiv1_settings0" >
+        </activity>
+        <activity
+            android:name=".UI.UIv1.CompareActivity"
+            android:label="@string/title_activity_compare"
+            android:theme="@style/AppTheme.NoActionBar" >
         </activity>
     </application>
 

@@ -6,7 +6,6 @@ import android.os.HandlerThread;
 import android.util.Log;
 import android.view.MotionEvent;
 
-import com.canvas.Stroke;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.init;
@@ -19,170 +18,212 @@ import java.util.List;
  * Created by nickisverygood on 4/20/2016.
  */
 public class TouchCollect {
-    private Recognize mRecognize = new Recognize();
 
     private Thread detectState;
-    private Handler stabilize_ThreadHandler;
-    private HandlerThread stabilize_Thread;
+    private Handler split_ThreadHandler;
+    private HandlerThread split_Thread;
 
     public states currentState = states.STOP;
     public List<SensorCollect.sensordata> raw_Online = new ArrayList<>();
     public List<List<SensorCollect.sensordata>> raw_Offline = new ArrayList<>();
 
-
     public ArrayList<SensorCollect.sensordata> sta_Online_raw = new ArrayList<SensorCollect.sensordata>();
     public List<List<SensorCollect.sensordata>> sta_Online_todraw_stroke = new ArrayList<>();
     public List<List<List<SensorCollect.sensordata>>> sta_Online_todraw_char = new ArrayList<>();
 
+    public List<List<SensorCollect.sensordata>> ori_Online_todraw_stroke = new ArrayList<>();
+    public List<List<List<SensorCollect.sensordata>>> ori_Online_todraw_char = new ArrayList<>();
+
+    public List<StabilizeResult> recognized_result = new ArrayList<>();
+
     public List<stabilize_v3.Point> sta_Offline = new ArrayList<>();
 
-    public TouchCollect(){
+    public TouchCollect() {
         detectState = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (true){
+                while (true) {
 
                     try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    //Log.e("varrays: ",String.valueOf(currentState));
+                        Thread.sleep(20);
+                        //Log.e("varrays: ",String.valueOf(currentState));
                         //Log.e("varrays: ",String.valueOf(currentState+" "+sta_Online_raw.size()+" "+sta_Online_todraw_stroke.size()+" "+sta_Online_todraw_char.size()));
-                        if(raw_Online != null){
-                            if(raw_Online.size()>1){
-                                if(System.currentTimeMillis()-raw_Online.get(raw_Online.size()-1).getTime() > 3000 && sta_Online_todraw_stroke.size()!=0) {
+                        if (raw_Online != null) {
+                            if (raw_Online.size() > 1) {
+                                if (System.currentTimeMillis() - raw_Online.get(raw_Online.size() - 1).getTime() > 1000) {
                                     currentState = states.STOP;
+                                }
+                                Log.e("THREAD", String.valueOf(currentState + " " + sta_Online_todraw_stroke.size() + " " + ori_Online_todraw_stroke.size()));
+                                if (currentState == states.STOP && sta_Online_todraw_stroke.size() > 0 && ori_Online_todraw_stroke.size() > 0) {
+                                    //split to char sta
                                     sta_Online_todraw_char.add(sta_Online_todraw_stroke);
+                                    //split to char ori
+                                    ori_Online_todraw_char.add(ori_Online_todraw_stroke);
                                     sta_Online_todraw_stroke = new ArrayList<>();
-                                    String[] character = mRecognize.recognize_stroke(new ArrayList<>(sta_Online_todraw_char.get(sta_Online_todraw_char.size()-1)));
-                                    Log.e("REC",String.valueOf(character[0]));
+                                    ori_Online_todraw_stroke = new ArrayList<>();
+                                    DemoDraw3.recognized_data sta_result = DemoDraw3.recognize_stroke(new ArrayList<>(sta_Online_todraw_char.get(sta_Online_todraw_char.size() - 1)));
+                                    DemoDraw3.recognized_data ori_result = DemoDraw3.recognize_stroke(new ArrayList<>(ori_Online_todraw_char.get(ori_Online_todraw_char.size() - 1)));
+                                    Log.e("REC", String.valueOf("STA: " + sta_result.getCharIndex(0) + " " + sta_result.getConfidenceIndex(0) + " ORI: " + ori_result.getCharIndex(0) + " " + ori_result.getConfidenceIndex(0)
+                                            + " " + (sta_result.getConfidenceIndex(0) > ori_result.getConfidenceIndex(0))));
+                                    recognized_result.add(new StabilizeResult(
+                                            new ArrayList<>(ori_Online_todraw_char.get(ori_Online_todraw_char.size() - 1)),
+                                            new ArrayList<>(sta_Online_todraw_char.get(sta_Online_todraw_char.size() - 1)),
+                                            ori_result,
+                                            sta_result
+                                    ));
+
 
                                 }
                             }
                         }
-                        if(sta_Online_todraw_char.size()>3){
-                            Log.e("varrays: ",String.valueOf(1));
-                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
                 }
             }
         });
         detectState.start();
 
-        stabilize_Thread = new HandlerThread("sensor handler");
-        stabilize_Thread.start();
-        stabilize_ThreadHandler =new Handler(stabilize_Thread.getLooper());
+        split_Thread = new HandlerThread("sensor handler");
+        split_Thread.start();
+        split_ThreadHandler = new Handler(split_Thread.getLooper());
     }
-    public void set_Touch(MotionEvent event){
-        raw_Online.add(new SensorCollect.sensordata(System.currentTimeMillis(),new float[]{event.getX(),event.getY(),0}, SensorCollect.sensordata.TYPE.TOUCH));
+
+    public void set_Touch(MotionEvent event) {
+        raw_Online.add(new SensorCollect.sensordata(System.currentTimeMillis(), new float[]{event.getX(), event.getY(), 0}, SensorCollect.sensordata.TYPE.TOUCH));
         ctrl_flow(event);
-        gen_Online();
+        gen_Online(event);
     }
 
-    public void gen_Online(){
-        if(raw_Online.size()>0){
+    public void gen_Online(final MotionEvent event) {
+        if (raw_Online.size() > 0) {
             final Bundle drawposBundleDRAWING = new Bundle();
-            drawposBundleDRAWING.putFloatArray("Draw", new float[]{raw_Online.get(raw_Online.size()-1).getData()[0],raw_Online.get(raw_Online.size()-1).getData()[1]});
-            drawposBundleDRAWING.putLong("Time",  raw_Online.get(raw_Online.size()-1).getTime());
+            drawposBundleDRAWING.putFloatArray("Draw", new float[]{raw_Online.get(raw_Online.size() - 1).getData()[0], raw_Online.get(raw_Online.size() - 1).getData()[1]});
+            drawposBundleDRAWING.putLong("Time", raw_Online.get(raw_Online.size() - 1).getTime());
 
-            stabilize_ThreadHandler.post(new Runnable() {
+            split_ThreadHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    try{
-                        gen_Online_raw(init.initStabilize.gen_Draw(drawposBundleDRAWING));
-                    }catch (Exception ex){
-
+                    try {
+                    } catch (Exception ex) {
+                        Log.e("EX",String.valueOf(ex));
                     }
+                    try {
+                        gen_Online_ori(event);
+                    } catch (Exception ex) {
+                        Log.e("EX1",String.valueOf(ex));
+                    }
+                    try {
+                    gen_Online_sta(event, init.initStabilize.gen_Draw(drawposBundleDRAWING));
+                    } catch (Exception ex) {
+                       Log.e("EX2",String.valueOf(ex));
+                    }
+
                 }
             });
         }
     }
 
-    public void gen_Online_raw(ArrayList<SensorCollect.sensordata> newPt){
-        if(currentState == states.HANDSDOWN){
-            sta_Online_todraw_stroke.add(new ArrayList<>(newPt));
-        }else{
-            if(sta_Online_todraw_stroke.size()==0){
-                sta_Online_todraw_stroke.add(new ArrayList<>(newPt));
+    public void gen_Online_ori(MotionEvent event) {
+
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            Log.e("jj","jj");
+            ori_Online_todraw_stroke.add(new ArrayList<SensorCollect.sensordata>());
+            ori_Online_todraw_stroke.get(ori_Online_todraw_stroke.size() - 1).add(raw_Online.get(raw_Online.size() - 1));
+        } else {
+            if (ori_Online_todraw_stroke.size() == 0) {
+                ori_Online_todraw_stroke.add(new ArrayList<SensorCollect.sensordata>());
             }
-            sta_Online_todraw_stroke.set(sta_Online_todraw_stroke.size()-1,new ArrayList<>(newPt));
+            ori_Online_todraw_stroke.get(ori_Online_todraw_stroke.size() - 1).add(raw_Online.get(raw_Online.size() - 1));
         }
-        //generate draw_char
+    }
 
-
-        /*
-        if(sta_Online_todraw_stroke.size()>2){
-            Log.e("varrays: ",String.valueOf(newPt.get(0).getTime() - sta_Online_todraw_stroke.get(sta_Online_todraw_stroke.size()-2).get(sta_Online_todraw_stroke.get(sta_Online_todraw_stroke.size()-2).size()-1).getTime() ));
-            if(newPt.get(0).getTime() - sta_Online_todraw_stroke.get(sta_Online_todraw_stroke.size()-2).get(sta_Online_todraw_stroke.get(sta_Online_todraw_stroke.size()-2).size()-1).getTime() > 1000){
-                sta_Online_todraw_char.add(new ArrayList<List<SensorCollect.sensordata>>());
-                for(int i =0 ; i< sta_Online_todraw_stroke.size()-1 ; i++){
-                    sta_Online_todraw_char.get(sta_Online_todraw_char.size()-1).add(sta_Online_todraw_stroke.get(i));
+    public void gen_Online_sta(MotionEvent event, ArrayList<SensorCollect.sensordata> newPt) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            sta_Online_todraw_stroke.add(new ArrayList<SensorCollect.sensordata>());
+        } else {
+            if(newPt!=null){
+                if (sta_Online_todraw_stroke.size() == 0) {
+                    sta_Online_todraw_stroke.add(new ArrayList<SensorCollect.sensordata>());
                 }
-                while (sta_Online_todraw_stroke.size()>1){
-                    sta_Online_todraw_stroke.remove(0);
-                }
+                sta_Online_todraw_stroke.set(sta_Online_todraw_stroke.size()-1, (List<SensorCollect.sensordata>) newPt.clone());
             }
-        }*/
+        }
 
         //draw
         List<List<stabilize_v3.Point>> toDrawList = new ArrayList<>();
-        for(List<List<SensorCollect.sensordata>> mchar:sta_Online_todraw_char){
-            for(List<SensorCollect.sensordata> stroke:mchar){
+        for (List<List<SensorCollect.sensordata>> mchar : sta_Online_todraw_char) {
+            for (List<SensorCollect.sensordata> stroke : mchar) {
                 toDrawList.add(sensordataList2pntList(stroke));
             }
         }
-        for (List<SensorCollect.sensordata> msta_Online_todraw_stroke:sta_Online_todraw_stroke){
+        for (List<SensorCollect.sensordata> msta_Online_todraw_stroke : sta_Online_todraw_stroke) {
             toDrawList.add(sensordataList2pntList(msta_Online_todraw_stroke));
         }
 
         DemoDraw3.pending_to_draw = toDrawList;
         DemoDraw3.mhandler.sendEmptyMessage(0);
-        Log.e("","");
+
+
     }
 
     private List<stabilize_v3.Point> sensordataList2pntList(List<SensorCollect.sensordata> stroke) {
         List<stabilize_v3.Point> retunList = new ArrayList<>();
-        for (SensorCollect.sensordata msensordata : stroke){
-            retunList.add(new stabilize_v3.Point(msensordata.getData()[0],msensordata.getData()[1]));
+        for (SensorCollect.sensordata msensordata : stroke) {
+            retunList.add(new stabilize_v3.Point(msensordata.getData()[0], msensordata.getData()[1]));
         }
         return retunList;
     }
 
-    public void ctrl_flow(MotionEvent event){
-        if(event.getAction() == MotionEvent.ACTION_DOWN){
+    public void ctrl_flow(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
             currentState = states.HANDSDOWN;
-        }else if(event.getAction() == MotionEvent.ACTION_MOVE){
+        } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
             currentState = states.DRAWING;
-        }else if(event.getAction() == MotionEvent.ACTION_UP){
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
             currentState = states.PAUSE;
         } else {
             currentState = states.STOP;
         }
-        if(raw_Online.size()>1){
-            //Log.e("array: ",String.valueOf(raw_Online.get(raw_Online.size()-1).getTime()-raw_Online.get(raw_Online.size()-2).getTime()));
-            if(raw_Online.get(raw_Online.size()-1).getTime()-raw_Online.get(raw_Online.size()-2).getTime() > 1000) {
-                currentState = states.STOP;
-            }
-        }
-        Log.e("array: ",String.valueOf(currentState));
+        Log.e("array: ", String.valueOf(currentState));
         gen_raw_Offline();
     }
-    public void gen_raw_Offline(){
-        if (raw_Online.size() > 2){
-            long last1_time = raw_Online.get(raw_Online.size()-1).getTime();
-            long last2_time = raw_Online.get(raw_Online.size()-2).getTime();
-            if(last1_time-last2_time > 2000){
+
+    public void gen_raw_Offline() {
+        if (raw_Online.size() > 2) {
+            long last1_time = raw_Online.get(raw_Online.size() - 1).getTime();
+            long last2_time = raw_Online.get(raw_Online.size() - 2).getTime();
+            if (last1_time - last2_time > 2000) {
                 raw_Offline.add(raw_Online);
                 raw_Online = new ArrayList<>();
             }
         }
     }
-    private enum states{
+
+    private enum states {
         STOP,
         HANDSDOWN,
         DRAWING,
         PAUSE,
         HANDSUP
+    }
+
+    public class StabilizeResult {
+        public List<List<SensorCollect.sensordata>> sta_Online_todraw_char;
+        public List<List<SensorCollect.sensordata>> ori_Online_todraw_char;
+        public DemoDraw3.recognized_data sta_result;
+        public DemoDraw3.recognized_data ori_result;
+
+        public StabilizeResult(
+                List<List<SensorCollect.sensordata>> sta_Online_todraw_char,
+                List<List<SensorCollect.sensordata>> ori_Online_todraw_char,
+                DemoDraw3.recognized_data sta_result,
+                DemoDraw3.recognized_data ori_result) {
+            this.ori_Online_todraw_char = ori_Online_todraw_char;
+            this.sta_Online_todraw_char = sta_Online_todraw_char;
+            this.ori_result = ori_result;
+            this.sta_result = sta_result;
+        }
     }
 }

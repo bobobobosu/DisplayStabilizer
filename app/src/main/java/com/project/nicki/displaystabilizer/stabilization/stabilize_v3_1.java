@@ -115,7 +115,7 @@ public class stabilize_v3_1 {
     }
 
     public ArrayList<sensordata> gen_Draw(final Bundle bundlegot) {
-        try {
+        //try {
             if (DemoDraw.drawing == 0) {
                 orieninit = tmporiensensordata.getData();
             }
@@ -215,18 +215,23 @@ public class stabilize_v3_1 {
 
 
                 } else {
+                    ArrayList<sensordata> r_stastrokebuffer = new ArrayList<>();
                     prevStroke = new float[]{
                             strokebuffer.get(0).getData()[0],
                             strokebuffer.get(0).getData()[1]};
                     prevStroke = new float[]{0, 0};
+                    r_stastrokebuffer.add(new sensordata(strokebuffer.get(0).getTime(),prevStroke));
+                    return r_stastrokebuffer;
+
                 }
 
 
             }
 
-        }catch (Exception ex){
-            Log.e("gen_Draw",String.valueOf(ex));
-        }
+        //}catch (Exception ex){
+        //    ex.printStackTrace();
+        //    Log.e("gen_Draw",String.valueOf(ex));
+        //}
 
         return null;
     }
