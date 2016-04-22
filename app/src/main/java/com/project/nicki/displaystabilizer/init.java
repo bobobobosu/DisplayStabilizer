@@ -66,19 +66,19 @@ public class init extends AppCompatActivity {
         //new Thread(new proDataFlow(getBaseContext())).start();
         //new Thread(new stabilize_v1(getBaseContext())).start();
 
-
-        Intent goto_UIv1_splash0 = new Intent();
-        overridePendingTransition(0, 0);
-        goto_UIv1_splash0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        goto_UIv1_splash0.setClass(init.this, UIv1_splash.class);
-        startActivity(goto_UIv1_splash0);
-
-        //new Thread(new stabilize_v3_1(getBaseContext())).start();
         try {
             new Thread(new getAcceGyro(getBaseContext())).start();
         }catch (Exception ex){
             Log.e("init", String.valueOf(ex));
         }
+        Intent goto_UIv1_splash0 = new Intent();
+        overridePendingTransition(0, 0);
+        goto_UIv1_splash0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        goto_UIv1_splash0.setClass(init.this, UIv1_splash.class);
+        //startActivity(goto_UIv1_splash0);
+
+        //new Thread(new stabilize_v3_1(getBaseContext())).start();
+
         /*
         Intent goto_DemoDrawUI2 = new Intent();
         overridePendingTransition(0, 0);
@@ -96,7 +96,7 @@ public class init extends AppCompatActivity {
         overridePendingTransition(0, 0);
         goto_UIv1_draw0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_UIv1_draw0.setClass(init.this, UIv1_draw0.class);
-        //startActivity(goto_UIv1_draw0);
+        startActivity(goto_UIv1_draw0);
 
         Intent goto_Canvas1 = new Intent();
         overridePendingTransition(0, 0);

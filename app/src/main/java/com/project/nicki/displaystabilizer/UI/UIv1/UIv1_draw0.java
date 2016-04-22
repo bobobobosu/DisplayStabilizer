@@ -56,6 +56,11 @@ public class UIv1_draw0 extends AppCompatActivity {
                 view_STA_CHAR.setTextColor(Color.RED);
                 view_STA_CONF.setText(String.valueOf("conf: "+msg.getData().getFloat("STA_CONF")));
                 view_STA_CONF.setTextColor(Color.RED);
+                if(msg.getData().getFloat("ORI_CONF") > msg.getData().getFloat("STA_CONF")){
+                    view_ORI_CONF.setText(String.valueOf("*conf: "+msg.getData().getFloat("ORI_CONF")));
+                }else {
+                    view_STA_CONF.setText(String.valueOf("*conf: "+msg.getData().getFloat("STA_CONF")));
+                }
             }
         };
         setSupportActionBar(toolbar);

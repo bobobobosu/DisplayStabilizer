@@ -1,5 +1,6 @@
 package com.project.nicki.displaystabilizer.UI.UIv1;
 
+import android.graphics.Color;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +11,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,6 +21,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.project.nicki.displaystabilizer.R;
+import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
+import com.project.nicki.displaystabilizer.contentprovider.utils.TouchCollect;
+import com.project.nicki.displaystabilizer.init;
 
 public class UIv1_compare0 extends AppCompatActivity {
 
@@ -116,9 +121,29 @@ public class UIv1_compare0 extends AppCompatActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
+
+
+            int currPage = getArguments().getInt(ARG_SECTION_NUMBER)-1;
+            int rev_currPage =  init.initTouchCollection.recognized_result.size() - currPage -1;
+            TouchCollect.StabilizeResult mresult = init.initTouchCollection.recognized_result.get(rev_currPage);
+
             View rootView = inflater.inflate(R.layout.fragment_uiv1_compare0, container, false);
             TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
+            TextView ori_textView = (TextView)rootView.findViewById(R.id.ori_textview);
+            TextView sta_textView = (TextView)rootView.findViewById(R.id.sta_textview);
+            ori_textView.setTextColor(Color.BLACK);
+            sta_textView.setTextColor(Color.RED);
+            if(mresult.ori_result.getConfidenceIndex(0) > mresult.sta_result.getConfidenceIndex(0)){
+                ori_textView.setText(String.valueOf("result: "+mresult.ori_result.getCharIndex(0))+" confidence: "+mresult.ori_result.getConfidenceIndex(0)+" *");
+                sta_textView.setText(String.valueOf("result: "+mresult.sta_result.getCharIndex(0))+" confidence: "+mresult.sta_result.getConfidenceIndex(0));
+            }else {
+                ori_textView.setText(String.valueOf("result: "+mresult.ori_result.getCharIndex(0))+" confidence: "+mresult.ori_result.getConfidenceIndex(0));
+                sta_textView.setText(String.valueOf("result: "+mresult.sta_result.getCharIndex(0))+" confidence: "+mresult.sta_result.getConfidenceIndex(0)+" *");
+            }
+
+            UIv1_view_view mDemoDraw3 = (UIv1_view_view)rootView.findViewById(R.id.mdemodraw3);
+            mDemoDraw3.drawStrokes(mresult);
+            textView.setText(String.valueOf("at: "+mresult.Time));
             return rootView;
         }
     }
@@ -143,7 +168,7 @@ public class UIv1_compare0 extends AppCompatActivity {
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 3;
+            return init.initTouchCollection.recognized_result.size();
         }
 
         @Override

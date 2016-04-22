@@ -36,6 +36,7 @@ configurations {
 }
 dependencies {
     testCompile 'junit:junit:4.12'
+    compile 'com.google.code.gson:gson:2.5'
     compile project(':JKalman')
     compile project(':dsp-collection')
     compile project(':opencsv-2.1-1.0.0')

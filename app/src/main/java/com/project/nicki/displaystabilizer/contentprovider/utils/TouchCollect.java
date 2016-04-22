@@ -7,20 +7,22 @@ import android.os.Message;
 import android.util.Log;
 import android.view.MotionEvent;
 
+import com.canvas.Stroke;
 import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_draw0;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
  * Created by nickisverygood on 4/20/2016.
  */
 public class TouchCollect {
-
     private Thread detectState;
     private Handler split_ThreadHandler;
     private HandlerThread split_Thread;
@@ -54,8 +56,9 @@ public class TouchCollect {
                                 if (System.currentTimeMillis() - raw_Online.get(raw_Online.size() - 1).getTime() > 1000) {
                                     currentState = states.STOP;
                                 }
-                                Log.e("THREAD", String.valueOf(currentState + " " + sta_Online_todraw_stroke.size() + " " + ori_Online_todraw_stroke.size()));
+
                                 if (currentState == states.STOP && sta_Online_todraw_stroke.size() > 0 && ori_Online_todraw_stroke.size() > 0) {
+                                    Log.e("THREAD", String.valueOf(currentState + " " + sta_Online_todraw_stroke.size() + " " + ori_Online_todraw_stroke.size()));
                                     recognized_and_save();
                                 }
                             }
@@ -75,7 +78,12 @@ public class TouchCollect {
     }
 
     public void recognized_and_save() {
-        Log.e("THREAD2", String.valueOf(currentState + " " + sta_Online_todraw_stroke.size() + " " + ori_Online_todraw_stroke.size()));
+        try {
+           // Log.e("THREAD2", String.valueOf(currentState + " " + sta_Online_todraw_stroke.get(0).size() + " " + ori_Online_todraw_stroke.get(0).size()));
+        }catch (Exception ex){
+
+        }
+
         //split to char sta
         sta_Online_todraw_char.add(sta_Online_todraw_stroke);
         //split to char ori
@@ -131,7 +139,7 @@ public class TouchCollect {
         sta_Online_todraw_char = new ArrayList<>();
         ori_Online_todraw_stroke = new ArrayList<>();
         ori_Online_todraw_char = new ArrayList<>();
-        DemoDraw3.pending_to_draw = new ArrayList<>();
+        DemoDraw3.sta_pending_to_draw = new ArrayList<>();
         DemoDraw3.clean_and_refresh.sendEmptyMessage(0);
     }
     public void gen_Online(final MotionEvent event) {
@@ -193,21 +201,34 @@ public class TouchCollect {
     }
 
     public void upadteDraw(){
-        //draw
-        List<List<stabilize_v3.Point>> toDrawList = new ArrayList<>();
+        //draw ori
+        List<List<stabilize_v3.Point>> sta_toDrawList = new ArrayList<>();
         for (List<List<SensorCollect.sensordata>> mchar : sta_Online_todraw_char) {
             for (List<SensorCollect.sensordata> stroke : mchar) {
-                toDrawList.add(sensordataList2pntList(stroke));
+                sta_toDrawList.add(sensordataList2pntList(stroke));
             }
         }
         for (List<SensorCollect.sensordata> msta_Online_todraw_stroke : sta_Online_todraw_stroke) {
-            toDrawList.add(sensordataList2pntList(msta_Online_todraw_stroke));
+            sta_toDrawList.add(sensordataList2pntList(msta_Online_todraw_stroke));
         }
 
-        DemoDraw3.pending_to_draw = toDrawList;
+        //draw ori
+        List<List<stabilize_v3.Point>> ori_toDrawList = new ArrayList<>();
+        for (List<List<SensorCollect.sensordata>> mchar : ori_Online_todraw_char) {
+            for (List<SensorCollect.sensordata> stroke : mchar) {
+                ori_toDrawList.add(sensordataList2pntList(stroke));
+            }
+        }
+        for (List<SensorCollect.sensordata> mori_Online_todraw_stroke : ori_Online_todraw_stroke) {
+            ori_toDrawList.add(sensordataList2pntList(mori_Online_todraw_stroke));
+        }
+
+
+        DemoDraw3.sta_pending_to_draw = sta_toDrawList;
+        DemoDraw3.ori_pending_to_draw = ori_toDrawList;
         DemoDraw3.refresh.sendEmptyMessage(0);
     }
-    private List<stabilize_v3.Point> sensordataList2pntList(List<SensorCollect.sensordata> stroke) {
+    public List<stabilize_v3.Point> sensordataList2pntList(List<SensorCollect.sensordata> stroke) {
         List<stabilize_v3.Point> retunList = new ArrayList<>();
         for (SensorCollect.sensordata msensordata : stroke) {
             retunList.add(new stabilize_v3.Point(msensordata.getData()[0], msensordata.getData()[1]));
@@ -253,16 +274,25 @@ public class TouchCollect {
         public List<List<SensorCollect.sensordata>> ori_Online_todraw_char;
         public DemoDraw3.recognized_data sta_result;
         public DemoDraw3.recognized_data ori_result;
-
+        public String Time = getDateTime();
         public StabilizeResult(
-                List<List<SensorCollect.sensordata>> sta_Online_todraw_char,
                 List<List<SensorCollect.sensordata>> ori_Online_todraw_char,
-                DemoDraw3.recognized_data sta_result,
-                DemoDraw3.recognized_data ori_result) {
+                List<List<SensorCollect.sensordata>> sta_Online_todraw_char,
+                DemoDraw3.recognized_data ori_result,
+                DemoDraw3.recognized_data sta_result
+                ) {
             this.ori_Online_todraw_char = ori_Online_todraw_char;
             this.sta_Online_todraw_char = sta_Online_todraw_char;
             this.ori_result = ori_result;
             this.sta_result = sta_result;
         }
+    }
+
+    public String getDateTime(){
+        SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss");
+        Date date = new Date();
+        String strDate = sdFormat.format(date);
+//System.out.println(strDate);
+        return strDate;
     }
 }

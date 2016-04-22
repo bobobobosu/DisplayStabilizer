@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DemoDraw3 extends View {
+
     //recognize
     private LipiTKJNIInterface _lipitkInterface;
     private static LipiTKJNIInterface _recognizer = null;
@@ -60,9 +61,11 @@ public class DemoDraw3 extends View {
         }
     }
     public path_ctrl mpath_ctrl= new path_ctrl();
-    public static List<List<stabilize_v3.Point>> pending_to_draw = new ArrayList<>();
+    public static List<List<stabilize_v3.Point>> sta_pending_to_draw = new ArrayList<>();
+    public static List<List<stabilize_v3.Point>> ori_pending_to_draw = new ArrayList<>();
     public static List<stabilize_v3.Point> pending_to_draw_direct = new ArrayList<>();
 
+    public List<List<stabilize_v3.Point>> nonstatic_pending_to_draw= new ArrayList<>();
 
     private static final String TAG = "DemoDraw";
     public static boolean orienreset = false;
@@ -76,7 +79,7 @@ public class DemoDraw3 extends View {
     public static Paint paint = new Paint();
     public static Paint paint3 = new Paint();
     public List<stabilize_v3.Point> incremental = new ArrayList<>();
-    public Path path = new Path();
+    public static Path path = new Path();
     protected Context mContext;
 
 
@@ -143,7 +146,7 @@ public class DemoDraw3 extends View {
 
         try {
             drawCanvas(canvas,path3,pending_to_draw_direct);
-            draw_ListofPaths(canvas,paint3,pending_to_draw);
+            draw_ListofPaths(canvas,paint3,path3, sta_pending_to_draw);
 
         }catch (Exception ex){
             //Log.e("onDraw",String.valueOf(ex));
@@ -154,8 +157,8 @@ public class DemoDraw3 extends View {
         canvas.drawPath(path2, paint2);
     }
 
-    public void draw_ListofPaths(Canvas canvas,Paint paint,List<List<stabilize_v3.Point>> pending_to_draw){
-        path3= new Path();
+    public void draw_ListofPaths(Canvas canvas,Paint paint,Path path,List<List<stabilize_v3.Point>> pending_to_draw){
+        path= new Path();
         for(List<stabilize_v3.Point> impending_to_draw:pending_to_draw){
             try {
                 Log.e("TESTING",String.valueOf("THE SIZE: "+impending_to_draw.size()));
@@ -163,9 +166,10 @@ public class DemoDraw3 extends View {
 
             }
 
-            drawCanvas(canvas, path3,impending_to_draw);
+            drawCanvas(canvas, path,impending_to_draw);
         }
     }
+
 
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
@@ -239,6 +243,7 @@ public class DemoDraw3 extends View {
                 } else {
                     stabilize_v3.Point prev = pts.get(i - 1);
                     mpath.cubicTo(prev.x + prev.dx, prev.y + prev.dy, point.x - point.dx, point.y - point.dy, point.x, point.y);
+
                 }
             }
             canvas.drawPath(mpath, paint3);

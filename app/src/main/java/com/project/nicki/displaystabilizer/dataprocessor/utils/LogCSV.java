@@ -14,6 +14,8 @@ import au.com.bytecode.opencsv.CSVWriter;
  */
 public class LogCSV {
     public LogCSV(String input,String a,String b,Float... data){
+
+
         //init CSV logging
         String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
         //String fileName = csvName;

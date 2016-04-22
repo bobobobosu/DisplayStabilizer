@@ -113,7 +113,7 @@
             android:layout_height="395dp"
             android:id="@+id/view_DemoDraw3"
             android:layout_alignParentStart="true"
-            android:layout_weight="0.45" />
+            android:layout_weight="1.58" />
 
     </LinearLayout>
 </RelativeLayout>
