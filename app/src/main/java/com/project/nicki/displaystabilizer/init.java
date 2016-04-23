@@ -1,7 +1,9 @@
 
 package com.project.nicki.displaystabilizer;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -30,6 +32,9 @@ public class init extends AppCompatActivity {
     public static TouchCollect initTouchCollection = new TouchCollect();
     public static stabilize_v3_1 initStabilize = new stabilize_v3_1();
 
+    public static SharedPreferences getSharedPreferences (Context ctxt) {
+        return ctxt.getSharedPreferences("FILE", 0);
+    }
 
     public static double widthm, heightcm, widthpix, heightpix, pix2m;
     String TAG = "init";

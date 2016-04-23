@@ -73,7 +73,6 @@ public class calRk4 {
 
 
 
-        /*
         new LogCSV("RK99", "", new BigDecimal(msensordata.getTime()).toPlainString(),
                 msensordata.getData()[0],
                 msensordata.getData()[1],
@@ -85,7 +84,7 @@ public class calRk4 {
                 toreurndata[1],
                 toreurndata[2]
                 );
-                */
+
 
 
         for (int i = 0; i < 3; i++) {
