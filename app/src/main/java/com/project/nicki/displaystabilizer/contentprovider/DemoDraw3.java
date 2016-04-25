@@ -19,10 +19,12 @@ import com.canvas.LipiTKJNIInterface;
 import com.canvas.LipitkResult;
 import com.canvas.Stroke;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
+import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -259,7 +261,10 @@ public class DemoDraw3 extends View {
     public class passTouch {
         public passTouch(final MotionEvent event) {
             init.initTouchCollection.set_Touch(event);
+            new LogCSV(String.valueOf(init.rk4_Log+"_2"), "",String.valueOf(System.currentTimeMillis()),
+                    event.getX(), event.getY());
         }
+
     }
 
 

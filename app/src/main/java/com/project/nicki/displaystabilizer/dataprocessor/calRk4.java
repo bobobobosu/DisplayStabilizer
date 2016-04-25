@@ -6,10 +6,16 @@ import com.project.nicki.displaystabilizer.contentprovider.DemoDraw2;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Filters.filterSensorData;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
+import com.project.nicki.displaystabilizer.init;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
+import au.com.bytecode.opencsv.CSVWriter;
 
 /**
  * Created by nickisverygood on 3/6/2016.
@@ -18,9 +24,9 @@ public class calRk4 {
     static final float NS2S = 1.0f / 1000000000.0f;
     public Position[] prevPosition = new Position[3];
     //init filters
-    filterSensorData filtercalRk4_ACCE = new filterSensorData(true, 10, 1, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, Float.MAX_VALUE);
-    filterSensorData filtercalRk4_VELO = new filterSensorData(true, 1, 0.7f, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, 0.05f);
-    filterSensorData filtercalRk4_POSI = new filterSensorData(true, 10, 0.7f, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, Float.MAX_VALUE);
+    filterSensorData filtercalRk4_ACCE = new filterSensorData(true, 10, 1, 1, getAcceGyro.isStatic , Float.MAX_VALUE);
+    filterSensorData filtercalRk4_VELO = new filterSensorData(true, 1, 0.7f, 1, getAcceGyro.isStatic , 0.05f);
+    filterSensorData filtercalRk4_POSI = new filterSensorData(true, 10, 0.7f, 1, getAcceGyro.isStatic,Float.MAX_VALUE);
 
     long last_timestamp = 0;
     private double prevPos;
@@ -73,7 +79,10 @@ public class calRk4 {
 
 
 
-        new LogCSV("RK99", "", new BigDecimal(msensordata.getTime()).toPlainString(),
+
+
+        new LogCSV(init.rk4_Log, "",
+                new BigDecimal(msensordata.getTime()).toPlainString(),
                 msensordata.getData()[0],
                 msensordata.getData()[1],
                 msensordata.getData()[2],
@@ -85,6 +94,18 @@ public class calRk4 {
                 toreurndata[2]
                 );
 
+
+        Log.d("RK4",String.valueOf(
+                new BigDecimal(msensordata.getTime()).toPlainString()+" "+
+                msensordata.getData()[0]+" "+
+                msensordata.getData()[1]+" "+
+                msensordata.getData()[2]+" "+
+                (float) prevPosition[0].v+" "+
+                (float) prevPosition[1].v+" "+
+                (float) prevPosition[2].v+" "+
+                toreurndata[0]+" "+
+                toreurndata[1]+" "+
+                toreurndata[2]));
 
 
         for (int i = 0; i < 3; i++) {
@@ -158,4 +179,7 @@ public class calRk4 {
             this.dv = dv;
         }
     }
+
+
+
 }

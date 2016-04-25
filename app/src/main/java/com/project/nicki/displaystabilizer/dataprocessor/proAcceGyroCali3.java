@@ -16,6 +16,9 @@ import android.util.Log;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw2;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LevenbergMarquardt;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
+import com.project.nicki.displaystabilizer.dataprocessor.utils.MatMultiply;
+import com.project.nicki.displaystabilizer.dataprocessor.utils.Vect2Mat.Matrix3D;
+import com.project.nicki.displaystabilizer.dataprocessor.utils.Vect2Mat.Vector3D;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3_1;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3_1;
@@ -32,6 +35,9 @@ import java.util.List;
 
 import jama.Matrix;
 import jkalman.JKalman;
+
+import static com.project.nicki.displaystabilizer.stabilization.stabilize_v3.double2String;
+import static com.project.nicki.displaystabilizer.stabilization.stabilize_v3.multiply;
 
 public class proAcceGyroCali3 {
     Context mContext;
@@ -51,7 +57,7 @@ public class proAcceGyroCali3 {
             thissensordata = new SensorCollect.sensordata(System.currentTimeMillis(), mSensorEvent.values, SensorCollect.sensordata.TYPE.ACCE);
             thissensordata.setData(new float[]{
                     mSensorEvent.values[0],
-                    mSensorEvent.values[1] - 0.452898f,
+                    mSensorEvent.values[1] ,
                     mSensorEvent.values[2]
             });
         }

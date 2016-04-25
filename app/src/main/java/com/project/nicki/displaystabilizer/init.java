@@ -26,7 +26,8 @@ import org.ejml.data.DenseMatrix64F;
 import jama.Matrix;
 
 public class init extends AppCompatActivity {
-
+    //Log name
+    public static String rk4_Log = "rk4_"+String.valueOf(System.currentTimeMillis());
     //Static Classes
     public static SensorCollect initSensorCollection = new SensorCollect();
     public static TouchCollect initTouchCollection = new TouchCollect();
@@ -80,7 +81,7 @@ public class init extends AppCompatActivity {
         overridePendingTransition(0, 0);
         goto_UIv1_splash0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_UIv1_splash0.setClass(init.this, UIv1_splash.class);
-        //startActivity(goto_UIv1_splash0);
+        startActivity(goto_UIv1_splash0);
 
         //new Thread(new stabilize_v3_1(getBaseContext())).start();
 
@@ -101,13 +102,13 @@ public class init extends AppCompatActivity {
         overridePendingTransition(0, 0);
         goto_UIv1_draw0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_UIv1_draw0.setClass(init.this, UIv1_draw0.class);
-        startActivity(goto_UIv1_draw0);
+        //startActivity(goto_UIv1_draw0);
 
         Intent goto_Canvas1 = new Intent();
         overridePendingTransition(0, 0);
         goto_Canvas1.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_Canvas1.setClass(init.this, Canvas1.class);
-        //startActivity(goto_Canvas1);
+        startActivity(goto_Canvas1);
 
 
 /*

@@ -86,7 +86,8 @@
                         android:id="@+id/sta_char"
                         android:gravity="center"
                         android:textStyle="bold"
-                        android:textSize="40dp" />
+                        android:textSize="40dp"
+                        android:textColor="#ff0000" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -102,7 +103,8 @@
                         android:text="confidence"
                         android:id="@+id/sta_conf"
                         android:gravity="center"
-                        android:textSize="10dp" />
+                        android:textSize="10dp"
+                        android:textColor="#ff0000" />
                 </LinearLayout>
 
             </LinearLayout>
