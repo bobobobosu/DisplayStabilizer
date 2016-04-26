@@ -148,8 +148,8 @@ public class stabilize_v3_1 {
 
 
             //manual control
-            cX = -10f;
-            cY = 10f;
+            cX = -150f;
+            cY = 150f;
 
 
             //buffer Draw

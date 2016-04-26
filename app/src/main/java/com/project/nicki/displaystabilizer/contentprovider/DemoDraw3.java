@@ -261,8 +261,6 @@ public class DemoDraw3 extends View {
     public class passTouch {
         public passTouch(final MotionEvent event) {
             init.initTouchCollection.set_Touch(event);
-            new LogCSV(String.valueOf(init.rk4_Log+"_2"), "",String.valueOf(System.currentTimeMillis()),
-                    event.getX(), event.getY());
         }
 
     }

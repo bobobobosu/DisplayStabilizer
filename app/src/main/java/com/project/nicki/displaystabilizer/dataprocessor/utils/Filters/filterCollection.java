@@ -99,8 +99,15 @@ public class filterCollection {
 
     //StaticFilter
     public float[] TooHighFilter(float[] data, float threshold) {
+        /*
         for (int i = 0; i < data.length; i++) {
             if (data[i] > threshold) {
+                data[i] = 0;
+            }
+        }
+        */
+        for (int i = 0; i < data.length; i++) {
+            if (Math.abs(data[i]) > Math.abs(threshold)) {
                 data[i] = 0;
             }
         }

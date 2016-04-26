@@ -32,7 +32,6 @@ public class init extends AppCompatActivity {
     public static SensorCollect initSensorCollection = new SensorCollect();
     public static TouchCollect initTouchCollection = new TouchCollect();
     public static stabilize_v3_1 initStabilize = new stabilize_v3_1();
-
     public static SharedPreferences getSharedPreferences (Context ctxt) {
         return ctxt.getSharedPreferences("FILE", 0);
     }
@@ -108,7 +107,7 @@ public class init extends AppCompatActivity {
         overridePendingTransition(0, 0);
         goto_Canvas1.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_Canvas1.setClass(init.this, Canvas1.class);
-        startActivity(goto_Canvas1);
+        //startActivity(goto_Canvas1);
 
 
 /*

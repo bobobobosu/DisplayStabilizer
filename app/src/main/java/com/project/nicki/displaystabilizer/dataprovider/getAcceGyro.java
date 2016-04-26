@@ -37,6 +37,7 @@ public class getAcceGyro implements Runnable {
     private Handler sensor_ThreadHandler;
     private HandlerThread sensor_Thread;
 
+
     public static Handler mgetValusHT_TOUCH_handler;
     public static boolean isStatic = true;
     String csvName = "getAcceGyro.csv";
@@ -51,7 +52,7 @@ public class getAcceGyro implements Runnable {
     private SensorEventListener mSensorEventListener;
     private HandlerThread mHandlerThread;
     private String TAG = "getAcceGyro";
-
+    public static StopDetector mstopdetector = new StopDetector();
     public getAcceGyro(Context context) {
         mContext = context;
     }
@@ -119,6 +120,7 @@ public class getAcceGyro implements Runnable {
                 switch (event.sensor.getType()) {
                     case Sensor.TYPE_LINEAR_ACCELERATION:
                         isStatic = mstaticsensor.getStatic(event.values);
+                        mstopdetector.update(event.values);
                         //if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1){
                             //mgetValusHT_ACCE_handler.post(new Runnable() {
                                 //@Override
@@ -209,7 +211,49 @@ public class getAcceGyro implements Runnable {
 
 
     }
+    public static class StopDetector{
+        public int[] error_threshold =new int[]{25,25,25};
+        int timespan_threshold = 25;
+        public int[] switchstop_TRUE = new int[]{0,0,0};
+        public boolean[] switchstop = new boolean[]{false,false,false};
+        public boolean[] changed = new boolean[]{false,false,false};
+        public int[] stack = new int[]{0,0,0};
+        private float[] prev = new float[]{0,0,0};
+        public void update(float[] data){
 
+            for (int i=0;i<3;i++){
+                if(data[i]*prev[i]>0){
+                    stack[i]++;
+                    error_threshold[i] = stack[i];
+                    changed[i]=false;
+                }else if(data[i]*prev[i]<0){
+                    if(stack[i]>timespan_threshold){
+                        switchstop[i] = !switchstop[i];
+                        changed[i]=true;
+                    }else {
+                        changed[i]=false;
+                    }
+                    stack[i]=0;
+                }
+
+                if(switchstop[i]){
+                    switchstop_TRUE[i]++;
+                    if(switchstop_TRUE[i]>error_threshold[i]){
+                        switchstop[i] = false;
+                    }
+                }else {
+                    switchstop_TRUE[i]=0;
+                }
+            }
+            prev = data.clone();
+        }
+        public boolean getStopped(int i){
+            return (switchstop[i]);
+        }
+        public int[] getstack(){
+            return stack;
+        }
+    }
     public class StaticSensor {
         float threshold = 0.000000000001f;
         int window = 100;

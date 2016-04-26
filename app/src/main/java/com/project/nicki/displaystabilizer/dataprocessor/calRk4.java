@@ -25,7 +25,7 @@ public class calRk4 {
     public Position[] prevPosition = new Position[3];
     //init filters
     filterSensorData filtercalRk4_ACCE = new filterSensorData(true, 10, 1, 1, getAcceGyro.isStatic , Float.MAX_VALUE);
-    filterSensorData filtercalRk4_VELO = new filterSensorData(true, 1, 0.7f, 1, getAcceGyro.isStatic , 0.05f);
+    filterSensorData filtercalRk4_VELO = new filterSensorData(true, 1, 0.7f, 1, getAcceGyro.isStatic , Float.MAX_VALUE);
     filterSensorData filtercalRk4_POSI = new filterSensorData(true, 10, 0.7f, 1, getAcceGyro.isStatic,Float.MAX_VALUE);
 
     long last_timestamp = 0;
@@ -53,8 +53,8 @@ public class calRk4 {
         //filter update
 
         filtercalRk4_ACCE.paramUpdate(true, 10, 1, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, Float.MAX_VALUE);
-        filtercalRk4_VELO.paramUpdate(true, 1, 1f, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, 0.05f);
-        filtercalRk4_POSI.paramUpdate(true, 10, 0.7f, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, Float.MAX_VALUE);
+        filtercalRk4_VELO.paramUpdate(true, 1, 0.7f, 1, getAcceGyro.isStatic || DemoDraw2.resetted == false, Float.MAX_VALUE);
+        filtercalRk4_POSI.paramUpdate(true, 10, 0.7f, 1, DemoDraw2.resetted == false, Float.MAX_VALUE);
         if (DemoDraw2.resetted == false) {
             Log.d("reset", String.valueOf(DemoDraw2.resetted));
             for (int i = 0; i < prevPosition.length; i++) {
@@ -67,13 +67,16 @@ public class calRk4 {
         //filter
         msensordata.setData(filtercalRk4_ACCE.filter(msensordata.getData()));
 
-        Log.d("debuggg", String.valueOf(msensordata.getData()[0]) + " " + getAcceGyro.isStatic);
         float[] toreurndata =new float[msensordata.getData().length];
         for (int i = 0; i < prevPosition.length; i++) {
             prevPosition[i].pos = filtercalRk4_POSI.filter(new float[]{(float) prevPosition[0].pos, (float) prevPosition[1].pos, (float) prevPosition[2].pos})[i];
             prevPosition[i].v = filtercalRk4_VELO.filter(new float[]{(float) prevPosition[0].v, (float) prevPosition[1].v, (float) prevPosition[2].v})[i];
             toreurndata[i] = (float)prevPosition[i].pos;
+            if(getAcceGyro.mstopdetector.getStopped(i)==true){
+                Log.d("stopdetect", String.valueOf(getAcceGyro.mstopdetector.getStopped(0)+" "+getAcceGyro.mstopdetector.error_threshold[0]+" "+getAcceGyro.mstopdetector.getstack()[0]+" "+getAcceGyro.mstopdetector.getstack()[1]+" "+getAcceGyro.mstopdetector.getstack()[2]));
 
+                prevPosition[i].v=0;
+            }
         }
         SensorCollect.sensordata toreturnsensordata = new SensorCollect.sensordata(msensordata.getTime(), toreurndata, SensorCollect.sensordata.TYPE.LOCA);
 
@@ -81,7 +84,7 @@ public class calRk4 {
 
 
 
-        new LogCSV(init.rk4_Log, "",
+        new LogCSV(init.rk4_Log+"calRk4", "",
                 new BigDecimal(msensordata.getTime()).toPlainString(),
                 msensordata.getData()[0],
                 msensordata.getData()[1],

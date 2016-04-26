@@ -69,6 +69,14 @@ public class proAcceGyroCali3 {
         }
 
         if (thissensordata != null && orientation != null) {
+            /*
+            new LogCSV(init.rk4_Log+"proAcce", "",
+                    new BigDecimal(thissensordata.getTime()).toPlainString(),
+                    thissensordata.getData()[0],
+                    thissensordata.getData()[1],
+                    thissensordata.getData()[2]
+            );*/
+
             Bundle bundle = new Bundle();
             bundle.putFloatArray("Pos", mcalRk4.calc(thissensordata).getData());
             bundle.putFloatArray("Orien", new float[]{orientation[0], orientation[1], orientation[2]});
