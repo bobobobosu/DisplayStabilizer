@@ -1,5 +1,6 @@
 package com.project.nicki.displaystabilizer.contentprovider.utils;
 
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -58,7 +59,7 @@ public class TouchCollect {
                                 }
 
                                 if (currentState == states.STOP && sta_Online_todraw_stroke.size() > 0 && ori_Online_todraw_stroke.size() > 0) {
-                                    Log.e("THREAD", String.valueOf(currentState + " " + sta_Online_todraw_stroke.size() + " " + ori_Online_todraw_stroke.size()));
+                                    //Log.e("THREAD", String.valueOf(currentState + " " + sta_Online_todraw_stroke.size() + " " + ori_Online_todraw_stroke.size()));
                                     recognized_and_save();
                                 }
                             }
@@ -128,10 +129,9 @@ public class TouchCollect {
         try{
             recognized_and_save();
         }catch (Exception ex){
-            Log.e("save_and_clean",String.valueOf(ex));
+            //Log.e("save_and_clean",String.valueOf(ex));
         }
 
-        Log.e("LOG","hihi");
         raw_Online = new ArrayList<>();
         raw_Offline = new ArrayList<>();
         sta_Online_raw = new ArrayList<SensorCollect.sensordata>();
@@ -153,17 +153,17 @@ public class TouchCollect {
                 public void run() {
                     try {
                     } catch (Exception ex) {
-                        Log.e("EX",String.valueOf(ex));
+                        //Log.e("EX",String.valueOf(ex));
                     }
                     try {
                         gen_Online_ori(event);
                     } catch (Exception ex) {
-                        Log.e("EX1",String.valueOf(ex));
+                        //Log.e("EX1",String.valueOf(ex));
                     }
                     try {
                     gen_Online_sta(event, init.initStabilize.gen_Draw(drawposBundleDRAWING));
                     } catch (Exception ex) {
-                       Log.e("EX2",String.valueOf(ex));
+                     //  Log.e("EX2",String.valueOf(ex));
                     }
 
                 }
@@ -174,7 +174,6 @@ public class TouchCollect {
     public void gen_Online_ori(MotionEvent event) {
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            Log.e("jj","jj");
             ori_Online_todraw_stroke.add(new ArrayList<SensorCollect.sensordata>());
             ori_Online_todraw_stroke.get(ori_Online_todraw_stroke.size() - 1).add(raw_Online.get(raw_Online.size() - 1));
         } else {
@@ -246,7 +245,7 @@ public class TouchCollect {
         } else {
             currentState = states.STOP;
         }
-        Log.e("array: ", String.valueOf(currentState));
+        //Log.e("array: ", String.valueOf(currentState));
         gen_raw_Offline();
     }
 

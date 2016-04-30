@@ -5,16 +5,17 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
-import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
-import com.project.nicki.displaystabilizer.contentprovider.DemoDraw2;
+import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_draw0;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali2;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali3;
+import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
@@ -27,6 +28,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import au.com.bytecode.opencsv.CSVWriter;
 
@@ -36,8 +38,8 @@ import au.com.bytecode.opencsv.CSVWriter;
 public class getAcceGyro implements Runnable {
     private Handler sensor_ThreadHandler;
     private HandlerThread sensor_Thread;
-
-
+    //Acce Calibration
+    public static float[] AcceCaliFloat = new float[]{0,0,0};
     public static Handler mgetValusHT_TOUCH_handler;
     public static boolean isStatic = true;
     String csvName = "getAcceGyro.csv";
@@ -53,6 +55,7 @@ public class getAcceGyro implements Runnable {
     private HandlerThread mHandlerThread;
     private String TAG = "getAcceGyro";
     public static StopDetector mstopdetector = new StopDetector();
+    public static CircularBuffer2 AcceBuffer = new CircularBuffer2(50);
     public getAcceGyro(Context context) {
         mContext = context;
     }
@@ -98,6 +101,18 @@ public class getAcceGyro implements Runnable {
 
             @Override
             public void onSensorChanged(final SensorEvent event) {
+                final SensorEvent calievent = event;
+                //Calibration
+                //Log.d("calibration",String.valueOf(AcceCaliFloat[0]+" "+AcceCaliFloat[1]+" "+AcceCaliFloat[2]));
+                if(calievent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION){
+                    calievent.values[0] = calievent.values[0]-AcceCaliFloat[0];
+                    calievent.values[1] = calievent.values[1]-AcceCaliFloat[1];
+                    calievent.values[2] = calievent.values[2]-AcceCaliFloat[2];
+                }
+
+
+
+
                 DemoDrawUI.runOnUI(new Runnable() {
                     @Override
                     public void run() {
@@ -110,53 +125,76 @@ public class getAcceGyro implements Runnable {
                     }
                 });
 
-                //mproAcceGyroCali.Controller(event);
-                sensor_ThreadHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mproAcceGyroCali3.Controller(event);
-                    }
-                });
-                switch (event.sensor.getType()) {
+                //mproAcceGyroCali.Controller(calievent);
+
+                switch (calievent.sensor.getType()) {
                     case Sensor.TYPE_LINEAR_ACCELERATION:
-                        isStatic = mstaticsensor.getStatic(event.values);
-                        mstopdetector.update(event.values);
+                        isStatic = mstaticsensor.getStatic(calievent.values);
+                        mstopdetector.update(calievent.values);
+                        AcceBuffer.add(calievent.values);
+                        new LogCSV(init.rk4_Log+"calRk4", String.valueOf(getAcceGyro.mstopdetector.getStopped(0)),
+                                new BigDecimal(String.valueOf(calievent.timestamp)).toPlainString(),
+                                calievent.values[0],
+                                calievent.values[1],
+                                calievent.values[2]);
                         //if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1){
-                            //mgetValusHT_ACCE_handler.post(new Runnable() {
-                                //@Override
-                                //public void run() {
-                                    //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), event.values, SensorCollect.sensordata.TYPE.ACCE));
-                                //}
-                            //});
+                        //mgetValusHT_ACCE_handler.post(new Runnable() {
+                        //@Override
+                        //public void run() {
+                        //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), calievent.values, SensorCollect.sensordata.TYPE.ACCE));
+                        //}
+                        //});
                         //}
                 }
 
-                if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                    mGravity = event.values;
+                if (calievent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                    mGravity = calievent.values;
                 }
-                if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-                    mGeomagnetic = event.values;
+                if (calievent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+                    mGeomagnetic = calievent.values;
                 }
+                final float orientation[] = new float[3];
                 if (mGravity != null && mGeomagnetic != null) {
 
                     float R[] = new float[9];
                     float I[] = new float[9];
                     boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
                     if (success) {
-                        final float orientation[] = new float[3];
                         SensorManager.getOrientation(R, orientation);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                //init.initStabilize.set_Sensor(bundle);
+                            }
+                        }).start();
+
+
                         //if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1) {
-                            //mgetValusHT_ORIEN_handler.post(new Runnable() {
-                                //@Override
-                                //public void run() {
-                                    //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), orientation, SensorCollect.sensordata.TYPE.ORIEN_radian));
-                                //}
-                            //});
+                        //mgetValusHT_ORIEN_handler.post(new Runnable() {
+                        //@Override
+                        //public void run() {
+                        //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), orientation, SensorCollect.sensordata.TYPE.ORIEN_radian));
+                        //}
+                        //});
                         //}
                     }else {
-                        Log.d("TESTING", "error");
                     }
                 }
+                sensor_ThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try{
+                            mproAcceGyroCali3.Controller(String.valueOf(calievent.sensor.getStringType()),calievent.timestamp,calievent.values);
+                        }catch (Exception ex){
+                            Log.d("getAcce",String.valueOf(ex));
+                        }
+                        try{
+                            mproAcceGyroCali3.Controller("android.sensor.getR",calievent.timestamp,orientation);
+                        }catch (Exception ex){}
+
+                    }
+                });
+
             }
 
             @Override
@@ -220,7 +258,6 @@ public class getAcceGyro implements Runnable {
         public int[] stack = new int[]{0,0,0};
         private float[] prev = new float[]{0,0,0};
         public void update(float[] data){
-
             for (int i=0;i<3;i++){
                 if(data[i]*prev[i]>0){
                     stack[i]++;
@@ -238,11 +275,16 @@ public class getAcceGyro implements Runnable {
 
                 if(switchstop[i]){
                     switchstop_TRUE[i]++;
-                    if(switchstop_TRUE[i]>error_threshold[i]){
+                    if(switchstop_TRUE[i]>error_threshold[i]*2){
                         switchstop[i] = false;
                     }
                 }else {
                     switchstop_TRUE[i]=0;
+                }
+
+                if((switchstop_TRUE[0]>100 || switchstop_TRUE[0]>100 || switchstop_TRUE[0]>100 )&& UIv1_draw0.calibrate_isrunning==false){
+                    Log.d("DEBUGG",String.valueOf(switchstop_TRUE[0]+" "+ switchstop_TRUE[0]+" "+  switchstop_TRUE[0]+" "+   UIv1_draw0.calibrate_isrunning));
+                    //UIv1_draw0.calibrate.sendEmptyMessage(0);
                 }
             }
             prev = data.clone();
@@ -355,6 +397,32 @@ public class getAcceGyro implements Runnable {
                     return data[data.length / 2];
                 }
             }
+        }
+    }
+
+    public static class CircularBuffer2{
+        int bufflength = 50;
+        public boolean hasnew = false;
+        public CircularBuffer2(int i){
+            bufflength = i;
+        }
+        public List<float[]> data = new ArrayList<>();
+        public void add(float[] idata){
+            if(data.size()==0){
+                data.add(idata);
+            }else if(data.size()< bufflength){
+                data.add(idata);
+            }else {
+                data.add(idata);
+                data.remove(0);
+            }
+            hasnew = true;
+        }
+        public void reset(){
+            data = new ArrayList<>();
+        }
+        public boolean full(){
+            return (data.size()>= bufflength);
         }
     }
 }

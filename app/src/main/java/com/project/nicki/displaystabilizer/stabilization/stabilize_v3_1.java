@@ -78,6 +78,7 @@ public class stabilize_v3_1 {
             prevdrawSTATUS = drawSTATUS;
             drawSTATUS = DemoDraw3.drawing < 2;
 
+            /*
             if (deltaingStatus == 0) {
                 tmp1accesensordata = tmpaccesensordata;
                 tmpaccesensordata = new sensordata(tmp1accesensordata.getTime(), new float[]{0, 0});
@@ -86,7 +87,17 @@ public class stabilize_v3_1 {
                 tmpaccesensordata = new sensordata(tmp1accesensordata.getTime(), new float[]{
                         tmpaccesensordata.getData()[0] - tmp1accesensordata.getData()[1],
                         tmpaccesensordata.getData()[1] - tmp1accesensordata.getData()[1]});
-            }
+            }*/
+
+
+                if(tmp1accesensordata != null){
+                    tmpaccesensordata = new sensordata(tmp1accesensordata.getTime(), new float[]{
+                            tmpaccesensordata.getData()[0] - tmp1accesensordata.getData()[0],
+                            tmpaccesensordata.getData()[1] - tmp1accesensordata.getData()[1]});
+                    tmp1accesensordata = tmpaccesensordata;
+                }
+
+
 
             if (prevdrawSTATUS == false && drawSTATUS == true || init_yesno == false) {
                 orieninit = tmporiensensordata.getData();
@@ -102,21 +113,21 @@ public class stabilize_v3_1 {
                 stastrokedeltabuffer = new ArrayList<>();
                 prevTime = 0;
                 prevStroke = null;
-
+                tmp1accesensordata = null;
                 init_yesno = true;
                 tmpaccesensordata = null;
                 deltaingStatus = 0;
             }
-        }catch (Exception ex){
-            Log.e("set_Sensor",String.valueOf(ex));
-        }
 
+        }catch (Exception ex){
+            //Log.e("set_Sensor",String.valueOf(ex));
+        }
 
     }
 
     public ArrayList<sensordata> gen_Draw(final Bundle bundlegot) {
         //try {
-            if (DemoDraw.drawing == 0) {
+            if (DemoDraw3.drawing == 0) {
                 orieninit = tmporiensensordata.getData();
             }
             if (tmpaccesensordata == null || Pos == null) {

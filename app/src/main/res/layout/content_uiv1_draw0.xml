@@ -110,6 +110,13 @@
             </LinearLayout>
         </LinearLayout>
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Calibrate"
+            android:id="@+id/button_calibrate"
+            android:layout_gravity="center_horizontal" />
+
         <com.project.nicki.displaystabilizer.contentprovider.DemoDraw3
             android:layout_width="fill_parent"
             android:layout_height="395dp"

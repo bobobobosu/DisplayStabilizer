@@ -74,13 +74,13 @@ public class init extends AppCompatActivity {
         try {
             new Thread(new getAcceGyro(getBaseContext())).start();
         }catch (Exception ex){
-            Log.e("init", String.valueOf(ex));
+            //Log.e("init", String.valueOf(ex));
         }
         Intent goto_UIv1_splash0 = new Intent();
         overridePendingTransition(0, 0);
         goto_UIv1_splash0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_UIv1_splash0.setClass(init.this, UIv1_splash.class);
-        startActivity(goto_UIv1_splash0);
+        //startActivity(goto_UIv1_splash0);
 
         //new Thread(new stabilize_v3_1(getBaseContext())).start();
 
@@ -97,17 +97,19 @@ public class init extends AppCompatActivity {
         goto_UIv1_main0.setClass(init.this, UIv1_main0.class);
         //startActivity(goto_UIv1_main0);
 
-        Intent goto_UIv1_draw0 = new Intent();
-        overridePendingTransition(0, 0);
-        goto_UIv1_draw0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        goto_UIv1_draw0.setClass(init.this, UIv1_draw0.class);
-        //startActivity(goto_UIv1_draw0);
-
         Intent goto_Canvas1 = new Intent();
         overridePendingTransition(0, 0);
         goto_Canvas1.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_Canvas1.setClass(init.this, Canvas1.class);
         //startActivity(goto_Canvas1);
+
+
+        Intent goto_UIv1_draw0 = new Intent();
+        overridePendingTransition(0, 0);
+        goto_UIv1_draw0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        goto_UIv1_draw0.setClass(init.this, UIv1_draw0.class);
+        startActivity(goto_UIv1_draw0);
+
 
 
 /*
