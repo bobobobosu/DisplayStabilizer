@@ -29,11 +29,11 @@ public class SensorCollect {
         if (msensordata.type == sensordata.TYPE.ACCE) {
             ACCEstorage.add(msensordata);
 
-            new LogCSV("1append2","",
-                    new BigDecimal(ACCEstorage.get(ACCEstorage.size()-1).getTime()).toPlainString(),
-                    ACCEstorage.get(ACCEstorage.size()-1).getData()[0],
-                    ACCEstorage.get(ACCEstorage.size()-1).getData()[1],
-                    ACCEstorage.get(ACCEstorage.size()-1).getData()[2]);
+            //new LogCSV("1append2","",
+            //        new BigDecimal(ACCEstorage.get(ACCEstorage.size()-1).getTime()).toPlainString(),
+            //        ACCEstorage.get(ACCEstorage.size()-1).getData()[0],
+            //        ACCEstorage.get(ACCEstorage.size()-1).getData()[1],
+            //        ACCEstorage.get(ACCEstorage.size()-1).getData()[2]);
         }
         if (msensordata.type == sensordata.TYPE.ORIEN_radian) {
             ORIENstorage.add(msensordata);

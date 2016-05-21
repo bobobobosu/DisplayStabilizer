@@ -106,7 +106,7 @@ public class UIv1_view_view extends View {
         path= new Path();
         for(List<stabilize_v3.Point> impending_to_draw:pending_to_draw){
             try {
-                Log.e("TESTING",String.valueOf("THE SIZE: "+impending_to_draw.size()));
+                //Log.e("TESTING",String.valueOf("THE SIZE: "+impending_to_draw.size()));
             }catch (Exception ex){
 
             }
@@ -126,7 +126,7 @@ public class UIv1_view_view extends View {
         for (List<SensorCollect.sensordata> mchar : sta_char) {
             sta_pending_to_draw.add(init.initTouchCollection.sensordataList2pntList(mchar));
         }
-        Log.e("draw",String.valueOf(ori_char.size()+" "+sta_char.size()));
+        //Log.e("draw",String.valueOf(ori_char.size()+" "+sta_char.size()));
         invalidate();
     }
 
@@ -143,7 +143,7 @@ public class UIv1_view_view extends View {
         if (pts.size() > 1) {
             final int SMOOTH_VAL = 6;
             for (int i = pts.size() - 2; i < pts.size(); i++) {
-                Log.e("draw",String.valueOf(pts.get(i).x));
+                //Log.e("draw",String.valueOf(pts.get(i).x));
                 if (i >= 0) {
                     stabilize_v3.Point point = pts.get(i);
                     if (i == 0) {

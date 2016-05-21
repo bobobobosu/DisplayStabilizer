@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DemoDraw3 extends View {
-
+    public static boolean resetted = false;
     //recognize
     private LipiTKJNIInterface _lipitkInterface;
     private static LipiTKJNIInterface _recognizer = null;
@@ -130,7 +130,6 @@ public class DemoDraw3 extends View {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
-                Log.e("LOG","bibibib");
                 path = new Path();
                 path2 = new Path();
                 path3 = new Path();
@@ -179,7 +178,7 @@ public class DemoDraw3 extends View {
         final float eventY = event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                //resetted = false;
+                resetted = false;
                 orienreset = false;
                 //path.reset();
                 //path2.reset();
@@ -187,6 +186,7 @@ public class DemoDraw3 extends View {
                 drawing = 0;
                 new passTouch(event);
                 path.moveTo(eventX, eventY);
+                path.lineTo(eventX, eventY);
                 return true;
             case MotionEvent.ACTION_MOVE:
                 mpath_ctrl.getReplace();

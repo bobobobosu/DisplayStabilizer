@@ -45,8 +45,8 @@ public class motion_Inertial {
 
 
     public List<SensorCollect.sensordata> getLocationList_full(List<SensorCollect.sensordata> ACCEstorage, List<SensorCollect.sensordata> ORIENstorage) {
-        Log.d("getLocationList_full","erfvwer");
         List<SensorCollect.sensordata> locationList_full = createLocationListfromLists(ACCEstorage, ORIENstorage);
+
         for(int i=0;i<locationList_full.size();i++){
             new LogCSV("locationList_full7","",new BigDecimal(locationList_full.get(i).getTime()).toPlainString(),
                     locationList_full.get(i).getData()[0],
