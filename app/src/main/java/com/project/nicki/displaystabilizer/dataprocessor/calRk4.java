@@ -154,16 +154,16 @@ public class calRk4 {
     }
 
     public double acceleration(Position position, double t) {        //Calculate all acceleration here - modify as needed
-        double f = position.a;
-        System.out.println(position.a);
-        return f;
+        float k = 10;
+        float b = 1;
+        return k * position.pos +b*position.v;
     }
 
     public Derivative evaluate(Position initial, double t, double dt, Derivative d, double acceleration) {   //Calculate new position based on change over time
         Position position = new Position(initial.pos + d.dp * dt, initial.v + d.dv * dt);       //New state influenced by derivatives of pos and v
+        position.v = acceleration(position,t+dt);
         return new Derivative(position.v, acceleration);//acceleration(position, t));   //Calculate new derivative for new position
     }
-
     public class Position {
         public double pos = 6;      //position
         public double v = 6;        //velocity
