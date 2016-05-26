@@ -18,6 +18,18 @@
             <option value="$PROJECT_DIR$/opencsv-2.1-1.0.0" />
           </set>
         </option>
+        <option name="myModules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/JKalman" />
+            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/butterknife-7.0.1" />
+            <option value="$PROJECT_DIR$/commons-math3-3.6" />
+            <option value="$PROJECT_DIR$/dsp-collection" />
+            <option value="$PROJECT_DIR$/lipiTk" />
+            <option value="$PROJECT_DIR$/opencsv-2.1-1.0.0" />
+          </set>
+        </option>
       </GradleProjectSettings>
     </option>
   </component>

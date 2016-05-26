@@ -8,6 +8,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
@@ -56,6 +57,13 @@ public class getAcceGyro implements Runnable {
     private String TAG = "getAcceGyro";
     public static StopDetector mstopdetector = new StopDetector();
     public static CircularBuffer2 AcceBuffer = new CircularBuffer2(50);
+
+    //MATLAB LOG
+    int initnum =0;
+    float[] acce = null;
+    float[] gyro = null;
+    float[] magn = null;
+
     public getAcceGyro(Context context) {
         mContext = context;
     }
@@ -90,6 +98,7 @@ public class getAcceGyro implements Runnable {
         mMSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         mRSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMASensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        mGSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         mHandlerThread = new HandlerThread("getAcceGyro");
         mHandlerThread.start();
 
@@ -195,7 +204,44 @@ public class getAcceGyro implements Runnable {
                     }
                 });
 
+
+                //Matlab LOG
+                initnum++;
+                if(initnum>5000){
+                    if(event.sensor.getType()==Sensor.TYPE_ACCELEROMETER){
+                        acce = event.values;
+                    }
+                    if(event.sensor.getType()==Sensor.TYPE_GYROSCOPE){
+                        gyro = event.values;
+                    }
+                    if(event.sensor.getType()==Sensor.TYPE_MAGNETIC_FIELD){
+                        magn = event.values;
+                    }
+                    if(acce!=null && gyro!=null && magn!=null){
+                        Log.d(TAG,"MATLAB "+String.valueOf(acce[0])+" "+String.valueOf(gyro[0])+" "+String.valueOf(magn[0]));
+                        LogCSV.LogCSV(
+                                "MATLAB", String.valueOf(initnum),
+                                String.valueOf(gyro[0]),
+                                gyro[1],
+                                gyro[2],
+                                acce[0]/10,
+                                acce[1]/10,
+                                acce[2]/10,
+                                magn[0],
+                                magn[1],
+                                magn[2]
+                        );
+                        acce = null;
+                        gyro = null;
+                        magn = null;
+                    }
+                }
+
+
             }
+
+
+
 
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {

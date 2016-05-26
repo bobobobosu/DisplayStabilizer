@@ -1,10 +1,14 @@
 [
     {
-        "merged": "C:\\Users\\nicki\\StudioProjects\\DisplayStabilizer\\lipiTk\\build\\intermediates\\res\\merged\\androidTest\\debug\\layout\\main.xml",
-        "source": "C:\\Users\\nicki\\StudioProjects\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\layout\\main.xml"
-    },
-    {
         "merged": "C:\\Users\\nicki\\Desktop\\DisplayStabilizer\\lipiTk\\build\\intermediates\\res\\merged\\androidTest\\debug\\layout\\main.xml",
         "source": "C:\\Users\\nicki\\Desktop\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\layout\\main.xml"
+    },
+    {
+        "merged": "C:\\Users\\nickisverygood\\AndroidProjects\\new\\DisplayStabilizer\\lipiTk\\build\\intermediates\\res\\merged\\androidTest\\debug\\layout\\main.xml",
+        "source": "C:\\Users\\nickisverygood\\AndroidProjects\\new\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\layout\\main.xml"
+    },
+    {
+        "merged": "C:\\Users\\nicki\\StudioProjects\\DisplayStabilizer\\lipiTk\\build\\intermediates\\res\\merged\\androidTest\\debug\\layout\\main.xml",
+        "source": "C:\\Users\\nicki\\StudioProjects\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\layout\\main.xml"
     }
 ]

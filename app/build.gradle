@@ -9,12 +9,6 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
-        multiDexEnabled true
-    }
-    dexOptions {
-        incremental = true;
-        preDexLibraries = false
-        javaMaxHeapSize "2g"
     }
 
     buildTypes {
