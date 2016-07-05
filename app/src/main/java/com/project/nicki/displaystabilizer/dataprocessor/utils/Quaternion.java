@@ -1,5 +1,7 @@
 package com.project.nicki.displaystabilizer.dataprocessor.utils;
 
+import org.apache.commons.math3.util.FastMath;
+
 /**
  * Created by nickisverygood on 12/16/2015.
  */
@@ -94,6 +96,36 @@ public class Quaternion {
         return a.inverse().times(b);
     }
 
+    public float[] toAngles() {
+        float[] angles =null;
+        if (angles == null) {
+            angles = new float[3];
+        } else if (angles.length != 3) {
+            throw new IllegalArgumentException("Angles array must have three elements");
+        }
+        float sqw = (float) (x0 * x0);
+        float sqx = (float) (x1 * x1);
+        float sqy = (float) (x2 * x2);
+        float sqz = (float) (x3 * x3);
+        float unit = sqx + sqy + sqz + sqw; // if normalized is one, otherwise
+        // is correction factor
+        float test = (float) (x1 * x2 + x3 * x0);
+        if (test > 0.499 * unit) { // singularity at north pole
+            angles[1] = (float) (2 * FastMath.atan2(x1, x0));
+            angles[2] = (float) (FastMath.PI/2);
+            angles[0] = 0;
+        } else if (test < -0.499 * unit) { // singularity at south pole
+            angles[1] = (float) (-2 * FastMath.atan2(x1, x0));
+            angles[2] = (float) (-FastMath.PI/2);
+            angles[0] = 0;
+        } else {
+            angles[1] = (float) FastMath.atan2(2 * x2 * x0 - 2 * x1 * x3, sqx - sqy - sqz + sqw); // roll or heading
+            angles[2] = (float) FastMath.asin(2 * test / unit); // pitch or attitude
+            angles[0] = (float) FastMath.atan2(2 * x1 * x0 - 2 * x2 * x3, -sqx + sqy - sqz + sqw); // yaw or bank
+        }
+        return angles;
+    }
+
     // sample client for testing
     public static void main(String[] args) {
         Quaternion a = new Quaternion(3.0, 1.0, 0.0, 0.0);
@@ -112,6 +144,8 @@ public class Quaternion {
         System.out.println("a^-1 * a = " + a.inverse().times(a));
         System.out.println("a * a^-1 = " + a.times(a.inverse()));
     }
+
+
 
 }
 

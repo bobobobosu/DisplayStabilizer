@@ -8,7 +8,8 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.SystemClock;
+import android.renderscript.Matrix3f;
+import android.renderscript.Matrix4f;
 import android.util.Log;
 
 import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
@@ -17,6 +18,7 @@ import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali2;
 import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali3;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
+import com.project.nicki.displaystabilizer.dataprocessor.utils.Matrix2Quaternion;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
@@ -57,13 +59,6 @@ public class getAcceGyro implements Runnable {
     private String TAG = "getAcceGyro";
     public static StopDetector mstopdetector = new StopDetector();
     public static CircularBuffer2 AcceBuffer = new CircularBuffer2(50);
-
-    //MATLAB LOG
-    int initnum =0;
-    float[] acce = null;
-    float[] gyro = null;
-    float[] magn = null;
-
     public getAcceGyro(Context context) {
         mContext = context;
     }
@@ -98,7 +93,6 @@ public class getAcceGyro implements Runnable {
         mMSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         mRSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMASensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        mGSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         mHandlerThread = new HandlerThread("getAcceGyro");
         mHandlerThread.start();
 
@@ -168,16 +162,25 @@ public class getAcceGyro implements Runnable {
                     float R[] = new float[9];
                     float I[] = new float[9];
                     boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+                    //R =new float[] {0.5f,0.866f,0f,-0.866f,0.5f,0f,0f,0f,1f};
+                    //float[] q = Matrix2Quaternion.setQuatFromMatrix(new Matrix3f(R));
+                    //Log.i("QUA",q[0]+" "+q[1]+" "+q[2]+" "+q[3]);
                     if (success) {
                         SensorManager.getOrientation(R, orientation);
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                //init.initStabilize.set_Sensor(bundle);
-                            }
-                        }).start();
-
-
+                        /*
+                        new LogCSV(init.rk4_Log + " ll", String.valueOf(getAcceGyro.mstopdetector.getStopped(0)),
+                                String.valueOf(System.currentTimeMillis()),
+                                mGravity[0],
+                                mGravity[1],
+                                mGravity[2],
+                                mGeomagnetic[0],
+                                mGeomagnetic[1],
+                                mGeomagnetic[2],
+                                orientation[0],
+                                orientation[1],
+                                orientation[2],
+                        R[0],R[1],R[2],R[3],R[4],R[5],R[6],R[7],R[8]);
+                        */
                         //if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1) {
                         //mgetValusHT_ORIEN_handler.post(new Runnable() {
                         //@Override
@@ -204,44 +207,7 @@ public class getAcceGyro implements Runnable {
                     }
                 });
 
-
-                //Matlab LOG
-                initnum++;
-                if(initnum>5000){
-                    if(event.sensor.getType()==Sensor.TYPE_ACCELEROMETER){
-                        acce = event.values;
-                    }
-                    if(event.sensor.getType()==Sensor.TYPE_GYROSCOPE){
-                        gyro = event.values;
-                    }
-                    if(event.sensor.getType()==Sensor.TYPE_MAGNETIC_FIELD){
-                        magn = event.values;
-                    }
-                    if(acce!=null && gyro!=null && magn!=null){
-                        Log.d(TAG,"MATLAB "+String.valueOf(acce[0])+" "+String.valueOf(gyro[0])+" "+String.valueOf(magn[0]));
-                        LogCSV.LogCSV(
-                                "MATLAB", String.valueOf(initnum),
-                                String.valueOf(gyro[0]),
-                                gyro[1],
-                                gyro[2],
-                                acce[0]/10,
-                                acce[1]/10,
-                                acce[2]/10,
-                                magn[0],
-                                magn[1],
-                                magn[2]
-                        );
-                        acce = null;
-                        gyro = null;
-                        magn = null;
-                    }
-                }
-
-
             }
-
-
-
 
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {

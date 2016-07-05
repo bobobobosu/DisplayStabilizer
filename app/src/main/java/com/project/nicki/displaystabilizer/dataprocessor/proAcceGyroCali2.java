@@ -246,8 +246,8 @@ public class proAcceGyroCali2 {
             float I[] = new float[9];
             boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
             if (success) {
-                orientation = new float[3];
-                SensorManager.getOrientation(R, orientation);
+                currOrientation = new float[3];
+                SensorManager.getOrientation(R, currOrientation);
             }
         }
 */

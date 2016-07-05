@@ -6,8 +6,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.StrictMode;
-import android.support.annotation.StringDef;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -18,10 +16,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.canvas.Canvas1;
-import com.canvas.Stroke;
 import com.project.nicki.displaystabilizer.R;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
 import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
@@ -31,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UIv1_draw0 extends AppCompatActivity {
+    //// declartions
     //display results
     public static TextView view_ORI_CHAR;
     public static TextView view_ORI_CONF;
@@ -41,18 +38,19 @@ public class UIv1_draw0 extends AppCompatActivity {
     public static Handler calibrate;
     public static Handler dialog_recognizing;
     public static boolean  calibrate_isrunning = false;
-
     //draw view
-    DemoDraw3 j_DemoDraw;
+    DemoDraw3 mDemoDraw;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        j_DemoDraw = new DemoDraw3(this);
-        j_DemoDraw = (DemoDraw3) findViewById(R.id.view_DemoDraw3);
 
-
+        //init draw view
+        mDemoDraw = new DemoDraw3(this);
+        mDemoDraw = (DemoDraw3) findViewById(R.id.view_DemoDraw3);
         setContentView(R.layout.activity_uiv1_draw0);
+
+        //init widgets
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         view_ORI_CHAR = (TextView) findViewById(R.id.ori_char);
         view_ORI_CONF = (TextView) findViewById(R.id.ori_conf);
@@ -65,7 +63,20 @@ public class UIv1_draw0 extends AppCompatActivity {
                 calibrate.sendEmptyMessage(0);
             }
         });
+        setSupportActionBar(toolbar);
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                init.initTouchCollection.save_and_clean();
+                Snackbar.make(view, "Recognized & Cleaned", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
 
+
+        ////init handlers
+        //recognize dialog
         final ProgressDialog[] ddialog_recognizing = new ProgressDialog[1];
         dialog_recognizing = new Handler(){
             @Override
@@ -79,6 +90,7 @@ public class UIv1_draw0 extends AppCompatActivity {
                 }
             }
         };
+        //init calibration dialog
         calibrate = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -130,8 +142,7 @@ public class UIv1_draw0 extends AppCompatActivity {
                 }
             }
         };
-
-        //calibrate.sendEmptyMessage(0);
+        //update widgets
         update_results = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -151,19 +162,8 @@ public class UIv1_draw0 extends AppCompatActivity {
                 }
             }
         };
-        //calibrate.sendEmptyMessage(0);
-        setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                init.initTouchCollection.save_and_clean();
-                Snackbar.make(view, "Recognized & Cleaned", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
+        //initiation
         calibrate.sendEmptyMessage(0);
     }
 

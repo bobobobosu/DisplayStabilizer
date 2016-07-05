@@ -309,7 +309,7 @@ public class proAcceGyroCali extends getAcceGyro {
                     cirbuff.add(thissensordata);
                     cirbuff.remove(0);
                     sensordata Allan = mcalAllan.getAvgAllan(cirbuff);
-                    //LogCSV("Allan", String.valueOf(Allan.getData()[0]), String.valueOf(Allan.getData()[1]), String.valueOf(Allan.getData()[2]), String.valueOf(thissensordata.getTime()), "", " ");
+                    //LogCSV("Allan", String.valueOf(Allan.getData()[0]), String.valueOf(Allan.getData()[1]), String.valueOf(Allan.getData()[2]), String.valueOf(currSensordata.getTime()), "", " ");
                     Log.d(TAG, "Allan: " + Allan.getData()[0]);
                 }
 
@@ -352,7 +352,7 @@ public class proAcceGyroCali extends getAcceGyro {
                 if (tmpgyrodata != null) {
                     thissensordata = rotateInput(thissensordata);
                     ///Log.d(TAG, "stop");
-                    //thissensordata.setData(new float[]{(float) result[0][0], (float) result[0][1]});
+                    //currSensordata.setData(new float[]{(float) result[0][0], (float) result[0][1]});
                     //mrotateVector.rotate(new sensordata(mSensorEvent.timestamp, new float[]{mSensorEvent.values[0], mSensorEvent.values[1]}));
                 }
 
@@ -360,15 +360,15 @@ public class proAcceGyroCali extends getAcceGyro {
                 //Choose and run
                 if (selectedMethod == 0 || modauto == 0) {
                     mdisplay.displaystatus2("Method: " + "NoShake");
-                    //thissensordata = mrotateVector.rotate(thissensordata);
+                    //currSensordata = mrotateVector.rotate(currSensordata);
                     NoShake(thissensordata);
                 } else if (selectedMethod == 1 || modauto == 1) {
                     mdisplay.displaystatus2("Method: " + "RK4");
-                    //thissensordata = mrotateVector.rotate(thissensordata);
+                    //currSensordata = mrotateVector.rotate(currSensordata);
                     RK4(thissensordata);
                 } else if (selectedMethod == 2 || modauto == 2) {
                     mdisplay.displaystatus2("Method: " + "Eular");
-                    //thissensordata = mrotateVector.rotate(thissensordata);
+                    //currSensordata = mrotateVector.rotate(currSensordata);
                     Eular(thissensordata);
                 }
                 Log.d(TAG, "current method " + selectedMethod);
@@ -392,7 +392,7 @@ public class proAcceGyroCali extends getAcceGyro {
                 mdisplay.displaystatus1("Calibrating...");
             } else {
                 sensordata thissensordata = new sensordata(mSensorEvent.timestamp, mSensorEvent.values);
-                //Calibration(thissensordata);
+                //Calibration(currSensordata);
             }
         }
     }

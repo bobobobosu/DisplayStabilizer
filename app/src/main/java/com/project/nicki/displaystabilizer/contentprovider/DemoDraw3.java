@@ -19,9 +19,13 @@ import com.canvas.LipiTKJNIInterface;
 import com.canvas.LipitkResult;
 import com.canvas.Stroke;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
+import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali3;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
+import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
+
+import org.ejml.simple.SimpleMatrix;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -29,61 +33,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DemoDraw3 extends View {
+    ////Constants
+    private final String TAG = "DemoDraw3";
+    protected Context mContext;
+    ////States
     public static boolean resetted = false;
-    //recognize
-    private LipiTKJNIInterface _lipitkInterface;
-    private static LipiTKJNIInterface _recognizer = null;
     public static int StrokeResultCount = 0;
-
-    private class path_ctrl{
-        List<Path> pathList = new ArrayList<>();
-        public path_ctrl(){
-            pathList.add(new Path());
-        }
-        public Path getNew(){
-            pathList.add(new Path());
-            return pathList.get(pathList.size()-1);
-        }
-        public Path getReplace(){
-            try {
-                pathList.remove(pathList.size()-1);
-            }catch (Exception ex){
-
-            }
-            pathList.add(new Path());
-            return pathList.get(pathList.size()-1);
-        }
-        public Path getCurr(){
-            return pathList.get(pathList.size()-1);
-        }
-        public void drawAll(Canvas canvas,Paint paint){
-            for(Path mpath:pathList){
-                canvas.drawPath(mpath,paint);
-            }
-        }
-    }
-    public path_ctrl mpath_ctrl= new path_ctrl();
+    public static boolean orienreset = false;
+    public static int drawing = 3;
+    public static boolean pending_quaternion_reset = false   ;
+    ////Buffer
     public static List<List<stabilize_v3.Point>> sta_pending_to_draw = new ArrayList<>();
     public static List<List<stabilize_v3.Point>> ori_pending_to_draw = new ArrayList<>();
     public static List<stabilize_v3.Point> pending_to_draw_direct = new ArrayList<>();
-
-    public List<List<stabilize_v3.Point>> nonstatic_pending_to_draw= new ArrayList<>();
-
-    private static final String TAG = "DemoDraw";
-    public static boolean orienreset = false;
-    public static int drawing = 3;
-    public static Paint paint2 = new Paint();
+    public static Path path = new Path();
     public static Path path2 = new Path();
     public static Path path3 = new Path();
-    public static Rect rectangle;
+    public static Paint paint = new Paint();
+    public static Paint paint2 = new Paint();
+    public static Paint paint3 = new Paint();
+    ////Handlers
     public static Handler clean_and_refresh;
     public static Handler refresh;
-    public static Paint paint = new Paint();
-    public static Paint paint3 = new Paint();
-    public List<stabilize_v3.Point> incremental = new ArrayList<>();
-    public static Path path = new Path();
-    protected Context mContext;
-
+    ////LipiToolkit
+    private LipiTKJNIInterface _lipitkInterface;
+    private static LipiTKJNIInterface _recognizer = null;
 
 
     public DemoDraw3(Context context) {
@@ -93,7 +67,7 @@ public class DemoDraw3 extends View {
 
     public DemoDraw3(Context context, AttributeSet attrs) {
         super(context, attrs);
-        //recognize
+        //Lipi init
         File externalFileDir = getContext().getExternalFilesDir(null);
         final String externalFileDirPath = externalFileDir.getPath();
         Log.d("JNI", "Path: " + externalFileDirPath);
@@ -101,6 +75,7 @@ public class DemoDraw3 extends View {
         _lipitkInterface.initialize();
         _recognizer = _lipitkInterface;
 
+        //painter init
         paint.setAntiAlias(true);
         paint.setStrokeWidth(5f);
         paint.setColor(Color.BLACK);
@@ -119,7 +94,8 @@ public class DemoDraw3 extends View {
         paint3.setStyle(Paint.Style.STROKE);
         paint3.setStrokeJoin(Paint.Join.ROUND);
 
-        refresh = new Handler(){
+        //Handlers init
+        refresh = new Handler() {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
@@ -141,36 +117,17 @@ public class DemoDraw3 extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if(drawing==1 || drawing==0){
-            //drawCanvas(canvas, stabilize_v3.stabilize.mstabilizeSession.todraw);
-    }
-
         try {
-            drawCanvas(canvas,path3,pending_to_draw_direct);
-            draw_ListofPaths(canvas,paint3,path3, sta_pending_to_draw);
+            drawCanvas(canvas, path3, pending_to_draw_direct);
+            draw_ListofPaths(canvas, paint3, path3, sta_pending_to_draw);
 
-        }catch (Exception ex){
+        } catch (Exception ex) {
             //Log.e("onDraw",String.valueOf(ex));
         }
 
-        mpath_ctrl.drawAll(canvas,paint3);
         canvas.drawPath(path, paint);
         canvas.drawPath(path2, paint2);
     }
-
-    public void draw_ListofPaths(Canvas canvas,Paint paint,Path path,List<List<stabilize_v3.Point>> pending_to_draw){
-        path= new Path();
-        for(List<stabilize_v3.Point> impending_to_draw:pending_to_draw){
-            try {
-                Log.e("TESTING",String.valueOf("THE SIZE: "+impending_to_draw.size()));
-            }catch (Exception ex){
-
-            }
-
-            drawCanvas(canvas, path,impending_to_draw);
-        }
-    }
-
 
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
@@ -180,22 +137,18 @@ public class DemoDraw3 extends View {
             case MotionEvent.ACTION_DOWN:
                 resetted = false;
                 orienreset = false;
-                //path.reset();
-                //path2.reset();
-                //path3.reset();
                 drawing = 0;
+                pending_quaternion_reset = true;
                 new passTouch(event);
                 path.moveTo(eventX, eventY);
                 path.lineTo(eventX, eventY);
                 return true;
             case MotionEvent.ACTION_MOVE:
-                mpath_ctrl.getReplace();
                 drawing = 1;
                 new passTouch(event);
                 path.lineTo(eventX, eventY);
                 break;
             case MotionEvent.ACTION_UP:
-                mpath_ctrl.getNew();
                 new passTouch(event);
                 drawing = 2;
                 break;
@@ -211,13 +164,51 @@ public class DemoDraw3 extends View {
 
 
 
+    ////Toolkit
+    //draw list of path
+    public void draw_ListofPaths(Canvas canvas, Paint paint, Path path, List<List<stabilize_v3.Point>> pending_to_draw) {
+        path = new Path();
 
-    //todraw
-    private void drawCanvas(Canvas canvas,Path mpath, List<stabilize_v3.Point> pts) {
+        for (List<stabilize_v3.Point> impending_to_draw : pending_to_draw) {
+
+            try {
+                Log.e("TESTING", String.valueOf("THE SIZE: " + impending_to_draw.size()));
+            } catch (Exception ex) {
+
+            }
+            drawCanvas(canvas, path, impending_to_draw);
+        }
+    }
+    //drawCanvas
+    private void drawCanvas(Canvas canvas, Path mpath, final List<stabilize_v3.Point> mpts) {
+        List<stabilize_v3.Point> pts = new ArrayList<>(mpts);
+        //rotate
+        //finger_Xto0
+        rotatePts(pts);
+        /*==
+        List<stabilize_v3.Point> tmppts = new ArrayList<>();
+        for(int i=50;i<500;i++){
+            tmppts.add(new stabilize_v3.Point(50,i));
+        }
+        if(tmppts.size()>1){
+            double[][] Xto0 = new double[][]{{(double) (0 - tmppts.get(tmppts.size() - 1).x)}, {(double) (0 - tmppts.get(tmppts.size() - 1).y)}, {1}};
+            SimpleMatrix Xto0_m = new SimpleMatrix(Xto0);
+            SimpleMatrix rot_m = new SimpleMatrix(proAcceGyroCali3.currRot);
+            for (int i = 0; i < tmppts.size(); i++) {
+                SimpleMatrix ori = new SimpleMatrix(new double[][]{{(double) tmppts.get(i).x}, {(double) tmppts.get(i).y}, {1}});
+                SimpleMatrix fin = rot_m.mult(ori.plus(Xto0_m)).minus(Xto0_m);
+                tmppts.set(i,new stabilize_v3.Point((float) fin.get(0, 0), (float) fin.get(1, 0)));
+                Log.i("matrix", String.valueOf(fin.toString()));
+            }
+        }
+
+        pts.addAll(tmppts);
+*/
+
         if (pts.size() > 1) {
             final int SMOOTH_VAL = 6;
             for (int i = pts.size() - 2; i < pts.size(); i++) {
-                Log.e("draw",String.valueOf(pts.get(i).x));
+                Log.e("draw", String.valueOf(pts.get(i).x));
                 if (i >= 0) {
                     stabilize_v3.Point point = pts.get(i);
                     if (i == 0) {
@@ -236,6 +227,7 @@ public class DemoDraw3 extends View {
                     }
                 }
             }
+
             boolean first = true;
             for (int i = 0; i < pts.size(); i++) {
                 stabilize_v3.Point point = pts.get(i);
@@ -262,10 +254,9 @@ public class DemoDraw3 extends View {
         public passTouch(final MotionEvent event) {
             init.initTouchCollection.set_Touch(event);
         }
-
     }
 
-
+    //recognize strokes
     public static recognized_data recognize_stroke(List<List<SensorCollect.sensordata>> lists) {
         if (lists.size() > 0) {
             String[] character = new String[0];
@@ -306,11 +297,12 @@ public class DemoDraw3 extends View {
 
     }
 
+    //merge strokes
     private static List<Stroke> merge_strokes(List<Stroke> strokes) {
         List<Stroke> return_strokeList = new ArrayList<>();
         Stroke merged_stroke = new Stroke();
-        for(Stroke mstroke:strokes){
-            for (int i=0;i<mstroke.getPoints().size();i++){
+        for (Stroke mstroke : strokes) {
+            for (int i = 0; i < mstroke.getPoints().size(); i++) {
                 merged_stroke.addPoint(mstroke.getPointAt(i));
             }
         }
@@ -318,25 +310,47 @@ public class DemoDraw3 extends View {
         return return_strokeList;
     }
 
-    public static class recognized_data{
+    //rotate points
+    public List<stabilize_v3.Point> rotatePts(List<stabilize_v3.Point> pts){
+        if(pts.size()>1 ){
+            double[][] Xto0 = new double[][]{{(double) (0 - pts.get(pts.size() - 1).x)}, {(double) (0 - pts.get(pts.size() - 1).y)}, {0}};
+            SimpleMatrix Xto0_m = new SimpleMatrix(Xto0);
+            SimpleMatrix rot_m = new SimpleMatrix(proAcceGyroCali3.currRot);
+            for (int i = 0; i < pts.size(); i++) {
+                SimpleMatrix ori = new SimpleMatrix(new double[][]{{(double) pts.get(i).x}, {(double) pts.get(i).y}, {0}});
+                SimpleMatrix fin = rot_m.mult(ori.plus(Xto0_m)).minus(Xto0_m);
+                pts.set(i,new stabilize_v3.Point((float) fin.get(0, 0), (float) fin.get(1, 0)));
+                Log.i("matrix", String.valueOf(fin.toString()));
+            }
+        }
+        return  pts;
+    }
+
+    ////Classes
+    //recognizes data class
+    public static class recognized_data {
         String configFileDirectory = _recognizer.getLipiDirectory() + "/projects/alphanumeric/config/";
         String[] characterArr;
         float[] confidenceArr;
-        public recognized_data(LipitkResult[] results){
+
+        public recognized_data(LipitkResult[] results) {
             characterArr = new String[results.length];
             confidenceArr = new float[results.length];
-            for(int i=0;i<results.length;i++){
+            for (int i = 0; i < results.length; i++) {
                 characterArr[i] = _recognizer.getSymbolName(results[i].Id, configFileDirectory);
                 confidenceArr[i] = results[i].Confidence;
             }
         }
 
-        public String getCharIndex(int i){
+        public String getCharIndex(int i) {
             return characterArr[i];
         }
-        public float getConfidenceIndex(int i){
+
+        public float getConfidenceIndex(int i) {
             return confidenceArr[i];
         }
     }
+
+
 
 }

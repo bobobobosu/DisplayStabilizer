@@ -1,27 +1,22 @@
 package com.project.nicki.displaystabilizer.stabilization;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.canvas.Stroke;
-import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
-import com.project.nicki.displaystabilizer.contentprovider.DemoDraw;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
+import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
+import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect.sensordata;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Serializable;
+import org.apache.commons.math3.complex.Quaternion;
+import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
+import org.ejml.data.Matrix;
+import org.ejml.simple.SimpleMatrix;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import au.com.bytecode.opencsv.CSVWriter;
 
 /**
  * Created by nickisverygood on 1/3/2016.
@@ -34,11 +29,8 @@ public class stabilize_v3_1 {
     private static float cY;
     //mods
     public boolean CalibrationMode = true;
-    public ArrayList<sensordata> stroke2pos;
 
     //buffers
-
-    
     ArrayList<sensordata> strokebuffer = new ArrayList<sensordata>();
     ArrayList<sensordata> strokedeltabuffer = new ArrayList<sensordata>();
     ArrayList<sensordata> posbuffer = new ArrayList<sensordata>();
@@ -54,6 +46,9 @@ public class stabilize_v3_1 {
     sensordata tmpaccesensordata;
     sensordata tmporiensensordata;
     float[] Pos = null;
+    double[] prevQuaternion = null;
+    double[] currQuaternion = null;
+    double[][] currRot = null;
     int deltaingStatus = 0;
     sensordata tmp1accesensordata;
     //init_yesno specific
@@ -67,6 +62,7 @@ public class stabilize_v3_1 {
     public void set_Sensor(final Bundle bundlegot) {
         try {
             Pos = bundlegot.getFloatArray("Pos");
+            currQuaternion = bundlegot.getDoubleArray("Quaternion");
 
             tmpaccesensordata = new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Pos"));
             tmporiensensordata = new sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Orien"));
@@ -77,31 +73,25 @@ public class stabilize_v3_1 {
 
             prevdrawSTATUS = drawSTATUS;
             drawSTATUS = DemoDraw3.drawing < 2;
-
-            /*
-            if (deltaingStatus == 0) {
-                tmp1accesensordata = tmpaccesensordata;
-                tmpaccesensordata = new sensordata(tmp1accesensordata.getTime(), new float[]{0, 0});
-                deltaingStatus = 1;
-            } else if (deltaingStatus == 1) {
-                tmpaccesensordata = new sensordata(tmp1accesensordata.getTime(), new float[]{
-                        tmpaccesensordata.getData()[0] - tmp1accesensordata.getData()[1],
-                        tmpaccesensordata.getData()[1] - tmp1accesensordata.getData()[1]});
-            }*/
-
-
-                if(tmp1accesensordata != null){
-                    tmpaccesensordata = new sensordata(tmp1accesensordata.getTime(), new float[]{
-                            tmpaccesensordata.getData()[0] - tmp1accesensordata.getData()[0],
-                            tmpaccesensordata.getData()[1] - tmp1accesensordata.getData()[1]});
-                    tmp1accesensordata = tmpaccesensordata;
+            if (tmp1accesensordata != null) {
+                float[] delta = new float[]{
+                        tmpaccesensordata.getData()[0] - tmp1accesensordata.getData()[0],
+                        tmpaccesensordata.getData()[1] - tmp1accesensordata.getData()[1]};
+                if (currRot != null) {
+                    SimpleMatrix delta_m = new SimpleMatrix(new double[][]{{(double) delta[0]}, {(double) delta[1]}, {0}});
+                    SimpleMatrix rot_m = new SimpleMatrix(currRot);
+                    delta_m.mult(rot_m);
+                    delta = new float[]{(float)delta_m.getMatrix().get(0,0),(float)delta_m.getMatrix().get(1,0)};
                 }
 
 
+                tmpaccesensordata = new sensordata(tmp1accesensordata.getTime(), delta);
+                tmp1accesensordata = tmpaccesensordata;
+            }
 
             if (prevdrawSTATUS == false && drawSTATUS == true || init_yesno == false) {
                 orieninit = tmporiensensordata.getData();
-                
+
                 if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
                     CalibrationMode = false;
                 }
@@ -119,125 +109,156 @@ public class stabilize_v3_1 {
                 deltaingStatus = 0;
             }
 
-        }catch (Exception ex){
+        } catch (Exception ex) {
             //Log.e("set_Sensor",String.valueOf(ex));
         }
 
     }
 
     public ArrayList<sensordata> gen_Draw(final Bundle bundlegot) {
+        if (prevQuaternion != null) {
+            Quaternion q_currQuaternion = new Quaternion(currQuaternion[0],currQuaternion[1],currQuaternion[2],currQuaternion[3]);
+            Quaternion q_prevQuaternion = new Quaternion(prevQuaternion[0],prevQuaternion[1],prevQuaternion[2],prevQuaternion[3]);
+            //Quaternion q_currQuaternion = new Quaternion(1,0,0,0);
+            //Quaternion q_prevQuaternion = new Quaternion(0.7358881620051946,0.2889093508708513,0.45508140685231796,0.40975713921457785);
+            Quaternion q_currminusprev = q_currQuaternion.multiply(q_prevQuaternion.getInverse());
+            Rotation convert2rot = new Rotation(q_currminusprev.getQ0(), q_currminusprev.getQ1(), q_currminusprev.getQ2(), q_currminusprev.getQ3(), false);
+            currRot = convert2rot.getMatrix();
+        }
+        prevQuaternion = currQuaternion.clone();
+
         //try {
-            if (DemoDraw3.drawing == 0) {
-                orieninit = tmporiensensordata.getData();
+        if (DemoDraw3.drawing == 0) {
+            orieninit = tmporiensensordata.getData();
+        }
+        if (tmpaccesensordata == null || Pos == null) {
+            return null;
+        }
+        prevdrawSTATUS = drawSTATUS;
+        drawSTATUS = DemoDraw3.drawing < 2;
+
+        if (prevdrawSTATUS == false && drawSTATUS == true || init_yesno == false) {
+
+
+            if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
+                CalibrationMode = false;
             }
-            if (tmpaccesensordata == null || Pos == null) {
-                return null;
-            }
-            prevdrawSTATUS = drawSTATUS;
-            drawSTATUS = DemoDraw3.drawing < 2;
+            strokebuffer = new ArrayList<>();
+            strokedeltabuffer = new ArrayList<>();
+            posbuffer = new ArrayList<>();
+            posdeltabuffer = new ArrayList<>();
+            stastrokebuffer = new ArrayList<>();
+            stastrokedeltabuffer = new ArrayList<>();
+            prevTime = 0;
+            prevStroke = null;
 
-            if (prevdrawSTATUS == false && drawSTATUS == true || init_yesno == false) {
+            init_yesno = true;
+            tmpaccesensordata = null;
 
 
-                if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
-                    CalibrationMode = false;
+        }
+
+
+        //manual control
+        cX = -150f;
+        cY = 150f;
+
+
+        //buffer Draw
+        strokebuffer.add(bundle2sensordata(bundlegot));
+        if (strokebuffer.size() > 1) {
+            strokedeltabuffer.add(getlatestdelta(strokebuffer));
+        }
+
+
+        if (tmpaccesensordata != null) {
+            posdeltabuffer.add(tmpaccesensordata);
+            tmpaccesensordata = null;
+        }
+
+        //get stabilized result
+        if (strokedeltabuffer.size() > 0 && posdeltabuffer.size() > 0) {
+            //generate stabilize vector
+            sensordata stastrokedelta = new sensordata();
+            stastrokedelta.setTime(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime());
+            stastrokedelta.setData(new float[]{
+                    strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * cX / (float) com.project.nicki.displaystabilizer.init.pix2m,
+                    strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY / (float) com.project.nicki.displaystabilizer.init.pix2m});
+            stastrokedeltabuffer.add(stastrokedelta);
+
+            if (prevStroke != null) {
+                //generate stabilized point
+                float[] delta = new float[]{
+                        stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0],
+                        stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1]};
+                if (currRot != null) {
+                    SimpleMatrix delta_m = new SimpleMatrix(new double[][]{{(double) delta[0]}, {(double) delta[1]}, {0}});
+                    SimpleMatrix rot_m = new SimpleMatrix(currRot);
+                    SimpleMatrix fin = rot_m.mult(delta_m);
+                    delta = new float[]{(float)fin.getMatrix().get(0,0),(float)fin.getMatrix().get(1,0)};
+
+                    SimpleMatrix delta_me = new SimpleMatrix(new double[][]{{0}, {1}, {0}});
+                    SimpleMatrix rot_me = new SimpleMatrix(currRot);
+                    SimpleMatrix fine = rot_me.mult(delta_me);
+                    /*
+                    float[] deltae = new float[]{(float)fine.getMatrix().get(0,0),(float)fine.getMatrix().get(1,0)};
+                    new LogCSV(init.rk4_Log + " stade", String.valueOf(getAcceGyro.mstopdetector.getStopped(0)),
+                            String.valueOf(System.currentTimeMillis()),
+                            deltae[0],
+                            deltae[1]
+                    );*/
                 }
-                strokebuffer = new ArrayList<>();
-                strokedeltabuffer = new ArrayList<>();
-                posbuffer = new ArrayList<>();
-                posdeltabuffer = new ArrayList<>();
-                stastrokebuffer = new ArrayList<>();
-                stastrokedeltabuffer = new ArrayList<>();
-                prevTime = 0;
-                prevStroke = null;
-
-                init_yesno = true;
-                tmpaccesensordata = null;
+                prevStroke[0] += delta[0];
+                prevStroke[1] += delta[1];
+                stastrokebuffer.add(new sensordata(stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getTime(), prevStroke));
 
 
-            }
+                init.initTouchCollection.sta_Online_raw.add(new sensordata(stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getTime(), prevStroke));
+
+                //stick to finger_array
+                float tofinger[] = new float[]{strokebuffer.get(strokebuffer.size() - 1).getData()[0] - prevStroke[0],
+                        strokebuffer.get(strokebuffer.size() - 1).getData()[1] - prevStroke[1]};
+                ArrayList<sensordata> r_stastrokebuffer = new ArrayList<>();
+
+                //init.initTouchCollection.sta_Online_todraw_stroke = new ArrayList<>();
 
 
-            //manual control
-            cX = -150f;
-            cY = 150f;
+                List<stabilize_v3.Point> tofingerList = new ArrayList<>();
+                for (int i = 0; i < stastrokebuffer.size(); i++) {
+                    sensordata tmp = new sensordata(strokebuffer.get(i));
+                    tmp.setData(new float[]{
+                            stastrokebuffer.get(i).getData()[0] + tofinger[0],
+                            stastrokebuffer.get(i).getData()[1] + tofinger[1]
+                    });
+                    tmp.setTime(stastrokebuffer.get(i).getTime());
 
+                    stabilize_v3.Point todraw = new stabilize_v3.Point();
+                    todraw.setX(stastrokebuffer.get(i).getData()[0] + tofinger[0]);
+                    todraw.setY(stastrokebuffer.get(i).getData()[1] + tofinger[1]);
+                    tofingerList.add(todraw);
 
-            //buffer Draw
-            strokebuffer.add(bundle2sensordata(bundlegot));
-            if (strokebuffer.size() > 1) {
-                strokedeltabuffer.add(getlatestdelta(strokebuffer));
-            }
-
-
-
-            if (tmpaccesensordata != null) {
-                posdeltabuffer.add(tmpaccesensordata);
-                tmpaccesensordata = null;
-            }
-
-            //get stabilized result
-            if (strokedeltabuffer.size() > 0 && posdeltabuffer.size() > 0) {
-                //generate stabilize vector
-                sensordata stastrokedelta = new sensordata();
-                stastrokedelta.setTime(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime());
-                stastrokedelta.setData(new float[]{
-                        strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * cX / (float) com.project.nicki.displaystabilizer.init.pix2m,
-                        strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY / (float) com.project.nicki.displaystabilizer.init.pix2m});
-                stastrokedeltabuffer.add(stastrokedelta);
-
-                if (prevStroke != null) {
-                    //generate stabilized point
-                    prevStroke[0] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0];
-                    prevStroke[1] += stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1];
-                    stastrokebuffer.add(new sensordata(stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getTime(), prevStroke));
-                    init.initTouchCollection.sta_Online_raw.add(new sensordata(stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getTime(), prevStroke));
-
-                    //stick to finger_array
-                    float tofinger[] = new float[]{strokebuffer.get(strokebuffer.size() - 1).getData()[0] - prevStroke[0],
-                            strokebuffer.get(strokebuffer.size() - 1).getData()[1] - prevStroke[1]};
-                    ArrayList<sensordata> r_stastrokebuffer = new ArrayList<>();
-
-                    //init.initTouchCollection.sta_Online_todraw_stroke = new ArrayList<>();
-
-
-                    List<stabilize_v3.Point> tofingerList = new ArrayList<>();
-                    for (int i = 0; i < stastrokebuffer.size(); i++) {
-                        sensordata tmp = new sensordata(strokebuffer.get(i));
-                        tmp.setData(new float[]{
-                                stastrokebuffer.get(i).getData()[0] + tofinger[0],
-                                stastrokebuffer.get(i).getData()[1] + tofinger[1]
-                        });
-                        tmp.setTime(stastrokebuffer.get(i).getTime());
-
-                        stabilize_v3.Point todraw = new stabilize_v3.Point();
-                        todraw.setX(stastrokebuffer.get(i).getData()[0] + tofinger[0]);
-                        todraw.setY(stastrokebuffer.get(i).getData()[1] + tofinger[1]);
-                        tofingerList.add(todraw);
-
-                        r_stastrokebuffer.add(tmp);
-
-                    }
-
-                   // DemoDraw3.pending_to_draw_direct = tofingerList;
-
-                    return r_stastrokebuffer;
-
-
-
-                } else {
-                    ArrayList<sensordata> r_stastrokebuffer = new ArrayList<>();
-                    prevStroke = new float[]{
-                            strokebuffer.get(0).getData()[0],
-                            strokebuffer.get(0).getData()[1]};
-                    prevStroke = new float[]{0, 0};
-                    r_stastrokebuffer.add(new sensordata(strokebuffer.get(0).getTime(),prevStroke));
-                    return r_stastrokebuffer;
+                    r_stastrokebuffer.add(tmp);
 
                 }
 
+                // DemoDraw3.pending_to_draw_direct = tofingerList;
+
+                return r_stastrokebuffer;
+
+
+            } else {
+                ArrayList<sensordata> r_stastrokebuffer = new ArrayList<>();
+                prevStroke = new float[]{
+                        strokebuffer.get(0).getData()[0],
+                        strokebuffer.get(0).getData()[1]};
+                prevStroke = new float[]{0, 0};
+                r_stastrokebuffer.add(new sensordata(strokebuffer.get(0).getTime(), prevStroke));
+                return r_stastrokebuffer;
 
             }
+
+
+        }
 
         //}catch (Exception ex){
         //    ex.printStackTrace();
@@ -271,7 +292,6 @@ public class stabilize_v3_1 {
         msensordata.setData(deltaFloat);
         return msensordata;
     }
-
 
 
 }

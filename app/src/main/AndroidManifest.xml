@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.project.nicki.displaystabilizer">
+    package="com.project.nicki.displaystabilizer" >
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -27,8 +27,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity android:name=".init">
+        android:theme="@style/AppTheme" >
+        <activity android:name=".init" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -39,7 +39,6 @@
         <activity android:name=".UI.DemoDrawUI" />
         <activity android:name=".UI.DemoDrawUI2" />
         <activity android:name=".Odometry.VideoActivity" />
-        <activity android:name=".UI.UIv1.UIv1_main0" />
         <activity android:name="com.canvas.Canvas1" />
         <activity
             android:name=".UI.UIv1.UIv1_settings0"
@@ -55,7 +54,7 @@
         <activity
             android:name=".UI.UIv1.UIv1_setttings0"
             android:label="@string/title_activity_uiv1_setttings0"
-            android:parentActivityName=".UI.UIv1.UIv1_draw0">
+            android:parentActivityName=".UI.UIv1.UIv1_draw0" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.project.nicki.displaystabilizer.UI.UIv1.UIv1_draw0" />
@@ -64,7 +63,7 @@
             android:name=".UI.UIv1.UIv1_compare0"
             android:label="@string/title_activity_uiv1_compare0"
             android:parentActivityName=".UI.UIv1.UIv1_draw0"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.project.nicki.displaystabilizer.UI.UIv1.UIv1_draw0" />
@@ -75,7 +74,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".UI.UIv1.UIv1_splash"></activity>
+        <activity android:name=".UI.UIv1.UIv1_splash" />
     </application>
 
 </manifest>

@@ -27,16 +27,16 @@ public class UIv1_view_view extends View {
     public List<List<stabilize_v3.Point>> sta_pending_to_draw = new ArrayList<>();
 
     public  int drawing = 3;
-    public  Paint paint2 = new Paint();
+
+    public Path path = new Path();
     public  Path path2 = new Path();
     public  Path path3 = new Path();
-    public  Rect rectangle;
+    public  Paint paint = new Paint();
+    public  Paint paint2 = new Paint();
+    public  Paint paint3 = new Paint();
     public  Handler clean_and_refresh;
     public  Handler refresh;
-    public  Paint paint = new Paint();
-    public  Paint paint3 = new Paint();
-    public List<stabilize_v3.Point> incremental = new ArrayList<>();
-    public Path path = new Path();
+
     protected Context mContext;
 
 

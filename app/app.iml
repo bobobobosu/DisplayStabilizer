@@ -82,7 +82,6 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/shaders" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/assets" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/blame" />
-      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/builds" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/bundles" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/classes" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/dependency-cache" />
@@ -145,14 +144,13 @@
     <orderEntry type="library" exported="" scope="TEST" name="junit-4.12" level="project" />
     <orderEntry type="library" exported="" name="core-0.29" level="project" />
     <orderEntry type="library" exported="" name="recognition-0.21" level="project" />
-    <orderEntry type="library" exported="" name="calibration-0.21" level="project" />
-    <orderEntry type="library" exported="" name="ip-0.21" level="project" />
     <orderEntry type="library" exported="" name="all-0.29" level="project" />
-    <orderEntry type="module" module-name="dsp-collection" exported="" />
+    <orderEntry type="library" exported="" name="ip-0.21" level="project" />
+    <orderEntry type="library" exported="" name="calibration-0.21" level="project" />
     <orderEntry type="module" module-name="JKalman" exported="" />
+    <orderEntry type="module" module-name="dsp-collection" exported="" />
     <orderEntry type="module" module-name="opencsv-2.1-1.0.0" exported="" />
     <orderEntry type="module" module-name="lipiTk" exported="" />
     <orderEntry type="module" module-name="commons-math3-3.6" exported="" />
-    <orderEntry type="library" exported="" name="android-android-23" level="project" />
   </component>
 </module>

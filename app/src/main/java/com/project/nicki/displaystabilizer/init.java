@@ -13,7 +13,6 @@ import android.view.Display;
 
 import com.canvas.Canvas1;
 import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_draw0;
-import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_main0;
 import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_splash;
 import com.project.nicki.displaystabilizer.contentprovider.utils.TouchCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
@@ -26,7 +25,7 @@ import org.ejml.data.DenseMatrix64F;
 import jama.Matrix;
 
 public class init extends AppCompatActivity {
-    //Log name
+    //Log names
     public static String rk4_Log = "rk4_"+String.valueOf(System.currentTimeMillis());
     //Static Classes
     public static SensorCollect initSensorCollection = new SensorCollect();
@@ -35,14 +34,15 @@ public class init extends AppCompatActivity {
     public static SharedPreferences getSharedPreferences (Context ctxt) {
         return ctxt.getSharedPreferences("FILE", 0);
     }
-
+    //Constants
     public static double widthm, heightcm, widthpix, heightpix, pix2m;
     String TAG = "init";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "");
 
+        ////get Constants
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         widthm = dm.widthPixels * 0.0254 / dm.xdpi;
@@ -54,171 +54,51 @@ public class init extends AppCompatActivity {
         heightpix = size.y;
         pix2m = widthm / widthpix;
 
-
-        //proAcceGyroCali.TEST();
-        /////////////////////////////////////////////
-
-        //clean csvs
-        /*
-        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-        String fileName = "stabilize_v2.csv";
-        String filePath = baseDir + File.separator + fileName;
-        File f = new File(filePath);
-        if(f.exists()){
-            f.delete();
-        }
-        */
-        //new Thread(new proDataFlow(getBaseContext())).start();
-        //new Thread(new stabilize_v1(getBaseContext())).start();
-
+        ////Start Threads
         try {
             new Thread(new getAcceGyro(getBaseContext())).start();
         }catch (Exception ex){
             //Log.e("init", String.valueOf(ex));
         }
+
+        ////Intents
+        //Intent: Splash Screen
         Intent goto_UIv1_splash0 = new Intent();
         overridePendingTransition(0, 0);
         goto_UIv1_splash0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_UIv1_splash0.setClass(init.this, UIv1_splash.class);
         //startActivity(goto_UIv1_splash0);
 
-        //new Thread(new stabilize_v3_1(getBaseContext())).start();
-
-        /*
-        Intent goto_DemoDrawUI2 = new Intent();
-        overridePendingTransition(0, 0);
-        goto_DemoDrawUI2.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        goto_DemoDrawUI2.setClass(init.this, DemoDrawUI2.class);
-        startActivity(goto_DemoDrawUI2);
-*/
-        Intent goto_UIv1_main0 = new Intent();
-        overridePendingTransition(0, 0);
-        goto_UIv1_main0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        goto_UIv1_main0.setClass(init.this, UIv1_main0.class);
-        //startActivity(goto_UIv1_main0);
-
-        Intent goto_Canvas1 = new Intent();
-        overridePendingTransition(0, 0);
-        goto_Canvas1.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        goto_Canvas1.setClass(init.this, Canvas1.class);
-        //startActivity(goto_Canvas1);
-
-
+        //Intent: Draw Screen
         Intent goto_UIv1_draw0 = new Intent();
         overridePendingTransition(0, 0);
         goto_UIv1_draw0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_UIv1_draw0.setClass(init.this, UIv1_draw0.class);
         startActivity(goto_UIv1_draw0);
 
+        /*
+        //Intent: Canvas(lipitoolkit)
+        Intent goto_Canvas1 = new Intent();
+        overridePendingTransition(0, 0);
+        goto_Canvas1.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        goto_Canvas1.setClass(init.this, Canvas1.class);
+        //startActivity(goto_Canvas1);
+        */
 
-
-/*
+        /*
         Intent goto_UIv1_settings0= new Intent();
         overridePendingTransition(0, 0);
         goto_UIv1_settings0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_UIv1_settings0.setClass(init.this, UIv1_settings0.class);
         startActivity(goto_UIv1_settings0);
         */
-/*
-        Intent goto_OdometryMainActivity = new Intent();
-        overridePendingTransition(0, 0);
-        goto_OdometryMainActivity.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        goto_OdometryMainActivity.setClass(init.this, VideoActivity.class);
-        startActivity(goto_OdometryMainActivity);
-*/
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        double xdpc = metrics.xdpi / 2.54;
-        double ydpc = metrics.ydpi / 2.54;
 
 
-
-    }
-
-    public double acceCali(DenseMatrix64F x, DenseMatrix64F param) {
-        double returey1 = 0;
-        double[][] rawMatrix = {{x.get(0, 0), x.get(1, 0), x.get(2, 0)}};
-        double[][] biasMatrix = {{param.get(6, 0), param.get(7, 0), param.get(8, 0)}};
-        double[][] scaleMatrix =
-                {{param.get(3, 0), 0, 0},
-                        {0, param.get(4, 0), 0},
-                        {0, 0, param.get(5, 0)}};
-        double[][] nonorMatrix =
-                {{1, -param.get(0, 0), param.get(1, 0)},
-                        {0, 1, -param.get(2, 0)},
-                        {0, 0, 1}};
-        Matrix mrawMatrix = new Matrix(rawMatrix);
-        Matrix mbiasMatrix = new Matrix(biasMatrix);
-        Matrix mscaleMatrix = new Matrix(scaleMatrix);
-        Matrix mnonorMatrix = new Matrix(nonorMatrix);
-
-        //Log.d(TAG, "getdimen " + mrawMatrix.getRowDimension() + "x" + mrawMatrix.getColumnDimension());  //1x3
-        //Log.d(TAG, "getdimen " + mbiasMatrix.getRowDimension() + "x" + mbiasMatrix.getColumnDimension());//1x3
-        //Log.d(TAG, "getdimen " + mscaleMatrix.getRowDimension() + "x" + mscaleMatrix.getColumnDimension());//3x3
-        //Log.d(TAG, "getdimen " + mnonorMatrix.getRowDimension() + "x" + mnonorMatrix.getRowDimension());//3x3
-
-        Matrix k = mrawMatrix.plus(mbiasMatrix); //1x3
-        Matrix m = mnonorMatrix.times(mscaleMatrix); //3x3
-        Matrix result = m.times(k.transpose());
-        //Log.d(TAG, "LM: getvarm " + result.get(0, 0) + " " + result.get(1, 0) + " " + result.get(2, 0));
-        try {
-            returey1 = (double) proAcceGyroCali.getVarianceMagnitude((float) result.get(0, 0), (float) result.get(1, 0), (float) result.get(2, 0));
-
-        } catch (Exception ex) {
-            Log.d(TAG, "sssss");
-        }
-        Log.d(TAG, "returnoutput: " + returey1);
-        return returey1;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-    }
-
-    public class sensordata {
-        private long Time;
-        private float[] Data = new float[3];
-
-        public sensordata() {
-            this(0, new float[]{0, 0, 0});
-        }
-
-        public sensordata(sensordata msensordata) {
-            setData(msensordata.getData());
-            setTime(msensordata.getTime());
-        }
-        public sensordata(long time, float[] data) {
-            this.Time = time;
-            this.Data[0] = data[0];
-            this.Data[1] = data[1];
-            this.Data[2] = data[2];
-        }
-
-        public void setsensordata(long time, float[] data) {
-            this.Time = time;
-            this.Data[0] = data[0];
-            this.Data[1] = data[1];
-            this.Data[2] = data[2];
-        }
-
-        public long getTime() {
-            return Time;
-        }
-
-        public void setTime(long time) {
-            this.Time = time;
-        }
-
-        public float[] getData() {
-            return Data;
-        }
-
-        public void setData(float[] data) {
-            this.Data[0] = data[0];
-            this.Data[1] = data[1];
-            this.Data[2] = data[2];
-        }
     }
 
 }
