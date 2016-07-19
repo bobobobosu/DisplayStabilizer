@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
+import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali3;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 import com.project.nicki.displaystabilizer.init;
@@ -89,6 +90,20 @@ public class stabilize_v3_1 {
                 tmp1accesensordata = tmpaccesensordata;
             }
 
+            if (prevQuaternion != null) {
+                Quaternion q_currQuaternion = new Quaternion(currQuaternion[0],currQuaternion[1],currQuaternion[2],currQuaternion[3]);
+                Quaternion q_prevQuaternion = new Quaternion(prevQuaternion[0],prevQuaternion[1],prevQuaternion[2],prevQuaternion[3]);
+                //Quaternion q_currQuaternion = new Quaternion(1,0,0,0);
+                //Quaternion q_prevQuaternion = new Quaternion(0.7358881620051946,0.2889093508708513,0.45508140685231796,0.40975713921457785);
+                Quaternion q_currminusprev = q_currQuaternion.multiply(q_prevQuaternion.getInverse());
+                Rotation convert2rot = new Rotation(q_currminusprev.getQ0(), q_currminusprev.getQ1(), q_currminusprev.getQ2(), q_currminusprev.getQ3(), false);
+                Log.i("angles", String.valueOf(convert2rot.getAngle()));
+                currRot = convert2rot.getMatrix();
+                //currRot = proAcceGyroCali3.currRot;
+            }
+            prevQuaternion = currQuaternion.clone();
+
+
             if (prevdrawSTATUS == false && drawSTATUS == true || init_yesno == false) {
                 orieninit = tmporiensensordata.getData();
 
@@ -116,16 +131,7 @@ public class stabilize_v3_1 {
     }
 
     public ArrayList<sensordata> gen_Draw(final Bundle bundlegot) {
-        if (prevQuaternion != null) {
-            Quaternion q_currQuaternion = new Quaternion(currQuaternion[0],currQuaternion[1],currQuaternion[2],currQuaternion[3]);
-            Quaternion q_prevQuaternion = new Quaternion(prevQuaternion[0],prevQuaternion[1],prevQuaternion[2],prevQuaternion[3]);
-            //Quaternion q_currQuaternion = new Quaternion(1,0,0,0);
-            //Quaternion q_prevQuaternion = new Quaternion(0.7358881620051946,0.2889093508708513,0.45508140685231796,0.40975713921457785);
-            Quaternion q_currminusprev = q_currQuaternion.multiply(q_prevQuaternion.getInverse());
-            Rotation convert2rot = new Rotation(q_currminusprev.getQ0(), q_currminusprev.getQ1(), q_currminusprev.getQ2(), q_currminusprev.getQ3(), false);
-            currRot = convert2rot.getMatrix();
-        }
-        prevQuaternion = currQuaternion.clone();
+
 
         //try {
         if (DemoDraw3.drawing == 0) {
@@ -172,7 +178,15 @@ public class stabilize_v3_1 {
 
 
         if (tmpaccesensordata != null) {
-            posdeltabuffer.add(tmpaccesensordata);
+            //rotate position vector
+            Log.i("touch",String.valueOf(strokebuffer.get(strokebuffer.size()-1).getData()[0]+" "+strokebuffer.get(strokebuffer.size()-1).getData()[1]));
+            if(strokebuffer.get(strokebuffer.size()-1)!=null && tmpaccesensordata.getData()[0]!=0){
+                posdeltabuffer.add(multiply_multiplier_caused_by_rotation(strokebuffer.get(strokebuffer.size()-1).getData(),tmpaccesensordata));
+            }else {
+                posdeltabuffer.add(tmpaccesensordata);
+            }
+           // posdeltabuffer.add(tmpaccesensordata);
+
             tmpaccesensordata = null;
         }
 
@@ -191,15 +205,12 @@ public class stabilize_v3_1 {
                 float[] delta = new float[]{
                         stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0],
                         stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1]};
-                if (currRot != null) {
+                if (proAcceGyroCali3.currRot != null ) {
                     SimpleMatrix delta_m = new SimpleMatrix(new double[][]{{(double) delta[0]}, {(double) delta[1]}, {0}});
-                    SimpleMatrix rot_m = new SimpleMatrix(currRot);
+                    SimpleMatrix rot_m = new SimpleMatrix(proAcceGyroCali3.currRot).invert();
+                    //rot_m = new SimpleMatrix(new double[][]{{0.866,-0.5,0},{0.5,0.866,0},{0,0,1}});
                     SimpleMatrix fin = rot_m.mult(delta_m);
                     delta = new float[]{(float)fin.getMatrix().get(0,0),(float)fin.getMatrix().get(1,0)};
-
-                    SimpleMatrix delta_me = new SimpleMatrix(new double[][]{{0}, {1}, {0}});
-                    SimpleMatrix rot_me = new SimpleMatrix(currRot);
-                    SimpleMatrix fine = rot_me.mult(delta_me);
                     /*
                     float[] deltae = new float[]{(float)fine.getMatrix().get(0,0),(float)fine.getMatrix().get(1,0)};
                     new LogCSV(init.rk4_Log + " stade", String.valueOf(getAcceGyro.mstopdetector.getStopped(0)),
@@ -291,6 +302,34 @@ public class stabilize_v3_1 {
         msensordata.setTime(strokebuffer.get(strokebuffer.size() - 1).getTime());
         msensordata.setData(deltaFloat);
         return msensordata;
+    }
+
+
+    //Process delta:　multiplier caused by rotation
+    private sensordata multiply_multiplier_caused_by_rotation(float[] prevStroke, sensordata acce){
+        sensordata toreturn = new sensordata(acce);
+
+        //returnvec = [accevector] + [Rotationvector][touch relative to center] -  [touch relative to center]
+        float[] accevector = acce.getData();
+        float[] touch_relative_to_center = new float[]{prevStroke[0]-691,prevStroke[1]-905};
+        //[Rotationvector][touch relative to center]
+        SimpleMatrix Rot_mult_rev = new SimpleMatrix(currRot).mult(new SimpleMatrix(new double[][]{{touch_relative_to_center[0]},{touch_relative_to_center[1]},{0}}));
+        //Rot_mult_rev = new SimpleMatrix(new double[][]{{0.866,-0.5,0},{0.5,0.866,0},{0,0,1}}).mult(new SimpleMatrix(new double[][]{{touch_relative_to_center[0]},{touch_relative_to_center[1]},{0}}));
+        //Rot_mult_rev = new SimpleMatrix(new double[][]{{1d,0d,0d},{0d,1d,0d},{0d,0d,1d}}).mult(new SimpleMatrix(new double[][]{{touch_relative_to_center[0]},{touch_relative_to_center[1]},{0}}));
+        toreturn.setData(new float[]{
+                (float) (accevector[0]+((float) Rot_mult_rev.get(0,0)-touch_relative_to_center[0])*0.0000001),
+                (float) (accevector[1]+((float) Rot_mult_rev.get(1,0)-touch_relative_to_center[1])*0.0000001),
+        });
+
+
+        /*
+        SimpleMatrix Rot_mult_rev = new SimpleMatrix(currRot).mult(new SimpleMatrix(new double[][]{{acce.getData()[0]},{acce.getData()[1]},{0}}));
+        toreturn.setData(new float[]{
+                (float) Rot_mult_rev.get(0,0),
+                (float) Rot_mult_rev.get(1,0),
+        });
+        */
+        return toreturn;
     }
 
 

@@ -44,11 +44,12 @@ public class UIv1_draw0 extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        setTitle("筆跡變形恢復系統Demo");  // provide compatibility to all the versions
         //init draw view
         mDemoDraw = new DemoDraw3(this);
         mDemoDraw = (DemoDraw3) findViewById(R.id.view_DemoDraw3);
         setContentView(R.layout.activity_uiv1_draw0);
+
 
         //init widgets
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);

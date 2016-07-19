@@ -118,7 +118,7 @@ public class DemoDraw3 extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         try {
-            drawCanvas(canvas, path3, pending_to_draw_direct);
+            //drawCanvas(canvas, path3, pending_to_draw_direct);
             draw_ListofPaths(canvas, paint3, path3, sta_pending_to_draw);
 
         } catch (Exception ex) {
@@ -126,7 +126,7 @@ public class DemoDraw3 extends View {
         }
 
         canvas.drawPath(path, paint);
-        canvas.drawPath(path2, paint2);
+        //canvas.drawPath(path2, paint2);
     }
 
     @Override
@@ -168,16 +168,10 @@ public class DemoDraw3 extends View {
     //draw list of path
     public void draw_ListofPaths(Canvas canvas, Paint paint, Path path, List<List<stabilize_v3.Point>> pending_to_draw) {
         path = new Path();
-
-        for (List<stabilize_v3.Point> impending_to_draw : pending_to_draw) {
-
-            try {
-                Log.e("TESTING", String.valueOf("THE SIZE: " + impending_to_draw.size()));
-            } catch (Exception ex) {
-
-            }
-            drawCanvas(canvas, path, impending_to_draw);
+        for(int i=0;i< pending_to_draw.size();i++){
+            drawCanvas(canvas, path, pending_to_draw.get(i));
         }
+
     }
     //drawCanvas
     private void drawCanvas(Canvas canvas, Path mpath, final List<stabilize_v3.Point> mpts) {
@@ -208,7 +202,7 @@ public class DemoDraw3 extends View {
         if (pts.size() > 1) {
             final int SMOOTH_VAL = 6;
             for (int i = pts.size() - 2; i < pts.size(); i++) {
-                Log.e("draw", String.valueOf(pts.get(i).x));
+                //Log.e("draw", String.valueOf(pts.get(i).x));
                 if (i >= 0) {
                     stabilize_v3.Point point = pts.get(i);
                     if (i == 0) {
@@ -243,8 +237,8 @@ public class DemoDraw3 extends View {
             canvas.drawPath(mpath, paint3);
         } else {
             if (pts.size() == 1) {
-                stabilize_v3.Point point = pts.get(0);
-                canvas.drawCircle(point.x, point.y, 2, paint3);
+                //stabilize_v3.Point point = pts.get(0);
+                //canvas.drawCircle(point.x, point.y, 2, paint3);
             }
         }
     }
@@ -320,7 +314,7 @@ public class DemoDraw3 extends View {
                 SimpleMatrix ori = new SimpleMatrix(new double[][]{{(double) pts.get(i).x}, {(double) pts.get(i).y}, {0}});
                 SimpleMatrix fin = rot_m.mult(ori.plus(Xto0_m)).minus(Xto0_m);
                 pts.set(i,new stabilize_v3.Point((float) fin.get(0, 0), (float) fin.get(1, 0)));
-                Log.i("matrix", String.valueOf(fin.toString()));
+                //Log.i("matrix", String.valueOf(fin.toString()));
             }
         }
         return  pts;

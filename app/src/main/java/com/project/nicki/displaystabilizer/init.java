@@ -76,14 +76,14 @@ public class init extends AppCompatActivity {
         goto_UIv1_draw0.setClass(init.this, UIv1_draw0.class);
         startActivity(goto_UIv1_draw0);
 
-        /*
+
         //Intent: Canvas(lipitoolkit)
         Intent goto_Canvas1 = new Intent();
         overridePendingTransition(0, 0);
         goto_Canvas1.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         goto_Canvas1.setClass(init.this, Canvas1.class);
         //startActivity(goto_Canvas1);
-        */
+
 
         /*
         Intent goto_UIv1_settings0= new Intent();

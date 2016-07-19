@@ -20,6 +20,7 @@ import java.util.Objects;
 
 import org.apache.commons.math3.complex.Quaternion;
 import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
+import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 public class proAcceGyroCali3 {
@@ -38,10 +39,9 @@ public class proAcceGyroCali3 {
     ////Handlers
     public static Handler resetMotionInertial;
     ///Filters
-    DescriptiveStatistics currOrientation_Filter0 = new DescriptiveStatistics(10);
-    DescriptiveStatistics currOrientation_Filter1 = new DescriptiveStatistics(10);
-    DescriptiveStatistics currOrientation_Filter2 = new DescriptiveStatistics(10);
-    DescriptiveStatistics currOrientation_Filter3 = new DescriptiveStatistics(10);
+    DescriptiveStatistics currOrientation_Filter0 = new DescriptiveStatistics(20);
+    DescriptiveStatistics currOrientation_Filter1 = new DescriptiveStatistics(20);
+    DescriptiveStatistics currOrientation_Filter2 = new DescriptiveStatistics(20);
 
 
     public proAcceGyroCali3(Context context) {
@@ -64,15 +64,16 @@ public class proAcceGyroCali3 {
             //Euler2Quaternion
             Log.i("rien",String.valueOf(currOrientation[0]+" "+currOrientation[1]+" "+currOrientation[2]));
             currOrientation = values.clone();
+            //new LogCSV(init.rk4_Log + " proAcce", String.valueOf(getAcceGyro.mstopdetector.getStopped(0)),
+            //        String.valueOf(System.currentTimeMillis()),
+            //        currOrientation[0], currOrientation[1], currOrientation[2]);
+            currOrientation_Filter0.addValue(currOrientation[0]);
+            currOrientation_Filter1.addValue(currOrientation[1]);
+            currOrientation_Filter2.addValue(currOrientation[2]);
+            currOrientation[0] = (float) currOrientation_Filter0.getMean();
+            currOrientation[1] = (float) currOrientation_Filter1.getMean();
+            currOrientation[2] = (float) currOrientation_Filter2.getMean();
             currQuaternionArray = getQuaternionfromEuler(currOrientation[0], currOrientation[1], currOrientation[2]);
-            currOrientation_Filter0.addValue(currQuaternionArray[0]);
-            currOrientation_Filter1.addValue(currQuaternionArray[1]);
-            currOrientation_Filter2.addValue(currQuaternionArray[2]);
-            currOrientation_Filter3.addValue(currQuaternionArray[3]);
-            //currQuaternionArray[0] = currOrientation_Filter0.getMean();
-            //currQuaternionArray[1] = currOrientation_Filter1.getMean();
-            //currQuaternionArray[2] = currOrientation_Filter2.getMean();
-            //currQuaternionArray[3] = currOrientation_Filter3.getMean();
 
             //update init
             if (!Arrays.equals(currQuaternionArray, new double[]{1, 0, 0, 0}) && inited == false) {
@@ -84,6 +85,9 @@ public class proAcceGyroCali3 {
             Log.i("pending", String.valueOf(DemoDraw3.pending_quaternion_reset));
             if (DemoDraw3.pending_quaternion_reset == true) {
                 initQua = new Quaternion(currQuaternionArray[0], currQuaternionArray[1], currQuaternionArray[2], currQuaternionArray[3]);
+                currOrientation_Filter0.clear();
+                currOrientation_Filter1.clear();
+                currOrientation_Filter2.clear();
                 DemoDraw3.pending_quaternion_reset = false;
             }
 
@@ -96,6 +100,7 @@ public class proAcceGyroCali3 {
             //Quaternion relative2init = fromWorld2Device.multiply(initQua).getInverse();
             Quaternion relative2init = fromDevice2World.multiply(initQua.getInverse()).getInverse();
             float[] currRotf_new = new float[]{1,0,0,0,1,0,0,0,1};
+            Rotation testrot  = new Rotation(currQuaternionArray[0], currQuaternionArray[1], currQuaternionArray[2], currQuaternionArray[3],false);;
             SensorManager.getRotationMatrixFromVector(currRotf_new,new float[]{(float)relative2init.getQ1(),(float)relative2init.getQ2(),(float)relative2init.getQ3(),(float)relative2init.getQ0()});
             Rotation convert2rot = new Rotation(relative2init.getQ0(), relative2init.getQ1(), relative2init.getQ2(), relative2init.getQ3(), false);
 
@@ -129,9 +134,9 @@ public class proAcceGyroCali3 {
             new LogCSV(init.rk4_Log + " proAcce", String.valueOf(getAcceGyro.mstopdetector.getStopped(0)),
                     String.valueOf(System.currentTimeMillis()),
                     currOrientation[0], currOrientation[1], currOrientation[2],
-                    (float)convert2rot.getAngles(RotationOrder.ZXY)[0],
-                    (float)convert2rot.getAngles(RotationOrder.ZXY)[1],
-                    (float)convert2rot.getAngles(RotationOrder.ZXY)[2],
+                    (float)testrot.getAngles(RotationOrder.ZXY)[0],
+                    (float)testrot.getAngles(RotationOrder.ZXY)[1],
+                    (float)testrot.getAngles(RotationOrder.ZXY)[2],
                     (float)initQua.getQ0(),
                     (float)initQua.getQ1(),
                     (float)initQua.getQ2(),
