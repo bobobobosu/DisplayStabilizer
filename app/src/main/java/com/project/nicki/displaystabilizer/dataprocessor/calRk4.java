@@ -54,9 +54,9 @@ public class calRk4 {
         //Log.d("static?", String.valueOf(getAcceGyro.isStatic + " " + String.valueOf(DemoDraw2.drawing == 0)));
         //filter update
 
-        filtercalRk4_ACCE.paramUpdate(true, 10, 1, 1, getAcceGyro.isStatic || DemoDraw3.resetted == false, Float.MAX_VALUE);
-        filtercalRk4_VELO.paramUpdate(true, 1, 1f, 1, getAcceGyro.isStatic || DemoDraw3.resetted == false, Float.MAX_VALUE);
-        filtercalRk4_POSI.paramUpdate(true, 10, 0.1f, 1, getAcceGyro.isStatic ||DemoDraw3.resetted == false, 0.00004f);
+        filtercalRk4_ACCE.paramUpdate(true, 10, 1, 1, getAcceGyro.isStatic || DemoDraw3.resetted == false,1f);
+        filtercalRk4_VELO.paramUpdate(true, 1, 1f, 1, getAcceGyro.isStatic || DemoDraw3.resetted == false, 0.5f);
+        filtercalRk4_POSI.paramUpdate(true, 10, 0.1f, 1, getAcceGyro.isStatic ||DemoDraw3.resetted == false, 0.00003f);
         if (DemoDraw3.resetted == false) {
             //Log.d("reset", String.valueOf(DemoDraw3.resetted));
             for (int i = 0; i < prevPosition.length; i++) {
@@ -73,6 +73,7 @@ public class calRk4 {
         for (int i = 0; i < prevPosition.length; i++) {
             prevPosition[i].pos = filtercalRk4_POSI.filter(new float[]{(float) prevPosition[0].pos, (float) prevPosition[1].pos, (float) prevPosition[2].pos})[i];
             prevPosition[i].v = filtercalRk4_VELO.filter(new float[]{(float) prevPosition[0].v, (float) prevPosition[1].v, (float) prevPosition[2].v})[i];
+            //Log.i("velo",String.valueOf(prevPosition[0].pos+" "+prevPosition[1].pos+ " "+prevPosition[2].pos));
             toreurndata[i] = (float)prevPosition[i].pos;
             //Log.d("stopdetect", String.valueOf(getAcceGyro.mstopdetector.getStopped(0)+" "+getAcceGyro.mstopdetector.error_threshold[0]+" "+getAcceGyro.mstopdetector.getstack()[0]+" "+getAcceGyro.mstopdetector.getstack()[1]+" "+getAcceGyro.mstopdetector.getstack()[2]));
 

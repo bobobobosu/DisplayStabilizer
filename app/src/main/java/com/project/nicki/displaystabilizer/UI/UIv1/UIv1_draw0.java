@@ -44,7 +44,7 @@ public class UIv1_draw0 extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTitle("筆跡變形恢復系統Demo");  // provide compatibility to all the versions
+        setTitle("DDRS Demo");  // provide compatibility to all the versions
         //init draw view
         mDemoDraw = new DemoDraw3(this);
         mDemoDraw = (DemoDraw3) findViewById(R.id.view_DemoDraw3);
@@ -115,7 +115,7 @@ public class UIv1_draw0 extends AppCompatActivity {
                                             getAcceGyro.AcceBuffer.hasnew = false;
                                         }
                                     }catch (Exception ex){
-
+                                        break;
                                     }
                                 }
 
@@ -150,16 +150,24 @@ public class UIv1_draw0 extends AppCompatActivity {
                 super.handleMessage(msg);
                 view_ORI_CHAR.setText(msg.getData().getString("ORI_CHAR"));
                 view_ORI_CHAR.setTextColor(Color.BLACK);
-                view_ORI_CONF.setText(String.valueOf("conf: " + msg.getData().getFloat("ORI_CONF")));
+                //view_ORI_CONF.setText(String.valueOf("conf: " + msg.getData().getFloat("ORI_CONF")));
+                view_ORI_CONF.setText(String.valueOf("難:"+ Math.ceil(msg.getData().getFloat("ORI_CONF")*100)+" 分"));
                 view_ORI_CONF.setTextColor(Color.BLACK);
                 view_STA_CHAR.setText(msg.getData().getString("STA_CHAR"));
                 view_STA_CHAR.setTextColor(Color.RED);
-                view_STA_CONF.setText(String.valueOf("conf: " + msg.getData().getFloat("STA_CONF")));
+                //view_STA_CONF.setText(String.valueOf("conf: " + msg.getData().getFloat("STA_CONF")));
+                view_STA_CONF.setText(String.valueOf("難:"+ Math.ceil(msg.getData().getFloat("STA_CONF")*100)+" 分"));
                 view_STA_CONF.setTextColor(Color.RED);
                 if (msg.getData().getFloat("ORI_CONF") > msg.getData().getFloat("STA_CONF")) {
-                    view_ORI_CONF.setText(String.valueOf("*conf: " + msg.getData().getFloat("ORI_CONF")));
+                    //view_ORI_CONF.setText(String.valueOf("*conf: " + msg.getData().getFloat("ORI_CONF")));
+                    view_ORI_CONF.setText(String.valueOf("易:"+ Math.ceil(msg.getData().getFloat("ORI_CONF")*100)+" 分"));
                 } else {
-                    view_STA_CONF.setText(String.valueOf("*conf: " + msg.getData().getFloat("STA_CONF")));
+                    //view_STA_CONF.setText(String.valueOf("*conf: " + msg.getData().getFloat("STA_CONF")));
+                    view_STA_CONF.setText(String.valueOf("易:"+ Math.ceil(msg.getData().getFloat("STA_CONF")*100)+" 分"));
+                    if(Math.ceil(msg.getData().getFloat("STA_CONF")*100) > 40){
+                        view_STA_CONF.setText(String.valueOf("優秀!"+ Math.ceil(msg.getData().getFloat("STA_CONF")*100)+" 分"));
+                        view_STA_CONF.setTextColor(Color.GREEN);
+                    }
                 }
             }
         };

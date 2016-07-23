@@ -90,7 +90,7 @@ public class getAcceGyro implements Runnable {
         //mproAcceGyroCali.TEST();
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
         mLSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        mMSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        mMSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
         mRSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMASensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         mHandlerThread = new HandlerThread("getAcceGyro");
@@ -150,6 +150,26 @@ public class getAcceGyro implements Runnable {
                         //}
                 }
 
+                float[] mRotationMatrix = new float[16];
+                final float[] orientationVals = new float[4];
+
+                if(calievent.sensor.getType() == Sensor.TYPE_GAME_ROTATION_VECTOR){
+
+                    // Convert the rotation-vector to a 4x4 matrix.
+                    SensorManager.getRotationMatrixFromVector(mRotationMatrix,
+                            calievent.values);
+                    SensorManager
+                            .remapCoordinateSystem(mRotationMatrix,
+                                    SensorManager.AXIS_X, SensorManager.AXIS_Z,
+                                    mRotationMatrix);
+                    SensorManager.getOrientation(mRotationMatrix, orientationVals);
+
+                    // Optionally convert the result from radians to degrees
+                    orientationVals[0] = orientationVals[0];
+                    orientationVals[1] = orientationVals[1];
+                    orientationVals[2] = orientationVals[2];
+
+                }
                 if (calievent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                     mGravity = calievent.values;
                 }
@@ -192,6 +212,16 @@ public class getAcceGyro implements Runnable {
                     }else {
                     }
                 }
+
+                try {
+                    if(orientationVals[0]!=0 && orientation[0]!=0){
+                        Log.i("Orien",String.valueOf(orientationVals[0]+" "+orientation[0]));
+                    }
+                }catch (Exception ex){
+
+                }
+
+
                 sensor_ThreadHandler.post(new Runnable() {
                     @Override
                     public void run() {

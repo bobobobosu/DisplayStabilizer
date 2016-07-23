@@ -58,7 +58,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:text="confidence"
+                        android:text="辨識難易度"
                         android:id="@+id/ori_conf"
                         android:gravity="center"
                         android:textSize="10dp" />
@@ -100,7 +100,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:text="confidence"
+                        android:text="辨識難易度"
                         android:id="@+id/sta_conf"
                         android:gravity="center"
                         android:textSize="10dp"

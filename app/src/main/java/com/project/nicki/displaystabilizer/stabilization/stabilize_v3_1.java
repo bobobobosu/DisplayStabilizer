@@ -74,7 +74,7 @@ public class stabilize_v3_1 {
 
             prevdrawSTATUS = drawSTATUS;
             drawSTATUS = DemoDraw3.drawing < 2;
-            if (tmp1accesensordata != null) {
+            if (tmp1accesensordata != null ) {
                 float[] delta = new float[]{
                         tmpaccesensordata.getData()[0] - tmp1accesensordata.getData()[0],
                         tmpaccesensordata.getData()[1] - tmp1accesensordata.getData()[1]};
