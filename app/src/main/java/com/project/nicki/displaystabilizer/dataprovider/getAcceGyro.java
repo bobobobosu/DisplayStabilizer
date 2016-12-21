@@ -37,17 +37,22 @@ import au.com.bytecode.opencsv.CSVWriter;
 
 /**
  * Created by nickisverygood on 12/17/2015.
+ * getAcceGyro.java
+ * DO:
+ * # get sensor data from SensorManager
+ * # simple calibration by average & update dialogue
+ * # add diy orientation sensor
+ * # pass sensor data to proAcceGyroCali3
+ * # LogCSV
+ * # Stop Detector
+ * # Static Detector
+ * # CircularBuffer2
  */
 public class getAcceGyro implements Runnable {
+
+    //// # get sensor data from SensorManager:　declare variables
     private Handler sensor_ThreadHandler;
     private HandlerThread sensor_Thread;
-    //Acce Calibration
-    public static float[] AcceCaliFloat = new float[]{0,0,0};
-    public static Handler mgetValusHT_TOUCH_handler;
-    public static boolean isStatic = true;
-    String csvName = "getAcceGyro.csv";
-    FileWriter mFileWriter;
-    private Context mContext;
     private SensorManager mSensorManager;
     private Sensor mGSensor; //gyro
     private Sensor mLSensor; //linear acce
@@ -56,6 +61,16 @@ public class getAcceGyro implements Runnable {
     private Sensor mMASensor;
     private SensorEventListener mSensorEventListener;
     private HandlerThread mHandlerThread;
+
+
+    //// # simple calibration by average & update dialogue:　declare variables
+    public static float[] AcceCaliFloat = new float[]{0,0,0};
+    public static Handler mgetValusHT_TOUCH_handler;
+    public static boolean isStatic = true;
+    String csvName = "getAcceGyro.csv";
+    FileWriter mFileWriter;
+    private Context mContext;
+
     private String TAG = "getAcceGyro";
     public static StopDetector mstopdetector = new StopDetector();
     public static CircularBuffer2 AcceBuffer = new CircularBuffer2(50);
@@ -68,11 +83,15 @@ public class getAcceGyro implements Runnable {
 
     @Override
     public void run() {
-        //sensor
+
+        //// # OBSOLETE
+        //final proAcceGyroCali mproAcceGyroCali = new proAcceGyroCali(mContext);
+        final proAcceGyroCali2 mproAcceGyroCali2 = new proAcceGyroCali2(mContext);
+        //mproAcceGyroCali.TEST();
+
         sensor_Thread = new HandlerThread("sensor handler");
         sensor_Thread.start();
         sensor_ThreadHandler=new Handler(sensor_Thread.getLooper());
-
         final StaticSensor mstaticsensor = new StaticSensor();
         final HandlerThread mgetValusHT_TOUCH = new HandlerThread("getValues_TOUCH");
         mgetValusHT_TOUCH.start();
@@ -84,10 +103,8 @@ public class getAcceGyro implements Runnable {
         mgetValusHT_ORIEN.start();
         final Handler mgetValusHT_ORIEN_handler = new Handler(mgetValusHT_ORIEN.getLooper());
 
-        //final proAcceGyroCali mproAcceGyroCali = new proAcceGyroCali(mContext);
-        final proAcceGyroCali2 mproAcceGyroCali2 = new proAcceGyroCali2(mContext);
-        final proAcceGyroCali3 mproAcceGyroCali3 = new proAcceGyroCali3(mContext);
-        //mproAcceGyroCali.TEST();
+
+        //// # get sensor data from SensorManager:　init
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
         mLSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         mMSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
@@ -96,6 +113,15 @@ public class getAcceGyro implements Runnable {
         mHandlerThread = new HandlerThread("getAcceGyro");
         mHandlerThread.start();
 
+
+
+        //// # pass sensor data to proAcceGyroCali3: init
+        final proAcceGyroCali3 mproAcceGyroCali3 = new proAcceGyroCali3(mContext);
+
+
+
+
+        //// # get sensor data from SensorManager:　get data
         Handler mHandler = new Handler(mHandlerThread.getLooper());
         mSensorEventListener = new SensorEventListener() {
             float[] mGravity;
@@ -105,6 +131,10 @@ public class getAcceGyro implements Runnable {
             @Override
             public void onSensorChanged(final SensorEvent event) {
                 final SensorEvent calievent = event;
+
+
+
+                //// # simple calibration by average & update dialogue: iterate through events and calculate AcceCaliFloat
                 //Calibration
                 //Log.d("calibration",String.valueOf(AcceCaliFloat[0]+" "+AcceCaliFloat[1]+" "+AcceCaliFloat[2]));
                 if(calievent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION){
@@ -115,7 +145,7 @@ public class getAcceGyro implements Runnable {
 
 
 
-
+                //// # OBSOLETE
                 DemoDrawUI.runOnUI(new Runnable() {
                     @Override
                     public void run() {
@@ -127,9 +157,10 @@ public class getAcceGyro implements Runnable {
                         }
                     }
                 });
-
                 //mproAcceGyroCali.Controller(calievent);
 
+
+                //// # add diy orientation sensor
                 switch (calievent.sensor.getType()) {
                     case Sensor.TYPE_LINEAR_ACCELERATION:
                         isStatic = mstaticsensor.getStatic(calievent.values);
@@ -222,6 +253,8 @@ public class getAcceGyro implements Runnable {
                 }
 
 
+
+                //// # pass sensor data to proAcceGyroCali3
                 sensor_ThreadHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -246,6 +279,7 @@ public class getAcceGyro implements Runnable {
             }
         };
 
+        //// # get sensor data from SensorManager:　registerListener
         mSensorManager.registerListener(mSensorEventListener, mGSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
         mSensorManager.registerListener(mSensorEventListener, mLSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
         mSensorManager.registerListener(mSensorEventListener, mMSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
@@ -253,6 +287,8 @@ public class getAcceGyro implements Runnable {
         mSensorManager.registerListener(mSensorEventListener, mMASensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
     }
 
+
+    //// # LogCSV
     public void LogCSV(String a, String b, String c, String d, String g, String h) {
         //init CSV logging
         String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -291,6 +327,9 @@ public class getAcceGyro implements Runnable {
 
 
     }
+
+
+    //// # Stop Detector
     public static class StopDetector{
         public int[] error_threshold =new int[]{25,25,25};
         int timespan_threshold = 25;
@@ -338,6 +377,10 @@ public class getAcceGyro implements Runnable {
             return stack;
         }
     }
+
+
+
+    //// # Static Detector
     public class StaticSensor {
         float threshold = 0.000000000001f;
         int window = 100;
@@ -467,4 +510,8 @@ public class getAcceGyro implements Runnable {
             return (data.size()>= bufflength);
         }
     }
+
+
+
+
 }

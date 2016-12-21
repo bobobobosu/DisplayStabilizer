@@ -2,6 +2,10 @@ package com.project.nicki.displaystabilizer.dataprocessor;
 
 /**
  * Created by nickisverygood on 3/9/2016.
+ * proAcceGyroCali3.java
+ * DO:
+ * #　gen RotationMatrix from Quaternion
+ * #　gen Quaternion from RotationMatrix
  */
 
 import android.content.Context;
