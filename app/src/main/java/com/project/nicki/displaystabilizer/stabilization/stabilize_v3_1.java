@@ -190,7 +190,7 @@ public class stabilize_v3_1 {
             tmpaccesensordata = null;
         }
 
-        //get stabilized result
+        //get stabilized  result
         if (strokedeltabuffer.size() > 0 && posdeltabuffer.size() > 0) {
             //generate stabilize vector
             sensordata stastrokedelta = new sensordata();
