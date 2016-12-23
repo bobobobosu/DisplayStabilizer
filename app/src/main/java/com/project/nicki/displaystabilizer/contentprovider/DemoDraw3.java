@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
@@ -18,17 +17,14 @@ import android.view.View;
 import com.canvas.LipiTKJNIInterface;
 import com.canvas.LipitkResult;
 import com.canvas.Stroke;
+import com.project.nicki.displaystabilizer.dataprocessor.MotionEstimation3;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
-import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali3;
-import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
-import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 
 import org.ejml.simple.SimpleMatrix;
 
 import java.io.File;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,7 +66,7 @@ public class DemoDraw3 extends View {
         //Lipi init
         File externalFileDir = getContext().getExternalFilesDir(null);
         final String externalFileDirPath = externalFileDir.getPath();
-        Log.d("JNI", "Path: " + externalFileDirPath);
+        //Log.d("JNI", "Path: " + externalFileDirPath);
         _lipitkInterface = new LipiTKJNIInterface(externalFileDirPath, "SHAPEREC_ALPHANUM");
         _lipitkInterface.initialize();
         _recognizer = _lipitkInterface;
@@ -187,7 +183,7 @@ public class DemoDraw3 extends View {
         if(tmppts.size()>1){
             double[][] Xto0 = new double[][]{{(double) (0 - tmppts.get(tmppts.size() - 1).x)}, {(double) (0 - tmppts.get(tmppts.size() - 1).y)}, {1}};
             SimpleMatrix Xto0_m = new SimpleMatrix(Xto0);
-            SimpleMatrix rot_m = new SimpleMatrix(proAcceGyroCali3.currRot);
+            SimpleMatrix rot_m = new SimpleMatrix(MotionEstimation3.currRot);
             for (int i = 0; i < tmppts.size(); i++) {
                 SimpleMatrix ori = new SimpleMatrix(new double[][]{{(double) tmppts.get(i).x}, {(double) tmppts.get(i).y}, {1}});
                 SimpleMatrix fin = rot_m.mult(ori.plus(Xto0_m)).minus(Xto0_m);
@@ -309,7 +305,7 @@ public class DemoDraw3 extends View {
         if(pts.size()>1 ){
             double[][] Xto0 = new double[][]{{(double) (0 - pts.get(pts.size() - 1).x)}, {(double) (0 - pts.get(pts.size() - 1).y)}, {0}};
             SimpleMatrix Xto0_m = new SimpleMatrix(Xto0);
-            SimpleMatrix rot_m = new SimpleMatrix(proAcceGyroCali3.currRot);
+            SimpleMatrix rot_m = new SimpleMatrix(MotionEstimation3.currRot);
             for (int i = 0; i < pts.size(); i++) {
                 SimpleMatrix ori = new SimpleMatrix(new double[][]{{(double) pts.get(i).x}, {(double) pts.get(i).y}, {0}});
                 SimpleMatrix fin = rot_m.mult(ori.plus(Xto0_m)).minus(Xto0_m);

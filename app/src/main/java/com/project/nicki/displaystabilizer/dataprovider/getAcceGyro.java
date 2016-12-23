@@ -5,35 +5,25 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.renderscript.Matrix3f;
-import android.renderscript.Matrix4f;
 import android.util.Log;
 
-import com.project.nicki.displaystabilizer.UI.DemoDrawUI;
-import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_draw0;
+import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
+import com.project.nicki.displaystabilizer.dataprocessor.MotionEstimation3;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
-import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali2;
-import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali3;
-import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
-import com.project.nicki.displaystabilizer.dataprocessor.utils.Matrix2Quaternion;
+import com.project.nicki.displaystabilizer.dataprocessor.calRk4;
 import com.project.nicki.displaystabilizer.init;
-import com.project.nicki.displaystabilizer.stabilization.stabilize_v2;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import org.apache.commons.math3.complex.Quaternion;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.StringTokenizer;
-
-import au.com.bytecode.opencsv.CSVWriter;
 
 /**
  * Created by nickisverygood on 12/17/2015.
@@ -41,16 +31,18 @@ import au.com.bytecode.opencsv.CSVWriter;
  * DO:
  * # get sensor data from SensorManager
  * # simple calibration by average & update dialogue
- * # add diy orientation sensor
- * # pass sensor data to proAcceGyroCali3
- * # LogCSV
+ * # accelerometer sensor
+ * # orientation sensor
+ * # quaternion sensor
  * # Stop Detector
  * # Static Detector
  * # CircularBuffer2
+ * # pass sensor data to MotionEstimation3
  */
 public class getAcceGyro implements Runnable {
 
     //// # get sensor data from SensorManager:　declare variables
+    Context mContext;
     private Handler sensor_ThreadHandler;
     private HandlerThread sensor_Thread;
     private SensorManager mSensorManager;
@@ -64,16 +56,19 @@ public class getAcceGyro implements Runnable {
 
 
     //// # simple calibration by average & update dialogue:　declare variables
-    public static float[] AcceCaliFloat = new float[]{0,0,0};
+    public static float[] AcceCaliFloat = new float[]{0, 0, 0};
     public static Handler mgetValusHT_TOUCH_handler;
     public static boolean isStatic = true;
-    String csvName = "getAcceGyro.csv";
-    FileWriter mFileWriter;
-    private Context mContext;
-
     private String TAG = "getAcceGyro";
     public static StopDetector mstopdetector = new StopDetector();
     public static CircularBuffer2 AcceBuffer = new CircularBuffer2(50);
+
+    //// # quaternion sensor
+    ///Filters
+    DescriptiveStatistics currOrientation_Filter0 = new DescriptiveStatistics(20);
+    DescriptiveStatistics currOrientation_Filter1 = new DescriptiveStatistics(20);
+    DescriptiveStatistics currOrientation_Filter2 = new DescriptiveStatistics(20);
+
     public getAcceGyro(Context context) {
         mContext = context;
     }
@@ -84,26 +79,6 @@ public class getAcceGyro implements Runnable {
     @Override
     public void run() {
 
-        //// # OBSOLETE
-        //final proAcceGyroCali mproAcceGyroCali = new proAcceGyroCali(mContext);
-        final proAcceGyroCali2 mproAcceGyroCali2 = new proAcceGyroCali2(mContext);
-        //mproAcceGyroCali.TEST();
-
-        sensor_Thread = new HandlerThread("sensor handler");
-        sensor_Thread.start();
-        sensor_ThreadHandler=new Handler(sensor_Thread.getLooper());
-        final StaticSensor mstaticsensor = new StaticSensor();
-        final HandlerThread mgetValusHT_TOUCH = new HandlerThread("getValues_TOUCH");
-        mgetValusHT_TOUCH.start();
-        mgetValusHT_TOUCH_handler = new Handler(mgetValusHT_TOUCH.getLooper());
-        final HandlerThread mgetValusHT_ACCE = new HandlerThread("getValues_ACCE");
-        mgetValusHT_ACCE.start();
-        final Handler mgetValusHT_ACCE_handler = new Handler(mgetValusHT_ACCE.getLooper());
-        final HandlerThread mgetValusHT_ORIEN = new HandlerThread("getValues_ORIEN");
-        mgetValusHT_ORIEN.start();
-        final Handler mgetValusHT_ORIEN_handler = new Handler(mgetValusHT_ORIEN.getLooper());
-
-
         //// # get sensor data from SensorManager:　init
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
         mLSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
@@ -113,79 +88,114 @@ public class getAcceGyro implements Runnable {
         mHandlerThread = new HandlerThread("getAcceGyro");
         mHandlerThread.start();
 
+        //// # pass sensor data to MotionEstimation3: init
+        sensor_Thread = new HandlerThread("sensor handler");
+        sensor_Thread.start();
+        sensor_ThreadHandler = new Handler(sensor_Thread.getLooper());
+        final MotionEstimation3 mproAcceGyroCali3 = new MotionEstimation3(mContext);
 
-
-        //// # pass sensor data to proAcceGyroCali3: init
-        final proAcceGyroCali3 mproAcceGyroCali3 = new proAcceGyroCali3(mContext);
-
-
-
+        //// # Static Detector: init
+        final StaticSensor mstaticsensor = new StaticSensor();
 
         //// # get sensor data from SensorManager:　get data
         Handler mHandler = new Handler(mHandlerThread.getLooper());
         mSensorEventListener = new SensorEventListener() {
             float[] mGravity;
             float[] mGeomagnetic;
-            long initTime = System.currentTimeMillis();
 
             @Override
             public void onSensorChanged(final SensorEvent event) {
                 final SensorEvent calievent = event;
 
 
-
                 //// # simple calibration by average & update dialogue: iterate through events and calculate AcceCaliFloat
-                //Calibration
-                //Log.d("calibration",String.valueOf(AcceCaliFloat[0]+" "+AcceCaliFloat[1]+" "+AcceCaliFloat[2]));
-                if(calievent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION){
-                    calievent.values[0] = calievent.values[0]-AcceCaliFloat[0];
-                    calievent.values[1] = calievent.values[1]-AcceCaliFloat[1];
-                    calievent.values[2] = calievent.values[2]-AcceCaliFloat[2];
+                if (calievent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+                    calievent.values[0] = calievent.values[0] - AcceCaliFloat[0];
+                    calievent.values[1] = calievent.values[1] - AcceCaliFloat[1];
+                    calievent.values[2] = calievent.values[2] - AcceCaliFloat[2];
+                    //update globalvariable
+                    init.initglobalvariable.AccelerometerVal =  calievent.values.clone();
                 }
 
 
-
-                //// # OBSOLETE
-                DemoDrawUI.runOnUI(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            DemoDrawUI.mlog_draw.setText("cX= " + String.valueOf(stabilize_v2.getcX()));
-                            DemoDrawUI.mlog_cam.setText("cY= " + String.valueOf(stabilize_v2.getcY()));
-                        } catch (Exception ex) {
-
-                        }
-                    }
-                });
-                //mproAcceGyroCali.Controller(calievent);
-
-
-                //// # add diy orientation sensor
+                //// # Static Detector
                 switch (calievent.sensor.getType()) {
                     case Sensor.TYPE_LINEAR_ACCELERATION:
                         isStatic = mstaticsensor.getStatic(calievent.values);
-                        mstopdetector.update(calievent.values);
                         AcceBuffer.add(calievent.values);
-                        new LogCSV(init.rk4_Log+"calRk4", String.valueOf(getAcceGyro.mstopdetector.getStopped(0)),
-                                new BigDecimal(String.valueOf(calievent.timestamp)).toPlainString(),
-                                calievent.values[0],
-                                calievent.values[1],
-                                calievent.values[2]);
-                        //if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1){
-                        //mgetValusHT_ACCE_handler.post(new Runnable() {
-                        //@Override
-                        //public void run() {
-                        //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), calievent.values, SensorCollect.sensordata.TYPE.ACCE));
-                        //}
-                        //});
-                        //}
+                        //update globalvariable
+                        init.initglobalvariable.StaticVal =  isStatic;
                 }
 
+                //// # Stop Detector
+                switch (calievent.sensor.getType()) {
+                    case Sensor.TYPE_LINEAR_ACCELERATION:
+                        mstopdetector.update(calievent.values);
+                        AcceBuffer.add(calievent.values);
+                        //update globalvariable
+                        init.initglobalvariable.StopDetectorVal =  mstopdetector.switchstop;
+                }
+
+
+                //// # gyroscope sensor
+                if (calievent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+                    //update globalvariable
+                    init.initglobalvariable.GyroscopeVal =  calievent.values;
+                }
+
+                //// # quaternion sensor
+                //Euler2Quaternion
+                float[] currOrientation;
+                double[] currQuaternionArray;
+                currOrientation = init.initglobalvariable.OrientationVal.clone();
+                currOrientation_Filter0.addValue(currOrientation[0]);
+                currOrientation_Filter1.addValue(currOrientation[1]);
+                currOrientation_Filter2.addValue(currOrientation[2]);
+                currOrientation[0] = (float) currOrientation_Filter0.getMean();
+                currOrientation[1] = (float) currOrientation_Filter1.getMean();
+                currOrientation[2] = (float) currOrientation_Filter2.getMean();
+                currQuaternionArray = getQuaternionfromEuler(currOrientation[0], currOrientation[1], currOrientation[2]);
+                //update init
+                if (!Arrays.equals(init.initglobalvariable.QuaternionVal, new double[]{1, 0, 0, 0}) && init.initglobalvariable.inited == false) {
+                    init.initglobalvariable.initQua = new Quaternion(init.initglobalvariable.QuaternionVal[0], init.initglobalvariable.QuaternionVal[1], init.initglobalvariable.QuaternionVal[2], init.initglobalvariable.QuaternionVal[3]);
+                    init.initglobalvariable.inited = true;
+                }
+                //update if new stroke
+                if (DemoDraw3.pending_quaternion_reset == true) {
+                    init.initglobalvariable.initQua = new Quaternion(currQuaternionArray[0], currQuaternionArray[1], currQuaternionArray[2], currQuaternionArray[3]);
+                    currOrientation_Filter0.clear();
+                    currOrientation_Filter1.clear();
+                    currOrientation_Filter2.clear();
+                    DemoDraw3.pending_quaternion_reset = false;
+                }
+                //get inverse
+                init.initglobalvariable.fromDevice2World = new Quaternion(currQuaternionArray[0], currQuaternionArray[1], currQuaternionArray[2], currQuaternionArray[3]);
+                //update globalvariable
+                init.initglobalvariable.QuaternionVal = currQuaternionArray.clone();
+
+
+                //// # rotation sensor
+                init.initglobalvariable.initQua = new Quaternion(init.initglobalvariable.QuaternionVal[0], init.initglobalvariable.QuaternionVal[1], init.initglobalvariable.QuaternionVal[2],  init.initglobalvariable.QuaternionVal[3]);
+                Quaternion relative2init = init.initglobalvariable.fromDevice2World.multiply(init.initglobalvariable.initQua.getInverse()).getInverse();
+                float[] currRotf_new = new float[]{1, 0, 0, 0, 1, 0, 0, 0, 1};
+                SensorManager.getRotationMatrixFromVector(currRotf_new, new float[]{(float) relative2init.getQ1(), (float) relative2init.getQ2(), (float) relative2init.getQ3(), (float) relative2init.getQ0()});
+                init.initglobalvariable.RotationVal = new double[][]{
+                        {(double) currRotf_new[0],
+                                (double) currRotf_new[1],
+                                (double) currRotf_new[2]},
+                        {(double) currRotf_new[3],
+                                (double) currRotf_new[4],
+                                (double) currRotf_new[5]},
+                        {(double) currRotf_new[6],
+                                (double) currRotf_new[7],
+                                (double) currRotf_new[8]}};
+
+
+                //// # orientation sensor
                 float[] mRotationMatrix = new float[16];
                 final float[] orientationVals = new float[4];
 
-                if(calievent.sensor.getType() == Sensor.TYPE_GAME_ROTATION_VECTOR){
-
+                if (calievent.sensor.getType() == Sensor.TYPE_GAME_ROTATION_VECTOR) {
                     // Convert the rotation-vector to a 4x4 matrix.
                     SensorManager.getRotationMatrixFromVector(mRotationMatrix,
                             calievent.values);
@@ -209,64 +219,27 @@ public class getAcceGyro implements Runnable {
                 }
                 final float orientation[] = new float[3];
                 if (mGravity != null && mGeomagnetic != null) {
-
                     float R[] = new float[9];
                     float I[] = new float[9];
                     boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
-                    //R =new float[] {0.5f,0.866f,0f,-0.866f,0.5f,0f,0f,0f,1f};
-                    //float[] q = Matrix2Quaternion.setQuatFromMatrix(new Matrix3f(R));
-                    //Log.i("QUA",q[0]+" "+q[1]+" "+q[2]+" "+q[3]);
                     if (success) {
                         SensorManager.getOrientation(R, orientation);
-                        /*
-                        new LogCSV(init.rk4_Log + " ll", String.valueOf(getAcceGyro.mstopdetector.getStopped(0)),
-                                String.valueOf(System.currentTimeMillis()),
-                                mGravity[0],
-                                mGravity[1],
-                                mGravity[2],
-                                mGeomagnetic[0],
-                                mGeomagnetic[1],
-                                mGeomagnetic[2],
-                                orientation[0],
-                                orientation[1],
-                                orientation[2],
-                        R[0],R[1],R[2],R[3],R[4],R[5],R[6],R[7],R[8]);
-                        */
-                        //if(DemoDraw2.drawing==0 || DemoDraw2.drawing==1) {
-                        //mgetValusHT_ORIEN_handler.post(new Runnable() {
-                        //@Override
-                        //public void run() {
-                        //init.initSensorCollection.append(new SensorCollect.sensordata(System.currentTimeMillis(), orientation, SensorCollect.sensordata.TYPE.ORIEN_radian));
-                        //}
-                        //});
-                        //}
-                    }else {
+                    } else {
                     }
                 }
-
-                try {
-                    if(orientationVals[0]!=0 && orientation[0]!=0){
-                        Log.i("Orien",String.valueOf(orientationVals[0]+" "+orientation[0]));
-                    }
-                }catch (Exception ex){
-
-                }
+                //update globalvariable
+                init.initglobalvariable.OrientationVal = orientation.clone();
 
 
-
-                //// # pass sensor data to proAcceGyroCali3
+                //// # pass sensor data to MotionEstimation3
                 sensor_ThreadHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        try{
-                            mproAcceGyroCali3.Controller(String.valueOf(calievent.sensor.getStringType()),calievent.timestamp,calievent.values);
-                        }catch (Exception ex){
-                            Log.d("getAcce",String.valueOf(ex));
+                        try {
+                            mproAcceGyroCali3.Controller();
+                        } catch (Exception ex) {
+                            Log.d("getAcce", String.valueOf(ex));
                         }
-                        try{
-                            mproAcceGyroCali3.Controller("android.sensor.getR",calievent.timestamp,orientation);
-                        }catch (Exception ex){}
-
                     }
                 });
 
@@ -274,8 +247,6 @@ public class getAcceGyro implements Runnable {
 
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-
             }
         };
 
@@ -288,96 +259,49 @@ public class getAcceGyro implements Runnable {
     }
 
 
-    //// # LogCSV
-    public void LogCSV(String a, String b, String c, String d, String g, String h) {
-        //init CSV logging
-        String baseDir = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-        String fileName = csvName;
-        String filePath = baseDir + File.separator + fileName;
-        File f = new File(filePath);
-        CSVWriter writer = null;
-        // File exist
-        if (f.exists() && !f.isDirectory()) {
-            try {
-                mFileWriter = new FileWriter(filePath, true);
-            } catch (IOException e) {
-                //e.printStackTrace();
-            }
-            writer = new CSVWriter(mFileWriter);
-        } else {
-            try {
-                writer = new CSVWriter(new FileWriter(filePath));
-            } catch (IOException e) {
-                //e.printStackTrace();
-            }
-        }
-
-        try {
-            String line = String.format("%s,%s,%s,%s,%s,%s\n", a, b, c, d, g, h);
-            mFileWriter.write(line);
-        } catch (IOException e) {
-            //e.printStackTrace();
-        }
-
-        try {
-            writer.close();
-        } catch (IOException e) {
-            //e.printStackTrace();
-        }
-
-
-    }
-
-
     //// # Stop Detector
-    public static class StopDetector{
-        public int[] error_threshold =new int[]{25,25,25};
+    public static class StopDetector {
+        public int[] error_threshold = new int[]{25, 25, 25};
         int timespan_threshold = 25;
-        public int[] switchstop_TRUE = new int[]{0,0,0};
-        public boolean[] switchstop = new boolean[]{false,false,false};
-        public boolean[] changed = new boolean[]{false,false,false};
-        public int[] stack = new int[]{0,0,0};
-        private float[] prev = new float[]{0,0,0};
-        public void update(float[] data){
-            for (int i=0;i<3;i++){
-                if(data[i]*prev[i]>0){
+        public int[] switchstop_TRUE = new int[]{0, 0, 0};
+        public boolean[] switchstop = new boolean[]{false, false, false};
+        public boolean[] changed = new boolean[]{false, false, false};
+        public int[] stack = new int[]{0, 0, 0};
+        private float[] prev = new float[]{0, 0, 0};
+
+        public void update(float[] data) {
+            for (int i = 0; i < 3; i++) {
+                if (data[i] * prev[i] > 0) {
                     stack[i]++;
                     error_threshold[i] = stack[i];
-                    changed[i]=false;
-                }else if(data[i]*prev[i]<0){
-                    if(stack[i]>timespan_threshold){
+                    changed[i] = false;
+                } else if (data[i] * prev[i] < 0) {
+                    if (stack[i] > timespan_threshold) {
                         switchstop[i] = !switchstop[i];
-                        changed[i]=true;
-                    }else {
-                        changed[i]=false;
+                        changed[i] = true;
+                    } else {
+                        changed[i] = false;
                     }
-                    stack[i]=0;
+                    stack[i] = 0;
                 }
 
-                if(switchstop[i]){
+                if (switchstop[i]) {
                     switchstop_TRUE[i]++;
-                    if(switchstop_TRUE[i]>error_threshold[i]*2){
+                    if (switchstop_TRUE[i] > error_threshold[i] * 2) {
                         switchstop[i] = false;
                     }
-                }else {
-                    switchstop_TRUE[i]=0;
+                } else {
+                    switchstop_TRUE[i] = 0;
                 }
 
-                if((switchstop_TRUE[0]>100 || switchstop_TRUE[0]>100 || switchstop_TRUE[0]>100 )&& UIv1_draw0.calibrate_isrunning==false){
-                    Log.d("DEBUGG",String.valueOf(switchstop_TRUE[0]+" "+ switchstop_TRUE[0]+" "+  switchstop_TRUE[0]+" "+   UIv1_draw0.calibrate_isrunning));
-                    //UIv1_draw0.calibrate.sendEmptyMessage(0);
-                }
             }
             prev = data.clone();
         }
-        public boolean getStopped(int i){
+
+        public boolean getStopped(int i) {
             return (switchstop[i]);
         }
-        public int[] getstack(){
-            return stack;
-        }
     }
-
 
 
     //// # Static Detector
@@ -411,7 +335,6 @@ public class getAcceGyro implements Runnable {
                 staticNum = 0;
             }
             if (staticNum < 50) {
-                Log.d(TAG, "Movinggg");
                 getAcceGyro.isStatic = false;
                 isStatic = false;
             } else {
@@ -485,33 +408,62 @@ public class getAcceGyro implements Runnable {
         }
     }
 
-    public static class CircularBuffer2{
+    public final double[] getQuaternionfromEuler(double mroll, double mpitch, double myaw) {
+        //note that original source mistaken roll as yaw, thus switch them (input parms still yaw,pithh,yaw [zy'x''])
+        float yaw = (float) myaw;
+        float pitch = (float) mpitch;
+        float roll = (float) mroll;
+        final float hr = roll * 0.5f;
+        final float shr = (float) Math.sin(hr);
+        final float chr = (float) Math.cos(hr);
+        final float hp = pitch * 0.5f;
+        final float shp = (float) Math.sin(hp);
+        final float chp = (float) Math.cos(hp);
+        final float hy = yaw * 0.5f;
+        final float shy = (float) Math.sin(hy);
+        final float chy = (float) Math.cos(hy);
+        final float chy_shp = chy * shp;
+        final float shy_chp = shy * chp;
+        final float chy_chp = chy * chp;
+        final float shy_shp = shy * shp;
+
+        float x = (chy_shp * chr) + (shy_chp * shr); // cos(yaw/2) * sin(pitch/2) * cos(roll/2) + sin(yaw/2) * cos(pitch/2) * sin(roll/2)
+        float y = (shy_chp * chr) - (chy_shp * shr); // sin(yaw/2) * cos(pitch/2) * cos(roll/2) - cos(yaw/2) * sin(pitch/2) * sin(roll/2)
+        float z = (chy_chp * shr) - (shy_shp * chr); // cos(yaw/2) * cos(pitch/2) * sin(roll/2) - sin(yaw/2) * sin(pitch/2) * cos(roll/2)
+        float w = (chy_chp * chr) + (shy_shp * shr); // cos(yaw/2) * cos(pitch/2) * cos(roll/2) + sin(yaw/2) * sin(pitch/2) * sin(roll/2)
+        return new double[]{w, x, y, z};
+    }
+
+    public static class CircularBuffer2 {
         int bufflength = 50;
         public boolean hasnew = false;
-        public CircularBuffer2(int i){
+
+        public CircularBuffer2(int i) {
             bufflength = i;
         }
+
         public List<float[]> data = new ArrayList<>();
-        public void add(float[] idata){
-            if(data.size()==0){
+
+        public void add(float[] idata) {
+            if (data.size() == 0) {
                 data.add(idata);
-            }else if(data.size()< bufflength){
+            } else if (data.size() < bufflength) {
                 data.add(idata);
-            }else {
+            } else {
                 data.add(idata);
                 data.remove(0);
             }
             hasnew = true;
         }
-        public void reset(){
+
+        public void reset() {
             data = new ArrayList<>();
         }
-        public boolean full(){
-            return (data.size()>= bufflength);
+
+        public boolean full() {
+            return (data.size() >= bufflength);
         }
     }
-
-
 
 
 }

@@ -5,15 +5,12 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
-import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali3;
-import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
-import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
+import com.project.nicki.displaystabilizer.dataprocessor.MotionEstimation3;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect.sensordata;
 
 import org.apache.commons.math3.complex.Quaternion;
 import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
-import org.ejml.data.Matrix;
 import org.ejml.simple.SimpleMatrix;
 
 import java.util.ArrayList;
@@ -97,9 +94,8 @@ public class stabilize_v3_1 {
                 //Quaternion q_prevQuaternion = new Quaternion(0.7358881620051946,0.2889093508708513,0.45508140685231796,0.40975713921457785);
                 Quaternion q_currminusprev = q_currQuaternion.multiply(q_prevQuaternion.getInverse());
                 Rotation convert2rot = new Rotation(q_currminusprev.getQ0(), q_currminusprev.getQ1(), q_currminusprev.getQ2(), q_currminusprev.getQ3(), false);
-                Log.i("angles", String.valueOf(convert2rot.getAngle()));
                 currRot = convert2rot.getMatrix();
-                //currRot = proAcceGyroCali3.currRot;
+                //currRot = MotionEstimation3.currRot;
             }
             prevQuaternion = currQuaternion.clone();
 
@@ -205,9 +201,9 @@ public class stabilize_v3_1 {
                 float[] delta = new float[]{
                         stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0],
                         stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1]};
-                if (proAcceGyroCali3.currRot != null ) {
+                if (MotionEstimation3.currRot != null ) {
                     SimpleMatrix delta_m = new SimpleMatrix(new double[][]{{(double) delta[0]}, {(double) delta[1]}, {0}});
-                    SimpleMatrix rot_m = new SimpleMatrix(proAcceGyroCali3.currRot).invert();
+                    SimpleMatrix rot_m = new SimpleMatrix(MotionEstimation3.currRot).invert();
                     //rot_m = new SimpleMatrix(new double[][]{{0.866,-0.5,0},{0.5,0.866,0},{0,0,1}});
                     SimpleMatrix fin = rot_m.mult(delta_m);
                     delta = new float[]{(float)fin.getMatrix().get(0,0),(float)fin.getMatrix().get(1,0)};
