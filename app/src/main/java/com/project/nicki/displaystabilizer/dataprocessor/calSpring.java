@@ -3,6 +3,7 @@ package com.project.nicki.displaystabilizer.dataprocessor;
 
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Filters.filterSensorData;
 import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
+import com.project.nicki.displaystabilizer.init;
 
 import java.util.List;
 
@@ -11,8 +12,8 @@ import java.util.List;
  */
 public class calSpring {
     //init filters
-    filterSensorData filtercalSpring_ACCE = new filterSensorData(true, 100, 1, 1, getAcceGyro.isStatic, Float.MAX_VALUE);
-    filterSensorData filtercalSpring_dPOS = new filterSensorData(true, 1, 1, 1, getAcceGyro.isStatic, Float.MAX_VALUE);
+    filterSensorData filtercalSpring_ACCE = new filterSensorData(true, 100, 1, 1, init.initglobalvariable.StaticVal, Float.MAX_VALUE);
+    filterSensorData filtercalSpring_dPOS = new filterSensorData(true, 1, 1, 1,init.initglobalvariable.StaticVal, Float.MAX_VALUE);
     filterSensorData filtercalSpring_POSI = new filterSensorData(true, 100, 0.7f, 1, false, Float.MAX_VALUE);
     float[] pos = new float[]{0, 0, 0};
     float[] dpos = new float[]{0, 0, 0};

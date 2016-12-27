@@ -27,6 +27,11 @@ import com.project.nicki.displaystabilizer.stabilization.stabilize_v3_1;
 
 
 public class init extends AppCompatActivity {
+    ////# initialize static classes
+    public static globalvariable initglobalvariable = new globalvariable();
+    public static TouchCollect initTouchCollection = new TouchCollect();
+    public static stabilize_v3_1 initStabilize = new stabilize_v3_1();
+
     ////# OBSOLETE
     public static String rk4_Log = "rk4_" + String.valueOf(System.currentTimeMillis());
     public static SensorCollect initSensorCollection = new SensorCollect();
@@ -34,10 +39,8 @@ public class init extends AppCompatActivity {
     public static double widthm, heightcm, widthpix, heightpix, pix2m;
     String TAG = "init";
 
-    ////# initialize static classes
-    public static TouchCollect initTouchCollection = new TouchCollect();
-    public static stabilize_v3_1 initStabilize = new stabilize_v3_1();
-    public static globalvariable initglobalvariable = new globalvariable();
+
+
 
     ////# set parameters
     public static SharedPreferences getSharedPreferences(Context ctxt) {

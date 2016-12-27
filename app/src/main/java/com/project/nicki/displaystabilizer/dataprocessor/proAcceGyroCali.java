@@ -1437,7 +1437,7 @@ public class proAcceGyroCali extends getAcceGyro {
 
     }
 
-    public class sensordata {
+    public static class sensordata {
         private long Time;
         private float[] Data = new float[3];
 

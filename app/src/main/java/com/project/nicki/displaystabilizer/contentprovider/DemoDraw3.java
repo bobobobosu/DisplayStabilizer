@@ -41,13 +41,16 @@ public class DemoDraw3 extends View {
     ////Buffer
     public static List<List<stabilize_v3.Point>> sta_pending_to_draw = new ArrayList<>();
     public static List<List<stabilize_v3.Point>> ori_pending_to_draw = new ArrayList<>();
+    public static List<List<stabilize_v3.Point>> motion_path = new ArrayList<>();
     public static List<stabilize_v3.Point> pending_to_draw_direct = new ArrayList<>();
     public static Path path = new Path();
     public static Path path2 = new Path();
     public static Path path3 = new Path();
+    public static Path path4 = new Path();
     public static Paint paint = new Paint();
     public static Paint paint2 = new Paint();
     public static Paint paint3 = new Paint();
+    public static Paint paint4 = new Paint();
     ////Handlers
     public static Handler clean_and_refresh;
     public static Handler refresh;
@@ -90,6 +93,12 @@ public class DemoDraw3 extends View {
         paint3.setStyle(Paint.Style.STROKE);
         paint3.setStrokeJoin(Paint.Join.ROUND);
 
+        paint4.setAntiAlias(true);
+        paint4.setStrokeWidth(2f);
+        paint4.setColor(Color.BLUE);
+        paint4.setStyle(Paint.Style.STROKE);
+        paint4.setStrokeJoin(Paint.Join.ROUND);
+
         //Handlers init
         refresh = new Handler() {
             @Override
@@ -105,6 +114,7 @@ public class DemoDraw3 extends View {
                 path = new Path();
                 path2 = new Path();
                 path3 = new Path();
+                path4 = new Path();
                 invalidate();
             }
         };
@@ -116,6 +126,7 @@ public class DemoDraw3 extends View {
         try {
             //drawCanvas(canvas, path3, pending_to_draw_direct);
             draw_ListofPaths(canvas, paint3, path3, sta_pending_to_draw);
+            draw_ListofPaths(canvas, paint4, path4, motion_path);
 
         } catch (Exception ex) {
             //Log.e("onDraw",String.valueOf(ex));
@@ -140,6 +151,7 @@ public class DemoDraw3 extends View {
                 path.lineTo(eventX, eventY);
                 return true;
             case MotionEvent.ACTION_MOVE:
+                Log.d("Tou",String.valueOf(eventX+"  "+ eventY));
                 drawing = 1;
                 new passTouch(event);
                 path.lineTo(eventX, eventY);
@@ -165,12 +177,12 @@ public class DemoDraw3 extends View {
     public void draw_ListofPaths(Canvas canvas, Paint paint, Path path, List<List<stabilize_v3.Point>> pending_to_draw) {
         path = new Path();
         for(int i=0;i< pending_to_draw.size();i++){
-            drawCanvas(canvas, path, pending_to_draw.get(i));
+            drawCanvas(canvas, path, pending_to_draw.get(i),paint);
         }
 
     }
     //drawCanvas
-    private void drawCanvas(Canvas canvas, Path mpath, final List<stabilize_v3.Point> mpts) {
+    private void drawCanvas(Canvas canvas, Path mpath, final List<stabilize_v3.Point> mpts, Paint paint) {
         List<stabilize_v3.Point> pts = new ArrayList<>(mpts);
         //rotate
         //finger_Xto0
@@ -230,7 +242,7 @@ public class DemoDraw3 extends View {
 
                 }
             }
-            canvas.drawPath(mpath, paint3);
+            canvas.drawPath(mpath, paint);
         } else {
             if (pts.size() == 1) {
                 //stabilize_v3.Point point = pts.get(0);
@@ -305,7 +317,7 @@ public class DemoDraw3 extends View {
         if(pts.size()>1 ){
             double[][] Xto0 = new double[][]{{(double) (0 - pts.get(pts.size() - 1).x)}, {(double) (0 - pts.get(pts.size() - 1).y)}, {0}};
             SimpleMatrix Xto0_m = new SimpleMatrix(Xto0);
-            SimpleMatrix rot_m = new SimpleMatrix(MotionEstimation3.currRot);
+            SimpleMatrix rot_m = new SimpleMatrix(init.initglobalvariable.RotationVal);
             for (int i = 0; i < pts.size(); i++) {
                 SimpleMatrix ori = new SimpleMatrix(new double[][]{{(double) pts.get(i).x}, {(double) pts.get(i).y}, {0}});
                 SimpleMatrix fin = rot_m.mult(ori.plus(Xto0_m)).minus(Xto0_m);

@@ -201,9 +201,9 @@ public class stabilize_v3_1 {
                 float[] delta = new float[]{
                         stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0],
                         stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1]};
-                if (MotionEstimation3.currRot != null ) {
+                if (init.initglobalvariable.RotationVal != null ) {
                     SimpleMatrix delta_m = new SimpleMatrix(new double[][]{{(double) delta[0]}, {(double) delta[1]}, {0}});
-                    SimpleMatrix rot_m = new SimpleMatrix(MotionEstimation3.currRot).invert();
+                    SimpleMatrix rot_m = new SimpleMatrix(init.initglobalvariable.RotationVal).invert();
                     //rot_m = new SimpleMatrix(new double[][]{{0.866,-0.5,0},{0.5,0.866,0},{0,0,1}});
                     SimpleMatrix fin = rot_m.mult(delta_m);
                     delta = new float[]{(float)fin.getMatrix().get(0,0),(float)fin.getMatrix().get(1,0)};

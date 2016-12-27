@@ -25,9 +25,9 @@ public class calRk4 {
     static final float NS2S = 1.0f / 1000000000.0f;
     public Position[] prevPosition = new Position[3];
     //init filters
-    filterSensorData filtercalRk4_ACCE = new filterSensorData(true, 10, 1, 1, getAcceGyro.isStatic , Float.MAX_VALUE);
-    filterSensorData filtercalRk4_VELO = new filterSensorData(true, 1, 0.7f, 1, getAcceGyro.isStatic , Float.MAX_VALUE);
-    filterSensorData filtercalRk4_POSI = new filterSensorData(true, 10, 0.7f, 1, getAcceGyro.isStatic,0.00004f);
+    filterSensorData filtercalRk4_ACCE = new filterSensorData(true, 10, 1, 1, init.initglobalvariable.StaticVal, Float.MAX_VALUE);
+    filterSensorData filtercalRk4_VELO = new filterSensorData(true, 1, 0.7f, 1, init.initglobalvariable.StaticVal, Float.MAX_VALUE);
+    filterSensorData filtercalRk4_POSI = new filterSensorData(true, 10, 0.7f, 1, init.initglobalvariable.StaticVal,0.00004f);
 
     long last_timestamp = 0;
     private double prevPos;
@@ -54,9 +54,9 @@ public class calRk4 {
         //Log.d("static?", String.valueOf(getAcceGyro.isStatic + " " + String.valueOf(DemoDraw2.drawing == 0)));
         //filter update
 
-        filtercalRk4_ACCE.paramUpdate(true, 10, 1, 1, getAcceGyro.isStatic || DemoDraw3.resetted == false,1f);
-        filtercalRk4_VELO.paramUpdate(true, 1, 1f, 1, getAcceGyro.isStatic || DemoDraw3.resetted == false, 0.5f);
-        filtercalRk4_POSI.paramUpdate(true, 10, 0.1f, 1, getAcceGyro.isStatic ||DemoDraw3.resetted == false, 0.00003f);
+        filtercalRk4_ACCE.paramUpdate(true, 10, 1, 1,init.initglobalvariable.StaticVal || DemoDraw3.resetted == false,1f);
+        filtercalRk4_VELO.paramUpdate(true, 1, 1f, 1,init.initglobalvariable.StaticVal || DemoDraw3.resetted == false, 0.5f);
+        filtercalRk4_POSI.paramUpdate(true, 10, 0.1f, 1,init.initglobalvariable.StaticVal ||DemoDraw3.resetted == false, 0.00003f);
         if (DemoDraw3.resetted == false) {
             //Log.d("reset", String.valueOf(DemoDraw3.resetted));
             for (int i = 0; i < prevPosition.length; i++) {

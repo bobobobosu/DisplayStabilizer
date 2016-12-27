@@ -30,7 +30,7 @@ import java.util.List;
  * getAcceGyro.java
  * DO:
  * # get sensor data from SensorManager
- * # simple calibration by average & update dialogue
+ * # apply accelerometer 
  * # accelerometer sensor
  * # orientation sensor
  * # quaternion sensor
@@ -55,13 +55,11 @@ public class getAcceGyro implements Runnable {
     private HandlerThread mHandlerThread;
 
 
-    //// # simple calibration by average & update dialogue:　declare variables
-    public static float[] AcceCaliFloat = new float[]{0, 0, 0};
+    //// # apply accelerometer :　declare variables
     public static Handler mgetValusHT_TOUCH_handler;
-    public static boolean isStatic = true;
-    private String TAG = "getAcceGyro";
+        private String TAG = "getAcceGyro";
     public static StopDetector mstopdetector = new StopDetector();
-    public static CircularBuffer2 AcceBuffer = new CircularBuffer2(50);
+    //public static CircularBuffer2 AcceBuffer = new CircularBuffer2(50);
 
     //// # quaternion sensor
     ///Filters
@@ -82,6 +80,7 @@ public class getAcceGyro implements Runnable {
         //// # get sensor data from SensorManager:　init
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
         mLSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        mGSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         mMSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
         mRSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMASensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
@@ -108,30 +107,32 @@ public class getAcceGyro implements Runnable {
                 final SensorEvent calievent = event;
 
 
-                //// # simple calibration by average & update dialogue: iterate through events and calculate AcceCaliFloat
+                //// # apply accelerometer : iterate through events and calculate AcceCaliFloat
                 if (calievent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
-                    calievent.values[0] = calievent.values[0] - AcceCaliFloat[0];
-                    calievent.values[1] = calievent.values[1] - AcceCaliFloat[1];
-                    calievent.values[2] = calievent.values[2] - AcceCaliFloat[2];
+                    calievent.values[0] = calievent.values[0] - init.initglobalvariable.AccelerometerCali[0];
+                    calievent.values[1] = calievent.values[1] - init.initglobalvariable.AccelerometerCali[1];
+                    calievent.values[2] = calievent.values[2] - init.initglobalvariable.AccelerometerCali[2];
                     //update globalvariable
                     init.initglobalvariable.AccelerometerVal =  calievent.values.clone();
                 }
 
 
                 //// # Static Detector
+                boolean isStatic = true;
                 switch (calievent.sensor.getType()) {
                     case Sensor.TYPE_LINEAR_ACCELERATION:
                         isStatic = mstaticsensor.getStatic(calievent.values);
-                        AcceBuffer.add(calievent.values);
+                        init.initglobalvariable.AcceBuffer.add(calievent.values);
                         //update globalvariable
                         init.initglobalvariable.StaticVal =  isStatic;
+                        init.initglobalvariable.StaticVarMagVal = mstaticsensor.getVarianceMagnitude(calievent.values);
                 }
 
                 //// # Stop Detector
                 switch (calievent.sensor.getType()) {
                     case Sensor.TYPE_LINEAR_ACCELERATION:
                         mstopdetector.update(calievent.values);
-                        AcceBuffer.add(calievent.values);
+                        init.initglobalvariable.AcceBuffer.add(calievent.values);
                         //update globalvariable
                         init.initglobalvariable.StopDetectorVal =  mstopdetector.switchstop;
                 }
@@ -335,13 +336,11 @@ public class getAcceGyro implements Runnable {
                 staticNum = 0;
             }
             if (staticNum < 50) {
-                getAcceGyro.isStatic = false;
-                isStatic = false;
+                init.initglobalvariable.StaticVal= false;
             } else {
-                getAcceGyro.isStatic = true;
-                isStatic = true;
+                init.initglobalvariable.StaticVal = true;
             }
-            return isStatic;
+            return init.initglobalvariable.StaticVal;
         }
 
         public float[][] List2Array(List<float[]> input) {
@@ -434,36 +433,7 @@ public class getAcceGyro implements Runnable {
         return new double[]{w, x, y, z};
     }
 
-    public static class CircularBuffer2 {
-        int bufflength = 50;
-        public boolean hasnew = false;
 
-        public CircularBuffer2(int i) {
-            bufflength = i;
-        }
-
-        public List<float[]> data = new ArrayList<>();
-
-        public void add(float[] idata) {
-            if (data.size() == 0) {
-                data.add(idata);
-            } else if (data.size() < bufflength) {
-                data.add(idata);
-            } else {
-                data.add(idata);
-                data.remove(0);
-            }
-            hasnew = true;
-        }
-
-        public void reset() {
-            data = new ArrayList<>();
-        }
-
-        public boolean full() {
-            return (data.size() >= bufflength);
-        }
-    }
 
 
 }
