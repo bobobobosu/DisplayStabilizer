@@ -878,7 +878,7 @@ public class proAcceGyroCali extends getAcceGyro {
 
             if (caliAccebuffer.size() > 6) {
                 mdisplay.displaystatus1("LM: Start");
-                //flatten all data
+                //flatten all buffer
                 ArrayList<sensordata> allcaliAccebuffer = new ArrayList<>();
                 for (int j = 0; j < caliAccebuffer.size(); j++) {
                     for (int k = 0; k < caliAccebuffer.get(j).size(); k++) {
@@ -1211,7 +1211,7 @@ public class proAcceGyroCali extends getAcceGyro {
                         gotdata[1] = Float.parseFloat(parts[1]);
                         gotdata[2] = Float.parseFloat(parts[2]);
                         csvdata.add(new sensordata(100, gotdata));
-                        Log.d(TAG, "data " + gotdata[0] + " " + gotdata[1] + " " + gotdata[2]);
+                        Log.d(TAG, "buffer " + gotdata[0] + " " + gotdata[1] + " " + gotdata[2]);
                     }
                 }
             } catch (IOException e) {

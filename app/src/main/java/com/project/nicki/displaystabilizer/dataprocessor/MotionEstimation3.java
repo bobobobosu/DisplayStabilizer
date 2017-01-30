@@ -10,29 +10,18 @@ package com.project.nicki.displaystabilizer.dataprocessor;
  */
 
 import android.content.Context;
-import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
-import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
-import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 import com.project.nicki.displaystabilizer.globalvariable;
 import com.project.nicki.displaystabilizer.init;
 import com.project.nicki.displaystabilizer.stabilization.stabilize_v3;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-
-import org.apache.commons.math3.complex.Quaternion;
-import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
-import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 public class MotionEstimation3 {
     ////Variables
@@ -53,7 +42,7 @@ public class MotionEstimation3 {
     }
 
     public void Controller() {
-        SensorCollect.sensordata currSensordata = new SensorCollect.sensordata(System.currentTimeMillis(), init.initglobalvariable.AccelerometerVal, SensorCollect.sensordata.TYPE.ACCE);
+        SensorCollect.sensordata currSensordata = new SensorCollect.sensordata(System.currentTimeMillis(), init.initglobalvariable.AccelerometerLinearVal, SensorCollect.sensordata.TYPE.ACCE);
         Bundle bundle = new Bundle();
         float[] pos = mcalRk4.calc(currSensordata).getData();
         bundle.putFloatArray("Pos", pos);
@@ -62,7 +51,7 @@ public class MotionEstimation3 {
         bundle.putLong("Time", currSensordata.getTime());
 
         drawMotionPath(pos);
-        init.initStabilize.set_Sensor(bundle);
+        init.initStabilize_v4.set_Sensor(bundle);
     }
 
     public void drawMotionPath(float[] pos) {
@@ -158,7 +147,7 @@ public class MotionEstimation3 {
 
             //Log.d("mot", String.valueOf(DemoDraw3.motion_path.get(0).size()) + "  " + CoeffX.floatValue() + "   " + CoeffY.floatValue());
 
-            Log.d("mot", String.valueOf(DemoDraw3.motion_path.get(0).size()) + "  " + CoeffX.floatValue() + "   " + CoeffY.floatValue());
+            //Log.d("mot", String.valueOf(DemoDraw3.motion_path.get(0).size()) + "  " + CoeffX.floatValue() + "   " + CoeffY.floatValue());
             DemoDraw3.refresh.sendEmptyMessage(0);
 
 

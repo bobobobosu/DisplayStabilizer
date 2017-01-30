@@ -110,19 +110,34 @@
             </LinearLayout>
         </LinearLayout>
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Calibrate"
-            android:id="@+id/button_calibrate"
-            android:layout_gravity="center_horizontal" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="53dp">
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Calibrate"
+                android:id="@+id/button_calibrate" />
+
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:inputType="textPersonName"
+                android:text="192.168.0.199:11000"
+                android:ems="10"
+                android:id="@+id/ipport"
+                android:layout_weight="1" />
+
+        </LinearLayout>
 
         <com.project.nicki.displaystabilizer.contentprovider.DemoDraw3
             android:layout_width="fill_parent"
             android:layout_height="395dp"
             android:id="@+id/view_DemoDraw3"
             android:layout_alignParentStart="true"
-            android:layout_weight="1.58" />
+            android:layout_weight="2.85" />
 
     </LinearLayout>
 </RelativeLayout>

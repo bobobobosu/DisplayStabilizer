@@ -136,6 +136,8 @@ public class DemoDraw3 extends View {
         //canvas.drawPath(path2, paint2);
     }
 
+
+
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
         final float eventX = event.getX();
@@ -329,7 +331,7 @@ public class DemoDraw3 extends View {
     }
 
     ////Classes
-    //recognizes data class
+    //recognizes buffer class
     public static class recognized_data {
         String configFileDirectory = _recognizer.getLipiDirectory() + "/projects/alphanumeric/config/";
         String[] characterArr;

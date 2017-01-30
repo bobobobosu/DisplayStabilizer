@@ -1,6 +1,6 @@
 [
     {
-        "outputFile": "C:\\Users\\nicki\\Desktop\\Android Projects\\nogit\\DDRS201612270927\\DisplayStabilizer\\lipiTk\\build\\intermediates\\incremental\\mergeDebugAndroidTestResources\\merged.dir\\values\\values.xml",
+        "outputFile": "C:\\Users\\nicki\\Desktop\\AndroidProjects\\DDRS201701262304\\DisplayStabilizer\\lipiTk\\build\\intermediates\\incremental\\mergeDebugAndroidTestResources\\merged.dir\\values\\values.xml",
         "map": [
             {
                 "to": {
@@ -11,7 +11,7 @@
                     "endOffset": 94
                 },
                 "from": {
-                    "file": "C:\\Users\\nicki\\Desktop\\Android Projects\\nogit\\DDRS201612270927\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\values\\values.xml",
+                    "file": "C:\\Users\\nicki\\Desktop\\AndroidProjects\\DDRS201701262304\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\values\\values.xml",
                     "position": {
                         "startLine": 2,
                         "startColumn": 4,
@@ -30,7 +30,7 @@
                     "endOffset": 150
                 },
                 "from": {
-                    "file": "C:\\Users\\nicki\\Desktop\\Android Projects\\nogit\\DDRS201612270927\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\values\\values.xml",
+                    "file": "C:\\Users\\nicki\\Desktop\\AndroidProjects\\DDRS201701262304\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\values\\values.xml",
                     "position": {
                         "startLine": 3,
                         "startColumn": 4,

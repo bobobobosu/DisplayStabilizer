@@ -10,6 +10,7 @@
       <module fileurl="file://$PROJECT_DIR$/dsp-collection/dsp-collection.iml" filepath="$PROJECT_DIR$/dsp-collection/dsp-collection.iml" />
       <module fileurl="file://$PROJECT_DIR$/lipiTk/lipiTk.iml" filepath="$PROJECT_DIR$/lipiTk/lipiTk.iml" />
       <module fileurl="file://$PROJECT_DIR$/opencsv-2.1-1.0.0/opencsv-2.1-1.0.0.iml" filepath="$PROJECT_DIR$/opencsv-2.1-1.0.0/opencsv-2.1-1.0.0.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sdk-v1.0.0/sdk-v1.0.0.iml" filepath="$PROJECT_DIR$/sdk-v1.0.0/sdk-v1.0.0.iml" />
     </modules>
   </component>
 </project>

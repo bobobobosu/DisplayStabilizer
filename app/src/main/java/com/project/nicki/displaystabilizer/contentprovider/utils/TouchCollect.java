@@ -155,7 +155,7 @@ public class TouchCollect {
                         //Log.e("EX1",String.valueOf(ex));
                     }
                     try {
-                        gen_Online_sta(event, init.initStabilize.gen_Draw(drawposBundleDRAWING));
+                        gen_Online_sta(event, init.initStabilize_v4.gen_Draw(drawposBundleDRAWING));
                     } catch (Exception ex) {
                         //  Log.e("EX2",String.valueOf(ex));
                     }

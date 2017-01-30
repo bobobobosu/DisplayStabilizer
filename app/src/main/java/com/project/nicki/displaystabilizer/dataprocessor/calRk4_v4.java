@@ -2,39 +2,28 @@ package com.project.nicki.displaystabilizer.dataprocessor;
 
 import android.util.Log;
 
-import com.project.nicki.displaystabilizer.contentprovider.DemoDraw2;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Filters.filterSensorData;
-import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
 import com.project.nicki.displaystabilizer.init;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import au.com.bytecode.opencsv.CSVWriter;
-
 /**
- * Created by nickisverygood on 3/6/2016.
+ * Created by nicki on 1/31/2017.
  */
-public class calRk4 {
+
+public class calRk4_v4 {
     static final float NS2S = 1.0f / 1000000000.0f;
     public Position[] prevPosition = new Position[3];
-    //init filters
-    filterSensorData filtercalRk4_ACCE = new filterSensorData(false, 10, 1, 1, init.initglobalvariable.StaticVal, Float.MAX_VALUE);
-    filterSensorData filtercalRk4_VELO = new filterSensorData(false, 1, 0.7f, 1, init.initglobalvariable.StaticVal, Float.MAX_VALUE);
-    filterSensorData filtercalRk4_POSI = new filterSensorData(false, 10, 0.7f, 1, init.initglobalvariable.StaticVal, 0.00004f);
 
     long last_timestamp = 0;
     private double prevPos;
     private double deltaPos = 0;
 
 
-    public calRk4() {
+    public calRk4_v4() {
         for (int i = 0; i < prevPosition.length; i++) {
             prevPosition[i] = new Position(System.currentTimeMillis(),0, 0);
         }
@@ -51,37 +40,13 @@ public class calRk4 {
 
     public SensorCollect.sensordata calc(final SensorCollect.sensordata msensordata) {
 
-        //Log.d("static?", String.valueOf(getAcceGyro.isStatic + " " + String.valueOf(DemoDraw2.drawing == 0)));
-        //filter update
-
-        filtercalRk4_ACCE.paramUpdate(false, 10, 1, 1, init.initglobalvariable.StaticVal || DemoDraw3.resetted == false, 1f);
-        filtercalRk4_VELO.paramUpdate(false, 1, 1f, 1, init.initglobalvariable.StaticVal || DemoDraw3.resetted == false, 0.5f);
-        filtercalRk4_POSI.paramUpdate(false, 10, 0.1f, 1, init.initglobalvariable.StaticVal || DemoDraw3.resetted == false, 0.00003f);
-        if (DemoDraw3.resetted == false) {
-            //Log.d("reset", String.valueOf(DemoDraw3.resetted));
-            for (int i = 0; i < prevPosition.length; i++) {
-                prevPosition[i].v = 0;
-                //prevPosition[i].pos = 0;
-            }
-            DemoDraw3.resetted = true;
-        }
-
-        //filter
-        msensordata.setData(filtercalRk4_ACCE.filter(msensordata.getData()));
 
         final float[] toreurndata = new float[msensordata.getData().length];
         for (int i = 0; i < prevPosition.length; i++) {
-            prevPosition[i].pos = filtercalRk4_POSI.filter(new float[]{(float) prevPosition[0].pos, (float) prevPosition[1].pos, (float) prevPosition[2].pos})[i];
-            prevPosition[i].v = filtercalRk4_VELO.filter(new float[]{(float) prevPosition[0].v, (float) prevPosition[1].v, (float) prevPosition[2].v})[i];
             //Log.i("velo",String.valueOf(prevPosition[0].pos+" "+prevPosition[1].pos+ " "+prevPosition[2].pos));
             toreurndata[i] = (float) prevPosition[i].pos;
-            //Log.d("stopdetect", String.valueOf(getAcceGyro.mstopdetector.getStopped(0)+" "+getAcceGyro.mstopdetector.error_threshold[0]+" "+getAcceGyro.mstopdetector.getstack()[0]+" "+getAcceGyro.mstopdetector.getstack()[1]+" "+getAcceGyro.mstopdetector.getstack()[2]));
-
-            if (getAcceGyro.mstopdetector.getStopped(i) == true) {
-                prevPosition[i].v = 0;
-            }
         }
-
+        Log.d("Pos",String.valueOf(prevPosition[0].pos));
         SensorCollect.sensordata toreturnsensordata = new SensorCollect.sensordata(msensordata.getTime(), toreurndata, SensorCollect.sensordata.TYPE.LOCA);
 
 
@@ -116,6 +81,7 @@ public class calRk4 {
         //Log.d("debug_rk4",String.valueOf(t)+" "+String.valueOf(dt)+" "+ String.valueOf(prevPosition[0].pos) + " " + String.valueOf(prevPosition[1].pos) + " " + String.valueOf(prevPosition[1].pos));
 
         last_timestamp = t;
+
         return position;
     }
 

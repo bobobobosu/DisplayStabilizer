@@ -130,7 +130,7 @@ public class LevenbergMarquardt {
     public LevenbergMarquardt(Function funcCost) {
         this.initialLambda = 1;
 
-        // declare data to some initial small size. It will grow later on as needed.
+        // declare buffer to some initial small size. It will grow later on as needed.
         int maxElements = 1;
         int numParam = 1;
 
@@ -289,7 +289,7 @@ public class LevenbergMarquardt {
     }
 
     /**
-     * Performs sanity checks on the input data and reshapes internal matrices.  By reshaping
+     * Performs sanity checks on the input buffer and reshapes internal matrices.  By reshaping
      * a matrix it will only declare new memory when needed.
      */
     protected void configure(DenseMatrix64F initParam, DenseMatrix64F X, DenseMatrix64F Y, ArrayList<proAcceGyroCali.sensordata> data) {

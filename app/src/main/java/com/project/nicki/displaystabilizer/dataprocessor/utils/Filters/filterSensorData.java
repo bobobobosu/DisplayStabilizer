@@ -43,14 +43,32 @@ public class filterSensorData {
         this.static_boo = static_boo;
         this.toohighfilter_thres = toohighfilter_thres;
     }
+
+    public void paramUpdate(float[] para) {
+        boolean kalmanfilter_boo = para[0] == 1;
+        int moveingavg_sample = Math.round(para[1]);
+        float highpass_alpha = para[2];
+        float lowpass_alpha = para[3];
+        boolean static_boo = para[4] == 1;
+        float toohighfilter_thres = para[5];
+
+        this.kalmanfilter_boo = kalmanfilter_boo;
+        this.highpass_alpha = highpass_alpha;
+        this.lowpass_alpha = lowpass_alpha;
+        this.moveingavg_sample = moveingavg_sample;
+        this.static_boo = static_boo;
+        this.toohighfilter_thres = toohighfilter_thres;
+    }
+
+
     public float[] filter(float[] data) {
         data = mfilterCollection.KalmanFilter(data, kalmanfilter_boo);
         data = mfilterCollection.MovingAvgFilter(data, moveingavg_sample);
         data = mfilterCollection.HighPassFilter(data, highpass_alpha);
         data = mfilterCollection.TooHighFilter(data, toohighfilter_thres);
-        //data = mfilterCollection.LowPassFilter(data, lowpass_alpha);
+        data = mfilterCollection.LowPassFilter(data, lowpass_alpha);
         data = mfilterCollection.StaticFilter(data, static_boo);
-        //data = mfilterCollection.TooHighFilter(data,toohighfilter_thres);
+        data = mfilterCollection.TooHighFilter(data,toohighfilter_thres);
 
         return data;
     }
@@ -109,13 +127,13 @@ public class filterSensorData {
         static_boo = builder.static_boo;
     }
 
-    public float[] filter(float[] data) {
-        data = mfilterCollection.KalmanFilter(data, kalmanfilter_boo);
-        data = mfilterCollection.MovingAvgFilter(data, moveingavg_sample);
-        data = mfilterCollection.HighPassFilter(data, highpass_alpha);
-        data = mfilterCollection.LowPassFilter(data, lowpass_alpha);
-        data = mfilterCollection.StaticFilter(data,static_boo);
-        return data;
+    public float[] filter(float[] buffer) {
+        buffer = mfilterCollection.KalmanFilter(buffer, kalmanfilter_boo);
+        buffer = mfilterCollection.MovingAvgFilter(buffer, moveingavg_sample);
+        buffer = mfilterCollection.HighPassFilter(buffer, highpass_alpha);
+        buffer = mfilterCollection.LowPassFilter(buffer, lowpass_alpha);
+        buffer = mfilterCollection.StaticFilter(buffer,static_boo);
+        return buffer;
     }
     */
 }

@@ -8,7 +8,7 @@ package com.project.nicki.displaystabilizer.dataprocessor.utils;
  * Caller implement this interface to specify the
  * function to be minimized and its gradient.
  *
- * Optionally return an initial guess and some test data,
+ * Optionally return an initial guess and some test buffer,
  * though the LM.java only uses this in its optional main() test program.
  * Return null if these are not needed.
  */

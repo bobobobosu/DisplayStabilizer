@@ -11,8 +11,8 @@ import android.util.Log;
 
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
 import com.project.nicki.displaystabilizer.dataprocessor.MotionEstimation3;
-import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
-import com.project.nicki.displaystabilizer.dataprocessor.calRk4;
+import com.project.nicki.displaystabilizer.dataprovider.orientationProvider.ImprovedOrientationSensor1Provider;
+import com.project.nicki.displaystabilizer.dataprovider.orientationProvider.OrientationProvider;
 import com.project.nicki.displaystabilizer.init;
 
 import org.apache.commons.math3.complex.Quaternion;
@@ -29,7 +29,7 @@ import java.util.List;
  * Created by nickisverygood on 12/17/2015.
  * getAcceGyro.java
  * DO:
- * # get sensor data from SensorManager
+ * # get sensor buffer from SensorManager
  * # apply accelerometer 
  * # accelerometer sensor
  * # orientation sensor
@@ -37,11 +37,12 @@ import java.util.List;
  * # Stop Detector
  * # Static Detector
  * # CircularBuffer2
- * # pass sensor data to MotionEstimation3
+ * # pass sensor buffer to MotionEstimation3
  */
 public class getAcceGyro implements Runnable {
+    ////tmep
 
-    //// # get sensor data from SensorManager:　declare variables
+    //// # get sensor buffer from SensorManager:　declare variables
     Context mContext;
     private Handler sensor_ThreadHandler;
     private HandlerThread sensor_Thread;
@@ -55,9 +56,11 @@ public class getAcceGyro implements Runnable {
     private HandlerThread mHandlerThread;
 
 
+
+
     //// # apply accelerometer :　declare variables
     public static Handler mgetValusHT_TOUCH_handler;
-        private String TAG = "getAcceGyro";
+    private String TAG = "getAcceGyro";
     public static StopDetector mstopdetector = new StopDetector();
     //public static CircularBuffer2 AcceBuffer = new CircularBuffer2(50);
 
@@ -76,8 +79,7 @@ public class getAcceGyro implements Runnable {
 
     @Override
     public void run() {
-
-        //// # get sensor data from SensorManager:　init
+        //// # get sensor buffer from SensorManager:　init
         mSensorManager = (SensorManager) mContext.getSystemService(Context.SENSOR_SERVICE);
         mLSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         mGSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -87,7 +89,7 @@ public class getAcceGyro implements Runnable {
         mHandlerThread = new HandlerThread("getAcceGyro");
         mHandlerThread.start();
 
-        //// # pass sensor data to MotionEstimation3: init
+        //// # pass sensor buffer to MotionEstimation3: init
         sensor_Thread = new HandlerThread("sensor handler");
         sensor_Thread.start();
         sensor_ThreadHandler = new Handler(sensor_Thread.getLooper());
@@ -96,16 +98,20 @@ public class getAcceGyro implements Runnable {
         //// # Static Detector: init
         final StaticSensor mstaticsensor = new StaticSensor();
 
-        //// # get sensor data from SensorManager:　get data
+        //// # get sensor buffer from SensorManager:　get buffer
         Handler mHandler = new Handler(mHandlerThread.getLooper());
         mSensorEventListener = new SensorEventListener() {
             float[] mGravity;
             float[] mGeomagnetic;
 
+
+            ////temp
+             BigDecimal gravity = new BigDecimal(0);
+             int granum = 0;
+
             @Override
             public void onSensorChanged(final SensorEvent event) {
                 final SensorEvent calievent = event;
-
 
                 //// # apply accelerometer : iterate through events and calculate AcceCaliFloat
                 if (calievent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
@@ -113,10 +119,20 @@ public class getAcceGyro implements Runnable {
                     calievent.values[1] = calievent.values[1] - init.initglobalvariable.AccelerometerCali[1];
                     calievent.values[2] = calievent.values[2] - init.initglobalvariable.AccelerometerCali[2];
                     //update globalvariable
-                    init.initglobalvariable.AccelerometerVal =  calievent.values.clone();
+                    init.initglobalvariable.AccelerometerLinearVal =  calievent.values.clone();
                 }
 
-
+                if(calievent.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
+                    /*
+                    BigDecimal xaxis = new BigDecimal(calievent.values[0]).pow(2);
+                    BigDecimal yaxis = new BigDecimal(calievent.values[1]).pow(2);
+                    BigDecimal zaxis = new BigDecimal(calievent.values[2]).pow(2);
+                    gravity = gravity.add(sqrtNewtonRaphson(xaxis.add(yaxis.add(zaxis)),new BigDecimal(0.5),new BigDecimal(10)));
+                    granum++;
+                    gravval  = gravity.divide(new BigDecimal(granum),10,BigDecimal.ROUND_DOWN);
+                    //Log.d("Gval: ",String.valueOf(gra\vval.doubleValue()));
+                    */
+                }
                 //// # Static Detector
                 boolean isStatic = true;
                 switch (calievent.sensor.getType()) {
@@ -170,15 +186,15 @@ public class getAcceGyro implements Runnable {
                     DemoDraw3.pending_quaternion_reset = false;
                 }
                 //get inverse
-                init.initglobalvariable.fromDevice2World = new Quaternion(currQuaternionArray[0], currQuaternionArray[1], currQuaternionArray[2], currQuaternionArray[3]);
+                init.initglobalvariable.   fromDevice2World = new Quaternion(currQuaternionArray[0], currQuaternionArray[1], currQuaternionArray[2], currQuaternionArray[3]);
                 //update globalvariable
-                init.initglobalvariable.QuaternionVal = currQuaternionArray.clone();
+                //  init.initglobalvariable.QuaternionVal = currQuaternionArray.clone();
 
 
                 //// # rotation sensor
                 init.initglobalvariable.initQua = new Quaternion(init.initglobalvariable.QuaternionVal[0], init.initglobalvariable.QuaternionVal[1], init.initglobalvariable.QuaternionVal[2],  init.initglobalvariable.QuaternionVal[3]);
                 Quaternion relative2init = init.initglobalvariable.fromDevice2World.multiply(init.initglobalvariable.initQua.getInverse()).getInverse();
-                float[] currRotf_new = new float[]{1, 0, 0, 0, 1, 0, 0, 0, 1};
+                float[] currRotf_new = new float[]{1, 0, 0, 0, 1, 0, 0,  0, 1};
                 SensorManager.getRotationMatrixFromVector(currRotf_new, new float[]{(float) relative2init.getQ1(), (float) relative2init.getQ2(), (float) relative2init.getQ3(), (float) relative2init.getQ0()});
                 init.initglobalvariable.RotationVal = new double[][]{
                         {(double) currRotf_new[0],
@@ -195,7 +211,10 @@ public class getAcceGyro implements Runnable {
                 //// # orientation sensor
                 float[] mRotationMatrix = new float[16];
                 final float[] orientationVals = new float[4];
-
+                if (calievent.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+                    init.initglobalvariable.MagnetometerVal = calievent.values;
+                    init.initglobalvariable.MagnBuffer.add(calievent.values);
+                }
                 if (calievent.sensor.getType() == Sensor.TYPE_GAME_ROTATION_VECTOR) {
                     // Convert the rotation-vector to a 4x4 matrix.
                     SensorManager.getRotationMatrixFromVector(mRotationMatrix,
@@ -232,7 +251,7 @@ public class getAcceGyro implements Runnable {
                 init.initglobalvariable.OrientationVal = orientation.clone();
 
 
-                //// # pass sensor data to MotionEstimation3
+                //// # pass sensor buffer to MotionEstimation3
                 sensor_ThreadHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -251,7 +270,7 @@ public class getAcceGyro implements Runnable {
             }
         };
 
-        //// # get sensor data from SensorManager:　registerListener
+        //// # get sensor buffer from SensorManager:　registerListener
         mSensorManager.registerListener(mSensorEventListener, mGSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
         mSensorManager.registerListener(mSensorEventListener, mLSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
         mSensorManager.registerListener(mSensorEventListener, mMSensor, SensorManager.SENSOR_DELAY_FASTEST, mHandler);
@@ -433,7 +452,67 @@ public class getAcceGyro implements Runnable {
         return new double[]{w, x, y, z};
     }
 
+    public static class CircularBuffer2 {
+        int bufflength = 50;
+        public boolean hasnew = false;
 
+        public CircularBuffer2(int i) {
+            bufflength = i;
+        }
 
+        public List<float[]> data = new ArrayList<>();
 
+        public void add(float[] idata) {
+            if (data.size() == 0) {
+                data.add(idata);
+            } else if (data.size() < bufflength) {
+                data.add(idata);
+            } else {
+                data.add(idata);
+                data.remove(0);
+            }
+            hasnew = true;
+        }
+
+        public void reset() {
+            data = new ArrayList<>();
+        }
+
+        public boolean full() {
+            return (data.size() >= bufflength);
+        }
+    }
+
+    private static final BigDecimal SQRT_DIG = new BigDecimal(150);
+    private static final BigDecimal SQRT_PRE = new BigDecimal(10).pow(SQRT_DIG.intValue());
+
+    /**
+     * Private utility method used to compute the square root of a BigDecimal.
+     *
+     * @author Luciano Culacciatti
+     * @url http://www.codeproject.com/Tips/257031/Implementing-SqrtRoot-in-BigDecimal
+     */
+    private static BigDecimal sqrtNewtonRaphson  (BigDecimal c, BigDecimal xn, BigDecimal precision){
+        BigDecimal fx = xn.pow(2).add(c.negate());
+        BigDecimal fpx = xn.multiply(new BigDecimal(2));
+        BigDecimal xn1 = fx.divide(fpx,2*SQRT_DIG.intValue(),RoundingMode.HALF_DOWN);
+        xn1 = xn.add(xn1.negate());
+        BigDecimal currentSquare = xn1.pow(2);
+        BigDecimal currentPrecision = currentSquare.subtract(c);
+        currentPrecision = currentPrecision.abs();
+        if (currentPrecision.compareTo(precision) <= -1){
+            return xn1;
+        }
+        return sqrtNewtonRaphson(c, xn1, precision);
+    }
+
+    /**
+     * Uses Newton Raphson to compute the square root of a BigDecimal.
+     *
+     * @author Luciano Culacciatti
+     * @url http://www.codeproject.com/Tips/257031/Implementing-SqrtRoot-in-BigDecimal
+     */
+    public static BigDecimal bigSqrt(BigDecimal c){
+        return sqrtNewtonRaphson(c,new BigDecimal(1),new BigDecimal(1).divide(SQRT_PRE));
+    }
 }

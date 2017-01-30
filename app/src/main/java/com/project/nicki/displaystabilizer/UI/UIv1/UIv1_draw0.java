@@ -1,35 +1,44 @@
 package com.project.nicki.displaystabilizer.UI.UIv1;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.BoolRes;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.text.format.Formatter;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
-import com.canvas.Canvas1;
 import com.project.nicki.displaystabilizer.R;
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
-import com.project.nicki.displaystabilizer.dataprocessor.CircularBuffer;
-import com.project.nicki.displaystabilizer.dataprocessor.proAcceGyroCali;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Calibration;
-import com.project.nicki.displaystabilizer.dataprovider.getAcceGyro;
+import com.project.nicki.displaystabilizer.dataprovider.representation.Quaternion;
+import com.project.nicki.displaystabilizer.dataprovider.udpBroadcast;
 import com.project.nicki.displaystabilizer.globalvariable;
 import com.project.nicki.displaystabilizer.init;
+import com.project.nicki.displaystabilizer.stabilization.stabilize_v4;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.project.nicki.displaystabilizer.init.mudpbroadcast;
 
 /**
  * UIv1_draw0.java
@@ -45,6 +54,7 @@ public class UIv1_draw0 extends AppCompatActivity {
     public static TextView view_ORI_CONF;
     public static TextView view_STA_CHAR;
     public static TextView view_STA_CONF;
+    public static TextView ipport;
     public static Button button_Calibrate;
     DemoDraw3 mDemoDraw;
     //// # simple calibration by average & update dialogue: declaration
@@ -56,19 +66,42 @@ public class UIv1_draw0 extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTitle("DDRS Demo");  // provide compatibility to all the versions
 
+        WifiManager wm = (WifiManager) getSystemService(WIFI_SERVICE);
+        String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+        Log.d("ip",ip);
+
+        setTitle("NoDistort Demo");  // provide compatibility to all the versions
+        setContentView(R.layout.activity_uiv1_draw0);
         //// # initialize widgets: control
         //init draw view
         mDemoDraw = new DemoDraw3(this);
         mDemoDraw = (DemoDraw3) findViewById(R.id.view_DemoDraw3);
-        setContentView(R.layout.activity_uiv1_draw0);
+
+        //set spen hover listener
+        mDemoDraw.setOnHoverListener(new View.OnHoverListener() {
+            @Override
+            public boolean onHover(View v, MotionEvent event) {
+                //x,y in meters
+                float Xval = pxToM(-event.getX() + getWindowManager().getDefaultDisplay().getWidth(), getBaseContext());
+                float Yval = pxToM(-event.getY() + getWindowManager().getDefaultDisplay().getHeight(), getBaseContext());
+                init.initglobalvariable.sHoverVal.add(event.getEventTime(),new float[]{Xval,Yval});
+                Log.e("HOVER", String.valueOf(
+                        pxToM(getWindowManager().getDefaultDisplay().getWidth(), getBaseContext()) + " " +
+                                pxToM(getWindowManager().getDefaultDisplay().getHeight(), getBaseContext()) + " " +
+                                init.initglobalvariable.HoverVal[0]));
+                return true;
+            }
+        });
+
+
         //init widgets
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         view_ORI_CHAR = (TextView) findViewById(R.id.ori_char);
         view_ORI_CONF = (TextView) findViewById(R.id.ori_conf);
         view_STA_CHAR = (TextView) findViewById(R.id.sta_char);
         view_STA_CONF = (TextView) findViewById(R.id.sta_conf);
+        ipport = (EditText) findViewById(R.id.ipport);
         button_Calibrate = (Button) findViewById(R.id.button_calibrate);
         button_Calibrate.setOnClickListener(new Button.OnClickListener() {
             @Override
@@ -110,7 +143,13 @@ public class UIv1_draw0 extends AppCompatActivity {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
-                if (msg.what != 5) {
+                init.initglobalvariable.ipportVal = ipport.getText().toString();
+
+                mudpbroadcast.interrupt();mudpbroadcast=null;
+                mudpbroadcast = new Thread(new udpBroadcast(getBaseContext(), init.initglobalvariable.ipportVal));
+                mudpbroadcast.start();
+
+                if (msg.what != 5 && false) {
                     final ProgressDialog dialog = ProgressDialog.show(UIv1_draw0.this,
                             "校正中", "請靜置等待...", true);
                     new Thread(new Runnable() {
@@ -118,13 +157,17 @@ public class UIv1_draw0 extends AppCompatActivity {
                         public void run() {
                             init.initglobalvariable.calibrate_isrunning = true;
                             try {
+
+                                Runnable MagnetometerCalibration = new com.project.nicki.displaystabilizer.dataprovider.MagnetometerCalibration();
+                                MagnetometerCalibration.run();
+
                                 float[] rawcali = new float[]{0, 0, 0};
                                 List<float[]> caliAcceData = new ArrayList<float[]>();
                                 List<globalvariable.CircularBuffer2> CalibrationData = new ArrayList<globalvariable.CircularBuffer2>();
 
 
                                 boolean poseChanged = true;
-                                while (CalibrationData.size() < 0) {
+                                while (CalibrationData.size() < 5) {
                                     if (poseChanged == true) {
                                         //try {
                                         globalvariable.CircularBuffer2 currbuffer = new globalvariable.CircularBuffer2(500);
@@ -170,6 +213,23 @@ public class UIv1_draw0 extends AppCompatActivity {
             }
         };
         //update widgets
+        ipport.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+
         update_results = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -198,8 +258,9 @@ public class UIv1_draw0 extends AppCompatActivity {
             }
         };
 
+
         //start calibration
-        calibrate.sendEmptyMessage(0);
+        //calibrate.sendEmptyMessage(0);
     }
 
     @Override
@@ -224,20 +285,31 @@ public class UIv1_draw0 extends AppCompatActivity {
                 startActivity(goto_UIv1_compare0);
                 break;
             case R.id.setttings0:
-                /*
+
                 Intent goto_UIv1_settings0 = new Intent();
                 goto_UIv1_settings0.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 goto_UIv1_settings0.setClass(UIv1_draw0.this, UIv1_setttings0.class);
-                startActivity(goto_UIv1_settings0);*/
+                startActivity(goto_UIv1_settings0);
+
+                /*
                 Intent goto_Canvas1 = new Intent();
                 overridePendingTransition(0, 0);
                 goto_Canvas1.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 goto_Canvas1.setClass(UIv1_draw0.this, Canvas1.class);
                 startActivity(goto_Canvas1);
+                */
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
 
 
+    public static float pxToM(final float px, final Context context) {
+        final DisplayMetrics dm = context.getResources().getDisplayMetrics();
+
+        //mm
+        //return px / TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, 1, dm);
+        //m
+        return px / (1000 * TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, 1, dm));
+    }
 }

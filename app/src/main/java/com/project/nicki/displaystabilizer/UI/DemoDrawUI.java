@@ -125,11 +125,11 @@ public class DemoDrawUI extends AppCompatActivity implements Camera.PreviewCallb
     // Two images are needed to store the converted preview image to prevent a thread conflict from occurring
     private ImageUInt8 gray1, gray2;
     private ImageSInt16 derivX, derivY;
-    // Android image data used for displaying the results
+    // Android image buffer used for displaying the results
     private Bitmap output;
-    // temporary storage that's needed when converting from BoofCV to Android image data types
+    // temporary storage that's needed when converting from BoofCV to Android image buffer types
     private byte[] storage;
-    // Thread where image data is processed
+    // Thread where image buffer is processed
     private ThreadProcess thread;
 
     public static void runOnUI(Runnable runnable) {
@@ -330,7 +330,7 @@ public class DemoDrawUI extends AppCompatActivity implements Camera.PreviewCallb
         param.setPreviewSize(s.width, s.height);
         mCamera.setParameters(param);
 
-        // declare image data
+        // declare image buffer
         gray1 = new ImageUInt8(s.width, s.height);
         gray2 = new ImageUInt8(s.width, s.height);
         derivX = new ImageSInt16(s.width, s.height);
@@ -400,7 +400,7 @@ public class DemoDrawUI extends AppCompatActivity implements Camera.PreviewCallb
     }
 
     /**
-     * Called each time a new image arrives in the data stream.
+     * Called each time a new image arrives in the buffer stream.
      */
     @Override
     public void onPreviewFrame(byte[] bytes, Camera camera) {
@@ -509,7 +509,7 @@ public class DemoDrawUI extends AppCompatActivity implements Camera.PreviewCallb
 
         // true if a request has been made to stop the thread
         volatile boolean stopRequested = false;
-        // true if the thread is running and can process more data
+        // true if the thread is running and can process more buffer
         volatile boolean running = true;
 
         /**

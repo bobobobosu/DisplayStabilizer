@@ -385,7 +385,7 @@ public final class LM
     //----------------------------------------------------------------
 
     /**
-     * Replicate the example in NR, fit a sum of Gaussians to data.
+     * Replicate the example in NR, fit a sum of Gaussians to buffer.
      * y(x) = \sum B_k exp(-((x - E_k) / G_k)^2)
      * minimize chisq = \sum { y[j] - \sum B_k exp(-((x_j - E_k) / G_k)^2) }^2
      *

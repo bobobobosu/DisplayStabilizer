@@ -2,11 +2,15 @@ package com.project.nicki.displaystabilizer.dataprocessor.utils.Filters;
 
 import android.util.Log;
 
+import com.project.nicki.displaystabilizer.init;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import jama.Matrix;
 import jkalman.JKalman;
+
+import static java.lang.Float.NaN;
 
 /**
  * Created by nickisverygood on 3/6/2016.
@@ -58,6 +62,14 @@ public class filterCollection {
                 rolling[i] = new ArrayList<>();
             }
         }
+
+        //reshape
+        for (int i = 0; i < data.length; i++) {
+            while (rolling[i].size()>sample){
+                rolling[i].remove(0);
+            }
+        }
+
         float[] toreturn = new float[data.length];
         for (int i = 0; i < data.length; i++) {
             if (rolling[i].size() < sample) {
@@ -86,7 +98,7 @@ public class filterCollection {
     //StaticFilter
     public float[] StaticFilter(float[] data, boolean static_sta) {
         //Log.d("static?", String.valueOf(static_sta));
-        if (static_sta == true) {
+        if (init.initglobalvariable.sStaticVal.getLatestData().getValues()[0] == 1 && static_sta == true) {
             for (int i = 0; i < data.length; i++) {
                 data[i] = 0;
             }
@@ -100,9 +112,9 @@ public class filterCollection {
     //StaticFilter
     public float[] TooHighFilter(float[] data, float threshold) {
         /*
-        for (int i = 0; i < data.length; i++) {
-            if (data[i] > threshold) {
-                data[i] = 0;
+        for (int i = 0; i < buffer.length; i++) {
+            if (buffer[i] > threshold) {
+                buffer[i] = 0;
             }
         }
         */
@@ -115,8 +127,9 @@ public class filterCollection {
     }
 
     public float[] KalmanFilter(float[] data, boolean activate) {
-        if (activate == true) {
-            if (kalman == null || m == null) {
+        if (activate == true && data.length ==3) {
+            if (kalman == null ) {
+
                 try {
                     //kalman = new JKalman(4, 2);
                     kalman = new JKalman(6, 3);
@@ -176,10 +189,17 @@ public class filterCollection {
                 // look better
                 c = kalman.Correct(m);
                 s = kalman.Predict();
-            } catch (Exception ex) {
+                //Log.d("kalman", String.valueOf((float) c.get(0, 0)));
+                if((float) c.get(0, 0) != NaN && (float) c.get(1, 0) != NaN && (float) c.get(2, 0) != NaN ){
+                    return new float[]{(float) c.get(0, 0), (float) c.get(1, 0), (float) c.get(2, 0)};
+                }else{
+                    return data;
+                }
 
-            }
-            return new float[]{(float) c.get(0, 0), (float) c.get(1, 0), (float) c.get(2, 0)};
+            } catch (Exception ex) {
+                return data;
+                }
+
         }
         return data;
     }
