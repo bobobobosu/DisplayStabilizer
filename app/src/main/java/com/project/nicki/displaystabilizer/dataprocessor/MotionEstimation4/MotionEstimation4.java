@@ -10,6 +10,7 @@ import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.calRk4;
 import com.project.nicki.displaystabilizer.dataprocessor.calRk4_v4;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Filters.filterSensorData;
+import com.project.nicki.displaystabilizer.dataprocessor.utils.LogCSV;
 import com.project.nicki.displaystabilizer.dataprocessor.utils.Vect2Mat.Matrix3D;
 import com.project.nicki.displaystabilizer.globalvariable;
 import com.project.nicki.displaystabilizer.init;
@@ -36,7 +37,14 @@ public class MotionEstimation4 {
     //    this.mcontext = mcontext;
     //}
 
+
     public void trigger() {
+        //// Propagate back filter results
+        for(int i=0;i<3;i++){
+            mcalRk4.prevPosition[i].pos = init.initglobalvariable.mPosotion.getLatestData().getValues()[i];
+            mcalRk4.prevPosition[i].v = init.initglobalvariable.mVelocity.getLatestData().getValues()[i];
+            mcalRk4.prevPosition[i].a = init.initglobalvariable.sAccelerometerLinearVal_world.getLatestData().getValues()[i];
+        }
         //// # raw sensors -> 1!integration -> 2!integration
         mcalRk4.calc(new SensorCollect.sensordata(
                 init.initglobalvariable.sAccelerometerLinearVal_world.getLatestData().getTimestamp(),
@@ -52,12 +60,18 @@ public class MotionEstimation4 {
                 (float) mcalRk4.prevPosition[1].pos,
                 (float) mcalRk4.prevPosition[2].pos
         });
-        //// Propagate back filter results
-        for(int i=0;i<3;i++){
-            mcalRk4.prevPosition[i].pos = init.initglobalvariable.mPosotion.getLatestData().getValues()[i];
-            mcalRk4.prevPosition[i].v = init.initglobalvariable.mVelocity.getLatestData().getValues()[i];
-            mcalRk4.prevPosition[i].a = init.initglobalvariable.sAccelerometerLinearVal_world.getLatestData().getValues()[i];
-        }
+
+
+
+
+        Log.d("param",String.valueOf(
+                init.initglobalvariable.mPosotion.filterparam[0]+" "+
+                        init.initglobalvariable.mPosotion.filterparam[1]+" "+
+                        init.initglobalvariable.mPosotion.filterparam[2]+" "+
+                        init.initglobalvariable.mPosotion.filterparam[3]+" "+
+                        init.initglobalvariable.mPosotion.filterparam[4]+" "+
+                        init.initglobalvariable.mPosotion.filterparam[5]));
+
 
 
     }

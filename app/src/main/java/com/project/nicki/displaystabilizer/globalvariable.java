@@ -52,11 +52,22 @@ public class globalvariable {
 
 
     //// # NEW sensor values
+    public float[] TouchVal = new float[]{0,0};
+    // # touch sensor
+    public float[] view2rawCoordinate_add ;
     // # accelerometer sensor
-    public SensorData sAccelerometerLinearVal = new SensorData(50, 3);
-    public SensorData sAccelerometerVal = new SensorData(50, 3);
-    public SensorData sAccelerometerVal_world = new SensorData(50, 3);
-    public SensorData sAccelerometerLinearVal_world = new SensorData(50, 3);
+    public SensorData sAccelerometerLinearVal = new SensorData(50, 3,new float[]{
+            0,1,1,1,0,100000000
+    },true);
+    public SensorData sAccelerometerVal = new SensorData(50, 3,new float[]{
+            1,25,1,1,1,1000000000
+    },true);
+    public SensorData sAccelerometerVal_world = new SensorData(50, 3,new float[]{
+        0,15,1,1,0,1000000000
+    },true);
+    public SensorData sAccelerometerLinearVal_world = new SensorData(50, 3,new float[]{
+            0,1,1,1,0,1000000000
+    },true);
     public float const_g = 9.78952f;
     public BigDecimal gravval = new BigDecimal(const_g);
     public float[] sAccelerometerCali = new float[]{0, 0, 0};
@@ -64,17 +75,24 @@ public class globalvariable {
     public SensorData sRotationVal = new SensorData(50, 9);
     // # quaternion sensor
     public Quaternion sDevice2World = new Quaternion(0, 0, 0, 1);
-    public SensorData sQuaternionVal = new SensorData(50, 4);
+    public SensorData sQuaternionVal = new SensorData(50, 4,new float[]{
+            0,1,1,1,0,1000000000
+    },false);
     // # Stop Detector
     public SensorData sStopDetectorVal = new SensorData(50, 3);
     // # Static Detector
     public SensorData sStaticVal = new SensorData(50, 1);
+    public float sStaticThres = 0;
     public double sStaticVarMagVal = 0;
     // # Hover Position
     public SensorData sHoverVal = new SensorData(50, 2);
     // # Integration
-    public SensorData mVelocity = new globalvariable.SensorData(1, 3);
-    public SensorData mPosotion = new globalvariable.SensorData(1, 3);//// # filters
+    public SensorData mVelocity = new globalvariable.SensorData(1, 3,new float[]{
+            0,1,0.9999f,1,1,10000
+    },true);
+    public SensorData mPosotion = new globalvariable.SensorData(1, 3,new float[]{
+            1,10,0.9f,1,0,1
+    },true);//// # filters
 
     //// # states
     public boolean calibrate_isrunning = false;
@@ -118,8 +136,8 @@ public class globalvariable {
     public static class SensorData {
         //FILTER
         filterSensorData mfilter = new filterSensorData(false, 1, 1, 1, false, Float.MAX_VALUE);
-        float[] filterparam = new float[]{0, 1, 1, 1, 0, Float.MAX_VALUE};
-
+        public float[] filterparam = new float[]{0, 1, 1, 1, 0, Float.MAX_VALUE};
+        boolean filteron = true;
         int bufflength = 50;
         int valueNum;
         public boolean hasnew = false;
@@ -159,6 +177,13 @@ public class globalvariable {
             this.bufflength = i;
             this.valueNum = valueNum;
         }
+        public SensorData(int i, int valueNum,float[] param,boolean filteron) {
+            this.bufflength = i;
+
+            this.valueNum = valueNum;
+            this.filterparam = param;
+            this.filteron = filteron;
+        }
 
         //Data
         public Data initData = null;
@@ -171,7 +196,10 @@ public class globalvariable {
             //Log.d("param",String.valueOf(filterparam[2]));
             mfilter.paramUpdate(filterparam);
 
-            idata = mfilter.filter(idata);
+            if(filteron == true){
+                idata = mfilter.filter(idata);
+            }
+
 
             if (initData == null) {
                 initData = new Data(timestamp, idata);
@@ -192,7 +220,7 @@ public class globalvariable {
         }
 
         public void resetinit() {
-            initData = null;
+            initData = getLatestData();
         }
 
         public boolean full() {
@@ -214,12 +242,19 @@ public class globalvariable {
         }
 
         public Data getLatestData() {
-            if (buffer.size() > 0) {
-                return buffer.get(buffer.size() - 1);
+            List<Data> mbuffer  = new ArrayList<>(buffer);
+            if (mbuffer.size() > 0) {
+                                return mbuffer.get(mbuffer.size() - 1);
             } else {
                 return new Data(System.currentTimeMillis(), new float[valueNum]);
             }
-
+        }
+        public Data getPreviousData(){
+            if(buffer.size()>1){
+                return buffer.get(buffer.size() - 2);
+            }else {
+                return getLatestData();
+            }
         }
     }
 

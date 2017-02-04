@@ -117,6 +117,12 @@ public class SensorCollection implements Runnable {
                     //init.initglobalvariable.sAccelerometerLinearVal.add(calievent.timestamp, calievent.values.clone());
                 }
 
+                //// # accelerometer_raw sensor
+                if (calievent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                    init.initglobalvariable.AccelerometerVal = calievent.values;
+                    init.initglobalvariable.sAccelerometerVal.add(calievent.timestamp, calievent.values.clone());
+                }
+
                 //// # alt_accelerometer_linear sensor
                 //obtain device2world
                 globalvariable.SensorData.Data currData_Acce = init.initglobalvariable.sAccelerometerVal.getLatestData();
@@ -141,17 +147,19 @@ public class SensorCollection implements Runnable {
                         (float) (result.get(2, 0))
                 });
 
+
+
                 // Substract Gravity
                 init.initglobalvariable.sAccelerometerLinearVal_world.add(calievent.timestamp, new float[]{
-                        (float) result.get(0, 0),
-                        (float) result.get(1, 0),
-                        (float) (result.get(2, 0) - 9.8149735275)
+                        init.initglobalvariable.sAccelerometerVal_world.getLatestData().getValues()[0],
+                        init.initglobalvariable.sAccelerometerVal_world.getLatestData().getValues()[1],
+                        (float) (init.initglobalvariable.sAccelerometerVal_world.getLatestData().getValues()[2] - 9.8149735275)
                 });
                 //// # alt accelerometer linear acce
                 double[] world = new double[]{
-                        result.get(0, 0),
-                        result.get(1, 0),
-                        (result.get(2, 0) - 9.8149735275)
+                        init.initglobalvariable.sAccelerometerLinearVal_world.getLatestData().getValues()[0],
+                        init.initglobalvariable.sAccelerometerLinearVal_world.getLatestData().getValues()[1],
+                        init.initglobalvariable.sAccelerometerLinearVal_world.getLatestData().getValues()[2]
                 };
                 Vector3D world2device = device2world_rot.applyInverseTo(new Vector3D(world));
                 init.initglobalvariable.sAccelerometerLinearVal.add(calievent.timestamp, new float[]{
@@ -159,11 +167,7 @@ public class SensorCollection implements Runnable {
                         ((float) world2device.getY()),
                         ((float) world2device.getZ())
                 });
-                //// # accelerometer_raw sensor
-                if (calievent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                    init.initglobalvariable.AccelerometerVal = calievent.values;
-                    init.initglobalvariable.sAccelerometerVal.add(calievent.timestamp, calievent.values.clone());
-                }
+
 
 
                 //// # Static Detector

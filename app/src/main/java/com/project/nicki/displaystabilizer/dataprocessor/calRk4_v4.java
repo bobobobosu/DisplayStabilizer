@@ -39,7 +39,8 @@ public class calRk4_v4 {
 
 
     public SensorCollect.sensordata calc(final SensorCollect.sensordata msensordata) {
-
+        double dt = (double) (( msensordata.getTime() - last_timestamp)*NS2S);
+        last_timestamp = msensordata.getTime();
 
         final float[] toreurndata = new float[msensordata.getData().length];
         for (int i = 0; i < prevPosition.length; i++) {
@@ -51,7 +52,7 @@ public class calRk4_v4 {
 
 
         for (int i = 0; i < 3; i++) {
-            integrate(prevPosition[i], msensordata.getTime(), 0.01, msensordata.getData()[i]);
+            integrate(prevPosition[i], msensordata.getTime(), dt, msensordata.getData()[i]);
         }
         return toreturnsensordata;
     }
@@ -63,7 +64,7 @@ public class calRk4_v4 {
     public Position integrate(Position position, long t, double dt, double acceleration) { //Heart of the RK4 integrator - I don't know what most of this is
         //save previous
         //double dt = (t - last_timestamp)/1000;
-        last_timestamp = t;
+        //last_timestamp = t;
 
         Derivative a = evaluate(position, t, 0, new Derivative(0, 0), acceleration);
         Derivative b = evaluate(position, t + dt * 0.5, dt * 0.5, a, acceleration);
@@ -80,7 +81,7 @@ public class calRk4_v4 {
         prevPos = position.pos;
         //Log.d("debug_rk4",String.valueOf(t)+" "+String.valueOf(dt)+" "+ String.valueOf(prevPosition[0].pos) + " " + String.valueOf(prevPosition[1].pos) + " " + String.valueOf(prevPosition[1].pos));
 
-        last_timestamp = t;
+        //last_timestamp = t;
 
         return position;
     }

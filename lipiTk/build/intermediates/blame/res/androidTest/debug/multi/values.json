@@ -1,6 +1,6 @@
 [
     {
-        "outputFile": "C:\\Users\\nicki\\Desktop\\AndroidProjects\\DDRS201701262304\\DisplayStabilizer\\lipiTk\\build\\intermediates\\incremental\\mergeDebugAndroidTestResources\\merged.dir\\values\\values.xml",
+        "outputFile": "C:\\Users\\nicki\\Desktop\\Android Projects\\_\\DisplayStabilizer\\lipiTk\\build\\intermediates\\incremental\\mergeDebugAndroidTestResources\\merged.dir\\values\\values.xml",
         "map": [
             {
                 "to": {
@@ -11,7 +11,7 @@
                     "endOffset": 94
                 },
                 "from": {
-                    "file": "C:\\Users\\nicki\\Desktop\\AndroidProjects\\DDRS201701262304\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\values\\values.xml",
+                    "file": "C:\\Users\\nicki\\Desktop\\Android Projects\\_\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\values\\values.xml",
                     "position": {
                         "startLine": 2,
                         "startColumn": 4,
@@ -30,7 +30,50 @@
                     "endOffset": 150
                 },
                 "from": {
-                    "file": "C:\\Users\\nicki\\Desktop\\AndroidProjects\\DDRS201701262304\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\values\\values.xml",
+                    "file": "C:\\Users\\nicki\\Desktop\\Android Projects\\_\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\values\\values.xml",
+                    "position": {
+                        "startLine": 3,
+                        "startColumn": 4,
+                        "startOffset": 99,
+                        "endColumn": 55,
+                        "endOffset": 150
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "outputFile": "C:\\Users\\nicki\\Desktop\\02021516\\DisplayStabilizer\\lipiTk\\build\\intermediates\\incremental\\mergeDebugAndroidTestResources\\merged.dir\\values\\values.xml",
+        "map": [
+            {
+                "to": {
+                    "startLine": 2,
+                    "startColumn": 4,
+                    "startOffset": 55,
+                    "endColumn": 43,
+                    "endOffset": 94
+                },
+                "from": {
+                    "file": "C:\\Users\\nicki\\Desktop\\02021516\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\values\\values.xml",
+                    "position": {
+                        "startLine": 2,
+                        "startColumn": 4,
+                        "startOffset": 55,
+                        "endColumn": 43,
+                        "endOffset": 94
+                    }
+                }
+            },
+            {
+                "to": {
+                    "startLine": 3,
+                    "startColumn": 4,
+                    "startOffset": 99,
+                    "endColumn": 55,
+                    "endOffset": 150
+                },
+                "from": {
+                    "file": "C:\\Users\\nicki\\Desktop\\02021516\\DisplayStabilizer\\lipiTk\\build\\intermediates\\bundles\\debug\\res\\values\\values.xml",
                     "position": {
                         "startLine": 3,
                         "startColumn": 4,

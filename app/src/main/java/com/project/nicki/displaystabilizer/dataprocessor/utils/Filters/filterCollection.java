@@ -72,7 +72,7 @@ public class filterCollection {
 
         float[] toreturn = new float[data.length];
         for (int i = 0; i < data.length; i++) {
-            if (rolling[i].size() < sample) {
+            if (rolling[i].size() < sample || sample<2) {
                 rolling[i].add(data[i]);
             } else {
                 rolling[i].remove(0);
@@ -98,12 +98,16 @@ public class filterCollection {
     //StaticFilter
     public float[] StaticFilter(float[] data, boolean static_sta) {
         //Log.d("static?", String.valueOf(static_sta));
-        if (init.initglobalvariable.sStaticVal.getLatestData().getValues()[0] == 1 && static_sta == true) {
-            for (int i = 0; i < data.length; i++) {
-                data[i] = 0;
+        try {
+            if (init.initglobalvariable.sStaticVal.getLatestData().getValues()[0] == 1 && static_sta == true) {
+                for (int i = 0; i < data.length; i++) {
+                    data[i] = 0;
+                }
+                return data;
+            } else {
+                return data;
             }
-            return data;
-        } else {
+        }catch (Exception ex){
             return data;
         }
 

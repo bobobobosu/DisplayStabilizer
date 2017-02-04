@@ -19,7 +19,7 @@ import java.util.ArrayList;
  */
 
 public class stabilize_v4 {
-    private stabilize_v3_1_func mstabilize_v3_func = new stabilize_v3_1_func();
+    public stabilize_v3_1_func mstabilize_v3_func = new stabilize_v3_1_func();
     public void set_Sensor(Bundle bundlegot){
         mstabilize_v3_func.set_Sensor(bundlegot);
     }

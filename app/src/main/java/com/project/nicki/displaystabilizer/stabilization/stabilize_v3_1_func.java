@@ -6,6 +6,9 @@ import android.util.Log;
 
 import com.project.nicki.displaystabilizer.contentprovider.DemoDraw3;
 import com.project.nicki.displaystabilizer.dataprocessor.SensorCollect;
+import com.project.nicki.displaystabilizer.dataprovider.representation.MatrixF4x4;
+import com.project.nicki.displaystabilizer.dataprovider.representation.Vector3f;
+import com.project.nicki.displaystabilizer.globalvariable;
 import com.project.nicki.displaystabilizer.init;
 
 import org.apache.commons.math3.complex.Quaternion;
@@ -22,6 +25,9 @@ import java.util.List;
 public class stabilize_v3_1_func {
     public static Handler getDraw;
 
+    //// # For Translation Only
+    public TranslationProvider mTP = new TranslationProvider();
+
     //constants
     private static float cX;
     private static float cY;
@@ -37,15 +43,18 @@ public class stabilize_v3_1_func {
     ArrayList<SensorCollect.sensordata> stastrokedeltabuffer = new ArrayList<SensorCollect.sensordata>();
     //tmps
     long prevTime = 0;
-    float[] prevStroke = null;
+    public float[] prevStroke = null;
     boolean drawSTATUS = false;
     boolean prevdrawSTATUS = false;
     boolean init_yesno = false;
     SensorCollect.sensordata tmpaccesensordata;
     SensorCollect.sensordata tmporiensensordata;
     float[] Pos = null;
-    double[] prevQuaternion = null;
-    double[] currQuaternion = null;
+    SimpleMatrix initQua_m = new SimpleMatrix(3, 3);
+    Quaternion q_initQua;
+    float[] prevQuaternion = init.initglobalvariable.sQuaternionVal.getLatestData().getValues();
+    float[] currQuaternion = init.initglobalvariable.sQuaternionVal.getLatestData().getValues();
+    ;
     double[][] currRot = null;
     int deltaingStatus = 0;
     SensorCollect.sensordata tmp1accesensordata;
@@ -60,7 +69,7 @@ public class stabilize_v3_1_func {
     public void set_Sensor(final Bundle bundlegot) {
         try {
             Pos = bundlegot.getFloatArray("Pos");
-            currQuaternion = bundlegot.getDoubleArray("Quaternion");
+            //currQuaternion = bundlegot.getDoubleArray("Quaternion");
 
             tmpaccesensordata = new SensorCollect.sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Pos"));
             tmporiensensordata = new SensorCollect.sensordata(bundlegot.getLong("Time"), bundlegot.getFloatArray("Orien"));
@@ -71,7 +80,7 @@ public class stabilize_v3_1_func {
 
             prevdrawSTATUS = drawSTATUS;
             drawSTATUS = DemoDraw3.drawing < 2;
-            if (tmp1accesensordata != null ) {
+            if (tmp1accesensordata != null) {
                 float[] delta = new float[]{
                         tmpaccesensordata.getData()[0] - tmp1accesensordata.getData()[0],
                         tmpaccesensordata.getData()[1] - tmp1accesensordata.getData()[1]};
@@ -79,7 +88,7 @@ public class stabilize_v3_1_func {
                     SimpleMatrix delta_m = new SimpleMatrix(new double[][]{{(double) delta[0]}, {(double) delta[1]}, {0}});
                     SimpleMatrix rot_m = new SimpleMatrix(currRot);
                     delta_m.mult(rot_m);
-                    delta = new float[]{(float)delta_m.getMatrix().get(0,0),(float)delta_m.getMatrix().get(1,0)};
+                    delta = new float[]{(float) delta_m.getMatrix().get(0, 0), (float) delta_m.getMatrix().get(1, 0)};
                 }
 
 
@@ -87,22 +96,10 @@ public class stabilize_v3_1_func {
                 tmp1accesensordata = tmpaccesensordata;
             }
 
-            if (prevQuaternion != null) {
-                Quaternion q_currQuaternion = new Quaternion(currQuaternion[0],currQuaternion[1],currQuaternion[2],currQuaternion[3]);
-                Quaternion q_prevQuaternion = new Quaternion(prevQuaternion[0],prevQuaternion[1],prevQuaternion[2],prevQuaternion[3]);
-                //Quaternion q_currQuaternion = new Quaternion(1,0,0,0);
-                //Quaternion q_prevQuaternion = new Quaternion(0.7358881620051946,0.2889093508708513,0.45508140685231796,0.40975713921457785);
-                Quaternion q_currminusprev = q_currQuaternion.multiply(q_prevQuaternion.getInverse());
-                Rotation convert2rot = new Rotation(q_currminusprev.getQ0(), q_currminusprev.getQ1(), q_currminusprev.getQ2(), q_currminusprev.getQ3(), false);
-                currRot = convert2rot.getMatrix();
-                //currRot = MotionEstimation3.currRot;
-            }
-            prevQuaternion = currQuaternion.clone();
-
-
+            /////////////////////////////////RESET/////////////////////////////////
             if (prevdrawSTATUS == false && drawSTATUS == true || init_yesno == false) {
+                //init.initglobalvariable.sQuaternionVal.resetinit();
                 orieninit = tmporiensensordata.getData();
-
                 if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
                     CalibrationMode = false;
                 }
@@ -119,6 +116,7 @@ public class stabilize_v3_1_func {
                 tmpaccesensordata = null;
                 deltaingStatus = 0;
             }
+            //////////////////////////////////////////////////////////////////
 
         } catch (Exception ex) {
             //Log.e("set_Sensor",String.valueOf(ex));
@@ -128,7 +126,7 @@ public class stabilize_v3_1_func {
 
     public ArrayList<SensorCollect.sensordata> gen_Draw(final Bundle bundlegot) {
 
-
+        /////////////////////////////////RESET/////////////////////////////////
         //try {
         if (DemoDraw3.drawing == 0) {
             orieninit = tmporiensensordata.getData();
@@ -138,10 +136,7 @@ public class stabilize_v3_1_func {
         }
         prevdrawSTATUS = drawSTATUS;
         drawSTATUS = DemoDraw3.drawing < 2;
-
-        if (prevdrawSTATUS == false && drawSTATUS == true || init_yesno == false) {
-
-
+        if (prevdrawSTATUS == false & drawSTATUS == true || init_yesno == false) {
             if (CalibrationMode == true && strokebuffer.size() > 1 && posbuffer.size() > 1) {
                 CalibrationMode = false;
             }
@@ -159,6 +154,7 @@ public class stabilize_v3_1_func {
 
 
         }
+        //////////////////////////////////////////////////////////////////
 
 
         //manual control
@@ -167,33 +163,149 @@ public class stabilize_v3_1_func {
 
 
         //buffer Draw
-        strokebuffer.add(bundle2sensordata(bundlegot));
+        strokebuffer.add(centerlizeTouch(bundle2sensordata(bundlegot)));
         if (strokebuffer.size() > 1) {
             strokedeltabuffer.add(getlatestdelta(strokebuffer));
         }
 
 
         if (tmpaccesensordata != null) {
+            /*\
             //rotate position vector
-            Log.i("touch",String.valueOf(strokebuffer.get(strokebuffer.size()-1).getData()[0]+" "+strokebuffer.get(strokebuffer.size()-1).getData()[1]));
-            if(strokebuffer.get(strokebuffer.size()-1)!=null && tmpaccesensordata.getData()[0]!=0){
-                posdeltabuffer.add(multiply_multiplier_caused_by_rotation(strokebuffer.get(strokebuffer.size()-1).getData(),tmpaccesensordata));
-            }else {
+            Log.i("touch", String.valueOf(strokebuffer.get(strokebuffer.size() - 1).getData()[0] + " " + strokebuffer.get(strokebuffer.size() - 1).getData()[1]));
+            if (strokebuffer.get(strokebuffer.size() - 1) != null && tmpaccesensordata.getData()[0] != 0) {
+                posdeltabuffer.add(multiply_multiplier_caused_by_rotation(strokebuffer.get(strokebuffer.size() - 1).getData(), tmpaccesensordata));
+            } else {
                 posdeltabuffer.add(tmpaccesensordata);
             }
-            // posdeltabuffer.add(tmpaccesensordata);
-
+            */
+            posdeltabuffer.add(tmpaccesensordata);
             tmpaccesensordata = null;
+
+
         }
 
+        ////cal strokedelta
+        //generate delta rotation
+        if (strokebuffer.size() > 1 && prevQuaternion != null) {
+            currQuaternion = init.initglobalvariable.sQuaternionVal.getLatestData().getValues();
+
+            //Override
+            //prevQuaternion = new float[]{1, 0, 0, 0};
+            //currQuaternion = new float[]{(float) 0.924, 0, 0, (float) 0.383};
+            //strokebuffer.get(strokebuffer.size() - 1).setData(new float[]{-1, -1});
+            //strokebuffer.get(strokebuffer.size() - 2).setData(new float[]{1, 1});
+
+
+            Quaternion q_currQuaternion = new Quaternion(currQuaternion[0], currQuaternion[1], currQuaternion[2], currQuaternion[3]);
+            q_currQuaternion = q_currQuaternion.multiply(q_initQua.getInverse());
+            //com.project.nicki.displaystabilizer.dataprovider.representation.Quaternion q_curr = new com.project.nicki.displaystabilizer.dataprovider.representation.Quaternion();
+            //q_curr.setXYZW(currQuaternion[1], currQuaternion[2], currQuaternion[3], currQuaternion[0]);
+            //MatrixF4x4 m_curr = q_curr.getMatrix4x4();
+            //double[][] currQuaternionRot = new double[][]{
+            //        {m_curr.getMatrix()[0], m_curr.getMatrix()[1], m_curr.getMatrix()[2]},
+             //       {m_curr.getMatrix()[4], m_curr.getMatrix()[5], m_curr.getMatrix()[6]},
+             //       {m_curr.getMatrix()[8], m_curr.getMatrix()[9], m_curr.getMatrix()[10]}};
+            //SimpleMatrix currQuaternionRot_m = new SimpleMatrix(currQuaternionRot);
+
+
+            Quaternion q_prevQuaternion = new Quaternion(prevQuaternion[0], prevQuaternion[1], prevQuaternion[2], prevQuaternion[3]);
+            q_prevQuaternion = q_prevQuaternion.multiply(q_initQua.getInverse());
+            //com.project.nicki.displaystabilizer.dataprovider.representation.Quaternion q = new com.project.nicki.displaystabilizer.dataprovider.representation.Quaternion();
+            //q.setXYZW(prevQuaternion[1], prevQuaternion[2], prevQuaternion[3], prevQuaternion[0]);
+            //MatrixF4x4 m = q.getMatrix4x4();
+            //double[][] prevQuaternionRot = new double[][]{
+            //        {m.getMatrix()[0], m.getMatrix()[1], m.getMatrix()[2]},
+            //        {m.getMatrix()[4], m.getMatrix()[5], m.getMatrix()[6]},
+            //        {m.getMatrix()[8], m.getMatrix()[9], m.getMatrix()[10]}
+           // };
+            //SimpleMatrix prevQuaternionRot_m = new SimpleMatrix(prevQuaternionRot);
+
+            Quaternion q_currminusprev = q_prevQuaternion.getInverse().multiply(q_currQuaternion);
+
+            /*
+            com.project.nicki.displaystabilizer.dataprocessor.utils.Quaternion q_currminusprev2
+                    = new com.project.nicki.displaystabilizer.dataprocessor.utils.Quaternion(
+                    q_currminusprev.getQ0(),
+                    q_currminusprev.getQ1(),
+                    q_currminusprev.getQ2(),
+                    q_currminusprev.getQ3());
+            com.project.nicki.displaystabilizer.dataprovider.representation.Quaternion q_currminusprev3 = new com.project.nicki.displaystabilizer.dataprovider.representation.Quaternion();
+*/
+            Rotation convert2rot = new Rotation(q_currminusprev.getQ0(), q_currminusprev.getQ1(), q_currminusprev.getQ2(), q_currminusprev.getQ3(), false);
+            Log.d("Rotation", String.valueOf(convert2rot.getAngle()));
+            currRot = convert2rot.getMatrix();
+            SimpleMatrix currTouchVec = new SimpleMatrix(new double[][]{
+                    {strokebuffer.get(strokebuffer.size() - 1).getData()[0]},
+                    {strokebuffer.get(strokebuffer.size() - 1).getData()[1]},
+                    {strokebuffer.get(strokebuffer.size() - 1).getData()[2]}
+            });
+            SimpleMatrix prevTouchVec = new SimpleMatrix(new double[][]{
+                    {strokebuffer.get(strokebuffer.size() - 2).getData()[0]},
+                    {strokebuffer.get(strokebuffer.size() - 2).getData()[1]},
+                    {strokebuffer.get(strokebuffer.size() - 2).getData()[2]}
+            });
+            SimpleMatrix currRot_m = new SimpleMatrix(currRot).transpose();//.mult(currQuaternionRot_m.mult(initQua_m.invert()));
+
+
+            //convert touch to world coordinate
+            //currTouchVec = currQuaternionRot_m.mult(currTouchVec);
+            //prevTouchVec = prevQuaternionRot_m.mult(prevTouchVec);
+
+            SimpleMatrix rotate_current = currRot_m.mult(currTouchVec);
+            SimpleMatrix minus_prev = rotate_current.minus(prevTouchVec);
+
+            //SimpleMatrix rotate_to_world = currRot_m.mult(initQua_m.invert()).mult(minus_prev);
+            //SimpleMatrix rotate_to_world = currQuaternionRot_m.mult(initQua_m.invert()).mult(minus_prev);
+
+            SimpleMatrix rotate_to_world;
+            rotate_to_world = minus_prev;
+            // rotate_to_world = currQuaternionRot_m.invert().mult(rotate_to_world);
+            // rotate_to_world = initQua_m.invert().mult(rotate_to_world);
+
+            //SimpleMatrix strokedelta_m = new SimpleMatrix(currQuaternionRot).mult(currRot_m.mult(currTouchVec).minus(prevTouchVec));
+            Log.d("results", String.valueOf(rotate_to_world.get(2, 0)));
+
+            //convert result to phone coordinate
+            // rotate_to_world = currQuaternionRot_m.invert().mult(rotate_to_world);
+
+
+
+            strokedeltabuffer.add(new SensorCollect.sensordata(
+                    strokebuffer.get(strokebuffer.size() - 1).getTime(),
+                    new float[]{(float) rotate_to_world.get(0, 0), (float) rotate_to_world.get(1, 0), (float) rotate_to_world.get(2, 0)}
+            ));/*
+            strokedeltabuffer.add(new SensorCollect.sensordata(strokebuffer.get(strokebuffer.size() - 1).getTime(),new float[]{
+                    (float) (currTouchVec.get(0,0) - prevTouchVec.get(0,0)),
+                    (float) (currTouchVec.get(1,0) - prevTouchVec.get(1,0)),
+            }));*/
+
+
+        }
+
+        prevQuaternion = currQuaternion;
         //get stabilized  result
         if (strokedeltabuffer.size() > 0 && posdeltabuffer.size() > 0) {
             //generate stabilize vector
             SensorCollect.sensordata stastrokedelta = new SensorCollect.sensordata();
             stastrokedelta.setTime(strokedeltabuffer.get(strokedeltabuffer.size() - 1).getTime());
+            //stastrokedelta.setData(new float[]{
+            //        strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0]+ posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * cX / (float) com.project.nicki.displaystabilizer.init.pix2m,
+            //       strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1]+ posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY / (float) com.project.nicki.displaystabilizer.init.pix2m});
+
+            //float[] translation = mTP.TranslationOnInitPlane(new Quaternion(currQuaternion[0],currQuaternion[1],currQuaternion[2],currQuaternion[3]),
+            //        q_initQua,stastrokedelta.getTime(),
+            //        stastrokebuffer.size());
+            float[] translation = mTP.TranslationOnInitPlane(
+                    new Quaternion(currQuaternion[0],currQuaternion[1],currQuaternion[2],currQuaternion[3]),
+                    q_initQua,
+                    stastrokedelta.getTime(),
+                    stastrokebuffer.size());
             stastrokedelta.setData(new float[]{
-                    strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[0] * cX / (float) com.project.nicki.displaystabilizer.init.pix2m,
-                    strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1] - posdeltabuffer.get(posdeltabuffer.size() - 1).getData()[1] * cY / (float) com.project.nicki.displaystabilizer.init.pix2m});
+                    strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[0] +translation[0],
+                    strokedeltabuffer.get(strokedeltabuffer.size() - 1).getData()[1] +translation[0]});
+
+
             stastrokedeltabuffer.add(stastrokedelta);
 
             if (prevStroke != null) {
@@ -201,20 +313,15 @@ public class stabilize_v3_1_func {
                 float[] delta = new float[]{
                         stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[0],
                         stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getData()[1]};
-                if (init.initglobalvariable.RotationVal != null ) {
+
+                /*
+                if (init.initglobalvariable.RotationVal != null) {
                     SimpleMatrix delta_m = new SimpleMatrix(new double[][]{{(double) delta[0]}, {(double) delta[1]}, {0}});
                     SimpleMatrix rot_m = new SimpleMatrix(init.initglobalvariable.RotationVal).invert();
-                    //rot_m = new SimpleMatrix(new double[][]{{0.866,-0.5,0},{0.5,0.866,0},{0,0,1}});
                     SimpleMatrix fin = rot_m.mult(delta_m);
-                    delta = new float[]{(float)fin.getMatrix().get(0,0),(float)fin.getMatrix().get(1,0)};
-                    /*
-                    float[] deltae = new float[]{(float)fine.getMatrix().get(0,0),(float)fine.getMatrix().get(1,0)};
-                    new LogCSV(init.rk4_Log + " stade", String.valueOf(getAcceGyro.mstopdetector.getStopped(0)),
-                            String.valueOf(System.currentTimeMillis()),
-                            deltae[0],
-                            deltae[1]
-                    );*/
+                    delta = new float[]{(float) fin.getMatrix().get(0, 0), (float) fin.getMatrix().get(1, 0)};
                 }
+                    */
                 prevStroke[0] += delta[0];
                 prevStroke[1] += delta[1];
                 stastrokebuffer.add(new SensorCollect.sensordata(stastrokedeltabuffer.get(stastrokedeltabuffer.size() - 1).getTime(), prevStroke));
@@ -250,7 +357,7 @@ public class stabilize_v3_1_func {
 
                 // DemoDraw3.pending_to_draw_direct = tofingerList;
 
-                return r_stastrokebuffer;
+                return viewlizeTouch(r_stastrokebuffer);
 
 
             } else {
@@ -260,7 +367,7 @@ public class stabilize_v3_1_func {
                         strokebuffer.get(0).getData()[1]};
                 prevStroke = new float[]{0, 0};
                 r_stastrokebuffer.add(new SensorCollect.sensordata(strokebuffer.get(0).getTime(), prevStroke));
-                return r_stastrokebuffer;
+                return viewlizeTouch(r_stastrokebuffer);
 
             }
 
@@ -273,6 +380,49 @@ public class stabilize_v3_1_func {
         //}
 
         return null;
+    }
+
+    public void initQuaternionReset() {
+        ////init Qua
+        globalvariable.SensorData.Data initQua_Array = init.initglobalvariable.sQuaternionVal.getLatestData();
+        com.project.nicki.displaystabilizer.dataprovider.representation.Quaternion initQua = new com.project.nicki.displaystabilizer.dataprovider.representation.Quaternion();
+        q_initQua = new Quaternion(
+                (double) initQua_Array.getValues()[0],
+                (double) initQua_Array.getValues()[1],
+                (double) initQua_Array.getValues()[2],
+                (double) initQua_Array.getValues()[3]
+        );
+        initQua.setXYZW(
+                initQua_Array.getValues()[3], initQua_Array.getValues()[0], initQua_Array.getValues()[1], initQua_Array.getValues()[2]
+        );
+        MatrixF4x4 initQua_m4x4 = initQua.getMatrix4x4();
+        initQua_m = new SimpleMatrix(new double[][]{
+                {initQua_m4x4.getMatrix()[0], initQua_m4x4.getMatrix()[1], initQua_m4x4.getMatrix()[2]},
+                {initQua_m4x4.getMatrix()[4], initQua_m4x4.getMatrix()[5], initQua_m4x4.getMatrix()[6]},
+                {initQua_m4x4.getMatrix()[8], initQua_m4x4.getMatrix()[9], initQua_m4x4.getMatrix()[10]}
+        });
+        Log.d("RESET", "REST");
+    }
+
+    private SensorCollect.sensordata centerlizeTouch(SensorCollect.sensordata sensordata) {
+        //convert view coordinate to screen
+        sensordata.setData(new float[]{
+                sensordata.getData()[0] - 720,
+                sensordata.getData()[1] - 1280
+        });
+
+        return sensordata;
+    }
+
+    private ArrayList<SensorCollect.sensordata> viewlizeTouch(ArrayList<SensorCollect.sensordata> sensordatas) {
+        for (int i = 0; i < sensordatas.size(); i++) {
+            //convert view coordinate to screen
+            sensordatas.get(i).setData(new float[]{
+                    sensordatas.get(i).getData()[0] + 720,
+                    sensordatas.get(i).getData()[1] + 1280
+            });
+        }
+        return sensordatas;
     }
 
 
@@ -302,19 +452,19 @@ public class stabilize_v3_1_func {
 
 
     //Process delta:　multiplier caused by rotation
-    private SensorCollect.sensordata multiply_multiplier_caused_by_rotation(float[] prevStroke, SensorCollect.sensordata acce){
+    private SensorCollect.sensordata multiply_multiplier_caused_by_rotation(float[] prevStroke, SensorCollect.sensordata acce) {
         SensorCollect.sensordata toreturn = new SensorCollect.sensordata(acce);
 
         //returnvec = [accevector] + [Rotationvector][touch relative to center] -  [touch relative to center]
         float[] accevector = acce.getData();
-        float[] touch_relative_to_center = new float[]{prevStroke[0]-691,prevStroke[1]-905};
+        float[] touch_relative_to_center = new float[]{prevStroke[0] - 691, prevStroke[1] - 905};
         //[Rotationvector][touch relative to center]
-        SimpleMatrix Rot_mult_rev = new SimpleMatrix(currRot).mult(new SimpleMatrix(new double[][]{{touch_relative_to_center[0]},{touch_relative_to_center[1]},{0}}));
+        SimpleMatrix Rot_mult_rev = new SimpleMatrix(currRot).mult(new SimpleMatrix(new double[][]{{touch_relative_to_center[0]}, {touch_relative_to_center[1]}, {0}}));
         //Rot_mult_rev = new SimpleMatrix(new double[][]{{0.866,-0.5,0},{0.5,0.866,0},{0,0,1}}).mult(new SimpleMatrix(new double[][]{{touch_relative_to_center[0]},{touch_relative_to_center[1]},{0}}));
         //Rot_mult_rev = new SimpleMatrix(new double[][]{{1d,0d,0d},{0d,1d,0d},{0d,0d,1d}}).mult(new SimpleMatrix(new double[][]{{touch_relative_to_center[0]},{touch_relative_to_center[1]},{0}}));
         toreturn.setData(new float[]{
-                (float) (accevector[0]+((float) Rot_mult_rev.get(0,0)-touch_relative_to_center[0])*0.0000001),
-                (float) (accevector[1]+((float) Rot_mult_rev.get(1,0)-touch_relative_to_center[1])*0.0000001),
+                (float) (accevector[0] + ((float) Rot_mult_rev.get(0, 0) - touch_relative_to_center[0]) * 0.0000001),
+                (float) (accevector[1] + ((float) Rot_mult_rev.get(1, 0) - touch_relative_to_center[1]) * 0.0000001),
         });
 
 
@@ -330,3 +480,4 @@ public class stabilize_v3_1_func {
 
 
 }
+

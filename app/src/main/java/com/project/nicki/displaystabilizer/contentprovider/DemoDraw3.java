@@ -28,6 +28,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.project.nicki.displaystabilizer.UI.UIv1.UIv1_draw0.pxToM;
+
 public class DemoDraw3 extends View {
     ////Constants
     private final String TAG = "DemoDraw3";
@@ -144,6 +146,11 @@ public class DemoDraw3 extends View {
         final float eventY = event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                init.initStabilize_v4.mstabilize_v3_func.initQuaternionReset();
+                init.initglobalvariable.view2rawCoordinate_add = new float[]{
+                        event.getRawX()-eventX,
+                        event.getRawY()-eventY
+                };
                 resetted = false;
                 orienreset = false;
                 drawing = 0;
@@ -153,12 +160,17 @@ public class DemoDraw3 extends View {
                 path.lineTo(eventX, eventY);
                 return true;
             case MotionEvent.ACTION_MOVE:
+                init.initglobalvariable.TouchVal = new float[]{
+                        event.getX() ,
+                        -event.getY()
+                };
                 Log.d("Tou",String.valueOf(eventX+"  "+ eventY));
                 drawing = 1;
                 new passTouch(event);
                 path.lineTo(eventX, eventY);
                 break;
             case MotionEvent.ACTION_UP:
+                init.initStabilize_v4.mstabilize_v3_func.initQuaternionReset();
                 new passTouch(event);
                 drawing = 2;
                 break;
@@ -188,7 +200,11 @@ public class DemoDraw3 extends View {
         List<stabilize_v3.Point> pts = new ArrayList<>(mpts);
         //rotate
         //finger_Xto0
+
+        //TEMPORARY
         rotatePts(pts);
+
+
         /*==
         List<stabilize_v3.Point> tmppts = new ArrayList<>();
         for(int i=50;i<500;i++){

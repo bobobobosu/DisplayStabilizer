@@ -50,7 +50,7 @@ public class MotionEstimation3 {
         bundle.putDoubleArray("Quaternion", init.initglobalvariable.QuaternionVal);
         bundle.putLong("Time", currSensordata.getTime());
 
-        drawMotionPath(pos);
+        //drawMotionPath(pos);
         init.initStabilize_v4.set_Sensor(bundle);
     }
 

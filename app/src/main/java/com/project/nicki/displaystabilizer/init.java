@@ -7,8 +7,10 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 
+import com.project.nicki.displaystabilizer.UI.UIv1.ParamControl;
 import com.project.nicki.displaystabilizer.UI.UIv1.UIv1_draw0;
 import com.project.nicki.displaystabilizer.contentprovider.utils.TouchCollect;
 import com.project.nicki.displaystabilizer.dataprocessor.MotionEstimation4.MotionEstimation4;
@@ -86,8 +88,9 @@ public class init extends AppCompatActivity {
            // mudprecieve.start();
 
         } catch (Exception ex) {
-            //Log.e("init", String.valueOf(ex));
+            Log.e("init", String.valueOf(ex));
         }
+
 
         ////# start intents
         //Intent: Draw Screen

@@ -96,12 +96,12 @@ public class udpBroadcast implements Runnable {
                                             String.valueOf(init.initglobalvariable.sAccelerometerLinearVal_world.getLatestData().getValues()[0]) + ":" +
                                             String.valueOf(init.initglobalvariable.sAccelerometerLinearVal_world.getLatestData().getValues()[1]) + ":" +
                                             String.valueOf(init.initglobalvariable.sAccelerometerLinearVal_world.getLatestData().getValues()[2]) + ":" +
-                                           // String.valueOf(init.initglobalvariable.sAccelerometerLinearVal.getLatestData().getValues()[0]) + ":" +
-                                           // String.valueOf(init.initglobalvariable.sAccelerometerLinearVal.getLatestData().getValues()[1]) + ":" +
-                                           // String.valueOf(init.initglobalvariable.sAccelerometerLinearVal.getLatestData().getValues()[2]) + ":" +
-                                           // String.valueOf(init.initglobalvariable.sAccelerometerVal_world.getLatestData().getValues()[0]) + ":" +
-                                           // String.valueOf(init.initglobalvariable.sAccelerometerVal_world.getLatestData().getValues()[1]) + ":" +
-                                           // String.valueOf(init.initglobalvariable.sAccelerometerVal_world.getLatestData().getValues()[2]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerLinearVal.getLatestData().getValues()[0]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerLinearVal.getLatestData().getValues()[1]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerLinearVal.getLatestData().getValues()[2]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerVal_world.getLatestData().getValues()[0]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerVal_world.getLatestData().getValues()[1]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerVal_world.getLatestData().getValues()[2]) + ":" +
                                             String.valueOf(init.initglobalvariable.sQuaternionVal.getLatestData().getValues()[0] + ":" +
                                                     String.valueOf(init.initglobalvariable.sQuaternionVal.getLatestData().getValues()[1]) + ":" +
                                                     String.valueOf(init.initglobalvariable.sQuaternionVal.getLatestData().getValues()[2]) + ":" +
@@ -115,9 +115,36 @@ public class udpBroadcast implements Runnable {
                                             String.valueOf(init.initglobalvariable.mPosotion.getLatestData().getValues()[0]) + ":" +
                                             String.valueOf(init.initglobalvariable.mPosotion.getLatestData().getValues()[1]) + ":" +
                                             String.valueOf(init.initglobalvariable.mPosotion.getLatestData().getValues()[2]) + ":" +
+                                            //  String.valueOf(init.initStabilize_v4.mstabilize_v3_func.prevStroke[0]) + ":" +
+                                            //  String.valueOf(init.initStabilize_v4.mstabilize_v3_func.prevStroke[1]) + ":" +
                                             String.valueOf(init.initglobalvariable.sStaticVal.getLatestData().getValues()[0]);
 
-                            byte[] buf = toSend3.getBytes("UTF-8");
+                            String toSend4 =
+                                    String.valueOf(System.currentTimeMillis()) + ":" +
+                                            String.valueOf(init.initglobalvariable.sQuaternionVal.getLatestData().getValues()[0]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sQuaternionVal.getLatestData().getValues()[1]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sQuaternionVal.getLatestData().getValues()[2]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sQuaternionVal.getLatestData().getValues()[3]) + ":" +
+                                            String.valueOf(init.initglobalvariable.mVelocity.getLatestData().getValues()[0]) + ":" +
+                                            String.valueOf(init.initglobalvariable.mVelocity.getLatestData().getValues()[1]) + ":" +
+                                            String.valueOf(init.initglobalvariable.mVelocity.getLatestData().getValues()[2]) + ":" +
+                                            String.valueOf(init.initglobalvariable.mPosotion.getLatestData().getValues()[0]) + ":" +
+                                            String.valueOf(init.initglobalvariable.mPosotion.getLatestData().getValues()[1]) + ":" +
+                                            String.valueOf(init.initglobalvariable.mPosotion.getLatestData().getValues()[2])+":"+
+                                            String.valueOf(init.initglobalvariable.sAccelerometerVal.getLatestData().getValues()[0]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerVal.getLatestData().getValues()[1]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerVal.getLatestData().getValues()[2]) + ":" +
+                                    String.valueOf(init.initglobalvariable.sAccelerometerVal_world.getLatestData().getValues()[0]) + ":" +
+                                    String.valueOf(init.initglobalvariable.sAccelerometerVal_world.getLatestData().getValues()[1]) + ":" +
+                                    String.valueOf(init.initglobalvariable.sAccelerometerVal_world.getLatestData().getValues()[2]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerLinearVal_world.getLatestData().getValues()[0]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerLinearVal_world.getLatestData().getValues()[1]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerLinearVal_world.getLatestData().getValues()[2]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerLinearVal.getLatestData().getValues()[0]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerLinearVal.getLatestData().getValues()[1]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sAccelerometerLinearVal.getLatestData().getValues()[2]) + ":" +
+                                            String.valueOf(init.initglobalvariable.sStaticVal.getLatestData().getValues()[0]);
+                            byte[] buf = toSend4.getBytes("UTF-8");
                             DatagramPacket packet = new DatagramPacket(buf, buf.length,
                                     serverAddress, SERVERPORT);
                             //Log.d("Client: Sending ‘", SERVERIP + ":" + SERVERPORT + "　" + new String(buf) + "’\n");
@@ -127,61 +154,75 @@ public class udpBroadcast implements Runnable {
                         } catch (Exception ex) {
                         }
 
-
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                byte[] recbuf = new byte[255];
-                                DatagramPacket recpacket = new DatagramPacket(recbuf,
-                                        recbuf.length);
-                                try {
-                                    Rsocket.setSoTimeout(1000);
-                                    Rsocket.receive(recpacket);
-
-
-                                    byte[] data = new byte[recpacket.getLength()];
-                                    System.arraycopy(recpacket.getData(), recpacket.getOffset(), data, 0, recpacket.getLength());
-
-                                    //String packetAsString=new String(recbuf, 0, recpacket.getLength());
-                                    String packetAAsString = new String(data, "UTF-8");
+                        /*
+                        try {
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                */
+                                    byte[] recbuf = new byte[255];
+                                    DatagramPacket recpacket = new DatagramPacket(recbuf,
+                                            recbuf.length);
+                                    try {
+                                        Rsocket.setSoTimeout(10);
+                                        Rsocket.receive(recpacket);
 
 
-                                    String[] tokens = packetAAsString.split("/");
-                                    for (String token : tokens) {
-                                        String[] params = token.split(":");
-                                        if (params[0].equals("sQuaternionVal")) {
-                                            init.initglobalvariable.sQuaternionVal.setFilterParam(params);
+                                        byte[] data = new byte[recpacket.getLength()];
+                                        System.arraycopy(recpacket.getData(), recpacket.getOffset(), data, 0, recpacket.getLength());
+
+                                        //String packetAsString=new String(recbuf, 0, recpacket.getLength());
+                                        String packetAAsString = new String(data, "UTF-8");
+
+
+
+                                        try {
+                                            String[] tokens = packetAAsString.split("/");
+                                            for (String token : tokens) {
+                                                String[] params = token.split(":");
+                                                if (params[0].equals("sQuaternionVal")) {
+                                                    init.initglobalvariable.sQuaternionVal.setFilterParam(params);
+                                                }
+                                                if (params[0].equals("sAccelerometerLinearVal")) {
+                                                    init.initglobalvariable.sAccelerometerLinearVal.setFilterParam(params);
+                                                }
+                                                if (params[0].equals("sAccelerometerVal")) {
+                                                    init.initglobalvariable.sAccelerometerVal.setFilterParam(params);
+                                                }
+                                                if (params[0].equals("sAccelerometerVal_world")) {
+                                                    init.initglobalvariable.sAccelerometerVal_world.setFilterParam(params);
+                                                }
+                                                if (params[0].equals("sAccelerometerLinearVal_world")) {
+                                                    init.initglobalvariable.sAccelerometerLinearVal_world.setFilterParam(params);
+                                                }
+                                                if (params[0].equals("RK4_Velocity_world")) {
+                                                    init.initglobalvariable.mVelocity.setFilterParam(params);
+                                                }
+                                                if (params[0].equals("RK4_Position_world")) {
+                                                    init.initglobalvariable.mPosotion.setFilterParam(params);
+                                                }
+                                                if (params[0].equals("re")) {
+                                                    init.initglobalvariable.mPosotion.resetbuffer();
+                                                    init.initglobalvariable.mVelocity.resetbuffer();
+
+                                                }
+                                            }
+                                        }catch (Exception ex){
+                                            Log.e("udp",String.valueOf(ex));
                                         }
-                                        if (params[0].equals("sAccelerometerLinearVal")) {
-                                            init.initglobalvariable.sAccelerometerLinearVal.setFilterParam(params);
-                                        }
-                                        if (params[0].equals("sAccelerometerVal")) {
-                                            init.initglobalvariable.sAccelerometerVal.setFilterParam(params);
-
-                                        }
-                                        if (params[0].equals("sAccelerometerVal_world")) {
-                                            init.initglobalvariable.sAccelerometerVal_world.setFilterParam(params);
-                                        }
-                                        if (params[0].equals("sAccelerometerLinearVal_world")) {
-                                            init.initglobalvariable.sAccelerometerLinearVal_world.setFilterParam(params);
-                                        }
-                                        if (params[0].equals("RK4_Velocity_world")) {
-                                            init.initglobalvariable.mVelocity.setFilterParam(params);
-                                        }
-                                        if (params[0].equals("RK4_Position_world")) {
-                                            init.initglobalvariable.mPosotion.setFilterParam(params);
-                                        }
-                                    }
 
 
-                                    Log.d("Recievedudp", "Server: Message received: ‘" + new String(recpacket.getData()) + "’\n" + "   " + "Server: IP " + recpacket.getAddress() + "’\n");
-                                } catch (Exception e) {
-                                    e.printStackTrace();
+
+                                        Log.d("Recievedudp", "Server: Message received: ‘" + new String(recpacket.getData()) + "’\n" + "   " + "Server: IP " + recpacket.getAddress() + "’\n");
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }  /*
                                 }
-                            }
-                        }).start();
+                            }).start();
+                        } catch (Exception ex) {
 
-
+                        }
+`                       */
                     }
 
                 }
